@@ -84,6 +84,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   <include layout="@layout/header"
            android:id="@+id/included_header"/>
+  <FrameLayout
+      android:layout_width="match_parent"
+      android:layout_height="400dp"
+      android:id="@+id/frameLayout"></FrameLayout>
 
   <RelativeLayout
     android:id="@+id/RelativeLayout"

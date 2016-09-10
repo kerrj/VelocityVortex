@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 package org.firstinspires.ftc.robotcontroller.internal;
 
+
 import android.app.ActionBar;
 import android.app.Activity;
 import android.content.ComponentName;
@@ -38,6 +39,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
+import android.graphics.PixelFormat;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.net.wifi.WifiManager;
@@ -50,6 +52,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebView;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -87,6 +90,7 @@ import com.qualcomm.robotcore.util.RobotLog;
 import com.qualcomm.robotcore.wifi.NetworkConnectionFactory;
 import com.qualcomm.robotcore.wifi.NetworkType;
 import com.qualcomm.robotcore.wifi.WifiDirectAssistant;
+import com.vuforia.Prop;
 
 import org.firstinspires.ftc.robotcore.internal.AppUtil;
 import org.firstinspires.inspection.RcInspectionActivity;
@@ -97,7 +101,35 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class FtcRobotControllerActivity extends Activity {
 
+  //----------------------------------------Unity Section-------------------------------------------------------
+    public interface UnityListener{
+        public void prop(int ID,String name,float localx, float localy, float localz,float boxx,float boxy,float boxz,
+                                float boxwidthx, float boxwidthy,float boxwidthz);
+    }
+
+    private UnityListener unityListener;
+
+    public void setUnityDataListener(UnityListener listener){
+        this.unityListener=listener;
+    }
+    public void prop(int ID,String name,float localx, float localy, float localz,float boxx,float boxy,float boxz,
+                     float boxwidthx, float boxwidthy,float boxwidthz){
+        if(unityListener!=null){
+            unityListener.prop(ID,name,localx,localy,localz,boxx,boxy,boxz,boxwidthx,boxwidthy,boxwidthz);
+        }
+    }
+  public interface UIListener{
+    public void onWindowFocusChanged(boolean focus);
+    public void onConfigurationChanged(Configuration config);
+  }
+  private UIListener UIListener;
+  public void setUIListener(UIListener l){
+    UIListener=l;
+  }
+  //----------------------------------------------Unity Section----------------------------------------------------
+
   public static final String TAG = "RCActivity";
+  private static FtcRobotControllerActivity activity;
 
   private static final int REQUEST_CONFIG_WIFI_CHANNEL = 1;
   private static final boolean USE_DEVICE_EMULATION = false;
@@ -190,10 +222,14 @@ public class FtcRobotControllerActivity extends Activity {
       }
     }
   }
-
+  public static FtcRobotControllerActivity getActivity(){
+    return activity;
+  }
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    getWindow().setFormat(PixelFormat.RGB_565);
+    activity=this;
     RobotLog.vv(TAG, "onCreate()");
 
     receivedUsbAttachmentNotifications = new ConcurrentLinkedQueue<UsbDevice>();
@@ -374,6 +410,9 @@ public class FtcRobotControllerActivity extends Activity {
     // When the window loses focus (e.g., the action overflow is shown),
     // cancel any pending hide action. When the window gains focus,
     // hide the system UI.
+    if(UIListener!=null) {
+      UIListener.onWindowFocusChanged(hasFocus);
+    }
     if (hasFocus) {
       if (ImmersiveMode.apiOver19()){
         // Immersive flag only works on API 19 and above.
@@ -441,11 +480,11 @@ public class FtcRobotControllerActivity extends Activity {
 
    return super.onOptionsItemSelected(item);
   }
-
   @Override
   public void onConfigurationChanged(Configuration newConfig) {
     super.onConfigurationChanged(newConfig);
     // don't destroy assets on screen rotation
+    UIListener.onConfigurationChanged(newConfig);
   }
 
   @Override
