@@ -101,7 +101,5 @@ repositories {
 }
 
 dependencies {
-    compile files('C:/Users/Justin/Documents/GitHub/FTCCamera/ftc_app/libs/unity-classes.jar')
-    compile files('C:/Users/Justin/Documents/GitHub/FTCCamera/ftc_app/libs/VuforiaUnityPlayer.jar')
 }
 apply from: 'build.release.gradle'
