@@ -12,16 +12,16 @@ public class Autonomous_Methods extends OpMode{
     public void loop(){}
     GyroSensor gyro;
     DcMotor L, R;
-    int ENCODER_CPR = 1120;    //encoder counts per revolution
-    double GEAR_RATIO = 1.5;     //gear ratio
-    double WHEEL_DIAMETER = 3.3;    //diameter of wheel in inches
+    int ENCODER_CPR = 1440;    //encoder counts per revolution
+    double GEAR_RATIO = 1/1.5;     //gear ratio
+    double WHEEL_DIAMETER = 4;    //diameter of wheel in inches
     double DISTANCE;
 
 
     public double Counts(double distance) {
         //DISTANCE in inches
         this.DISTANCE = distance;
-        double CIRCUMFERENCE = 12.07;
+        double CIRCUMFERENCE = Math.PI*WHEEL_DIAMETER;
         double ROTATIONS = distance / CIRCUMFERENCE;
         double COUNTS = ENCODER_CPR * ROTATIONS * GEAR_RATIO;
         return COUNTS;

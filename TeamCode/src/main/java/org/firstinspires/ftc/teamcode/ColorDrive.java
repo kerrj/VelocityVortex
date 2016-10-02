@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -15,6 +16,7 @@ import com.qualcomm.robotcore.hardware.I2cAddr;
  */
 
 @Autonomous
+@Disabled
 public class ColorDrive extends LinearOpMode{
     public void runOpMode() throws InterruptedException{
 //        ColorSensor floorSensor;
