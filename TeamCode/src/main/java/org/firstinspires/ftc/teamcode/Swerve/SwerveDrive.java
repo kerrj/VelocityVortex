@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Swerve;
 
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -25,13 +26,13 @@ public class SwerveDrive {
             //array can be any size, as long as the position of each module is specified in its constructor
             modules = new SwerveModule[] {
                     //front left
-                    new SwerveModule(front, frontleft, new AbsoluteEncoder(0), WHEEL_BASE_WIDTH/2, WHEEL_BASE_LENGTH/2),
+                    new SwerveModule(front, frontleft, new AbsoluteEncoder(0, EncoderTest.analoginput1), WHEEL_BASE_WIDTH/2, WHEEL_BASE_LENGTH/2),
                     //front right
-                    new SwerveModule(front, frontright, new AbsoluteEncoder(0), WHEEL_BASE_WIDTH/2, WHEEL_BASE_LENGTH/2),
+                    new SwerveModule(front, frontright, new AbsoluteEncoder(1, EncoderTest.analoginput1), WHEEL_BASE_WIDTH/2, WHEEL_BASE_LENGTH/2),
                     //back left
-                    new SwerveModule(back, backleft, new AbsoluteEncoder(0), WHEEL_BASE_WIDTH/2, WHEEL_BASE_LENGTH/2),
+                    new SwerveModule(back, backleft, new AbsoluteEncoder(2, EncoderTest.analoginput1), WHEEL_BASE_WIDTH/2, WHEEL_BASE_LENGTH/2),
                     //back right
-                    new SwerveModule(back, backright, new AbsoluteEncoder(0), WHEEL_BASE_WIDTH, WHEEL_BASE_LENGTH/2)
+                    new SwerveModule(back, backright, new AbsoluteEncoder(3, EncoderTest.analoginput1), WHEEL_BASE_WIDTH/2, WHEEL_BASE_LENGTH/2)
             };
         }
 

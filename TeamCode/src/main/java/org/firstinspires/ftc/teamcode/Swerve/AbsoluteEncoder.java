@@ -1,6 +1,13 @@
 package org.firstinspires.ftc.teamcode.Swerve;
-;import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
+import com.qualcomm.robotcore.hardware.DigitalChannelController;
+import com.qualcomm.robotcore.hardware.HardwareDevice;
+import com.qualcomm.robotcore.hardware.I2cAddr;
+import com.qualcomm.robotcore.hardware.I2cController;
+import com.qualcomm.robotcore.util.SerialNumber;
+
+import java.util.concurrent.locks.Lock;
 
 /**
  * @author Duncan
@@ -15,13 +22,9 @@ public class AbsoluteEncoder{
      *
      * @param angleOffset zero point of encoder in degrees
      */
-    public AbsoluteEncoder(double angleOffset) {
+    public AbsoluteEncoder(double angleOffset, AnalogInput ai) {
         this.angleOffset = Math.toRadians(angleOffset);
-    }
-
-    public AbsoluteEncoder(double angleOffset, boolean flipped) {
-        this.angleOffset = Math.toRadians(angleOffset);
-        this.flipped = flipped;
+        this.ai = ai;
     }
 
     /**
@@ -40,6 +43,12 @@ public class AbsoluteEncoder{
      */
     public double pidGet() {
         return getAngle();
+    }
+    public double getMaxVoltage(){
+        return ai.getMaxVoltage();
+    }
+    public double getVoltage(){
+        return ai.getVoltage();
     }
 
 }
