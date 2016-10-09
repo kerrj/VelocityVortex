@@ -12,8 +12,8 @@ public class Autonomous_Methods extends OpMode{
     public void loop(){}
     GyroSensor gyro;
     DcMotor L, R;
-    int ENCODER_CPR = 1440;    //encoder counts per revolution
-    double GEAR_RATIO = 1/1.5;     //gear ratio
+    int ENCODER_CPR = 1680;    //encoder counts per revolution
+    double GEAR_RATIO = 1.5;     //gear ratio
     double WHEEL_DIAMETER = 4;    //diameter of wheel in inches
     double DISTANCE;
 

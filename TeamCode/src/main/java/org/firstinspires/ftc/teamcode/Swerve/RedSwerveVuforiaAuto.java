@@ -51,7 +51,7 @@ public class RedSwerveVuforiaAuto extends OpMode {
                 if(swerveDrive.getInchesTravelled()<5) {
                     swerveDrive.driveTowards(new Vector(0, 1), 1);
                 }else{
-                    
+
                 }
                 break;
         }

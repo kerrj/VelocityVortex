@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import android.text.style.WrapTogetherSpan;
+import android.util.Log;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -9,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
@@ -24,12 +26,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class RedAutoSixWheel extends OpMode {
     final double WHEEL_IN=0;
     final double WHEEL_OUT=.7;
-    final double DISTANCE_FROM_WALL=5;
+    final double DISTANCE_FROM_WALL=5;//inches
     ColorSensor floorSensor;
     ColorSensor beaconSensor;
+    DeviceInterfaceModule cdim;
     Servo buttonServo;
     GyroSensor gyro;
-    ModernRoboticsI2cRangeSensor rangeSensor;
+    ModernRoboticsI2cRangeSensor frontRanger;
+    ModernRoboticsI2cRangeSensor backRanger;
     DcMotor right;
     DcMotor left;
     State robotState;
@@ -47,11 +51,12 @@ public class RedAutoSixWheel extends OpMode {
 
     //define the discrete robot state possibilities here
     enum State{
-        DriveStraight,Turn1,DriveToWall, TurnToBeacon, DriveToFirstBeacon,PressBeacon,DriveToBeacon,Stop
+        DriveStraight,Turn1,DriveToWall, TurnToBeacon,PressBeacon,DriveToBeacon,Stop, AlignWithWall
     }
 
     @Override
     public void init() {
+        cdim=hardwareMap.deviceInterfaceModule.get("cdim");
         right=hardwareMap.dcMotor.get("right");
         left=hardwareMap.dcMotor.get("left");
         floorSensor=hardwareMap.colorSensor.get("floorSensor");
@@ -60,18 +65,25 @@ public class RedAutoSixWheel extends OpMode {
         buttonServo=hardwareMap.servo.get("buttonServo");
         gyro=hardwareMap.gyroSensor.get("gyro");
         gyro.calibrate();
-        I2cDeviceSynch i=hardwareMap.i2cDeviceSynch.get("rangeSensor");
-        rangeSensor=new ModernRoboticsI2cRangeSensor(i);
+        I2cDeviceSynch i=hardwareMap.i2cDeviceSynch.get("frontRanger");
+        frontRanger=new ModernRoboticsI2cRangeSensor(i);
+        I2cDeviceSynch i2=hardwareMap.i2cDeviceSynch.get("backRanger");
+        backRanger=new ModernRoboticsI2cRangeSensor(i2);
+        I2cAddr front=I2cAddr.create8bit(0x10);
+        frontRanger.setI2cAddress(front);
+        I2cAddr back=I2cAddr.create8bit(0x28);
+        backRanger.setI2cAddress(back);
         I2cAddr f=I2cAddr.create8bit(0x42);
         I2cAddr b=I2cAddr.create8bit(0x6c); // must use create8bit to work
         beaconSensor.setI2cAddress(b);
         floorSensor.setI2cAddress(f);
-        left.setDirection(DcMotor.Direction.REVERSE);
+        right.setDirection(DcMotor.Direction.REVERSE);
         floorSensor.enableLed(true);
         buttonServo.setPosition(0);
 
         //SET START STATE HERE
-        robotState=State.PressBeacon;
+        robotState=State.DriveStraight;
+        beaconsPressed=0;
     }
 
     @Override
@@ -85,8 +97,8 @@ public class RedAutoSixWheel extends OpMode {
                         resetPosition=false;
                     }
                     if (right.getCurrentPosition() < startPosition + methods.Counts(DISTANCE)){
-                        right.setPower(.3);
-                        left.setPower(.3);
+                        right.setPower(.6);
+                        left.setPower(.6);
                     } else {
                         right.setPower(0);
                         left.setPower(0);
@@ -98,27 +110,27 @@ public class RedAutoSixWheel extends OpMode {
 
             case Turn1://turn right towards the wall DEGREES degrees
                 final int DEGREES=45;
-                if(Math.abs(gyro.getHeading()-DEGREES)>3){//if heading is more than 3 degrees away from desired position
-                    left.setPower(.1);
-                    right.setPower(-.1);
+                if(Math.abs(gyro.getHeading()-DEGREES)>3){//if heading is more than 8 degrees away from desired position
+                    left.setPower(.5);
+                    right.setPower(-.5);
                 }else{
                     left.setPower(0);
                     right.setPower(0);
-                    robotState=State.DriveStraight;
+                    robotState=State.DriveToWall;
                     resetPosition=true;
                 }
                 break;
 
 
             case DriveToWall://drive DISTANCE inches forward to the wall
-                DISTANCE=50;
+                DISTANCE=70;
                 if(resetPosition){
                     startPosition=right.getCurrentPosition();
                     resetPosition=false;
                 }
                 if(right.getCurrentPosition()<startPosition+methods.Counts(DISTANCE)){
-                    left.setPower(.5);
-                    right.setPower(.5);
+                    left.setPower(.7);
+                    right.setPower(.7);
                 }else{
                     left.setPower(0);
                     right.setPower(0);
@@ -130,12 +142,20 @@ public class RedAutoSixWheel extends OpMode {
 
             case TurnToBeacon:
                 if(Math.abs(gyro.getHeading())>3){
-                    right.setPower(-.1);
-                    left.setPower(.1);
+                    right.setPower(.5);
+                    left.setPower(-.5);
                 }else{
                     right.setPower(0);
                     left.setPower(0);
-                    robotState=State.DriveToFirstBeacon;
+                    robotState=State.AlignWithWall;
+                }
+                break;
+
+            case AlignWithWall://move close enough to the wall
+                if(frontRanger.getDistance(DistanceUnit.INCH)>5||backRanger.getDistance(DistanceUnit.INCH)>5){
+                    //do nothing
+                }else{
+                    robotState=State.DriveToBeacon;
                 }
                 break;
 
@@ -145,21 +165,36 @@ public class RedAutoSixWheel extends OpMode {
                 if (floorSensor.red() < THRESHOLD && floorSensor.green() < THRESHOLD && floorSensor.blue() < THRESHOLD) {
                     //here is where the wall following code goes, maintain DISTANCE_FROM_WALL inches from the wall
                     double MOTOR_POWER=.5;
-                    double POWER_DELTA=.1;
-                    double rangeSensorDistance=rangeSensor.getDistance(DistanceUnit.INCH);
-                    if(rangeSensorDistance>DISTANCE_FROM_WALL){
-                        //move closer to the wall, right goes slower
-                        right.setPower(MOTOR_POWER-POWER_DELTA);
-                        left.setPower(MOTOR_POWER);
-                    }else if(rangeSensorDistance<DISTANCE_FROM_WALL){
-                        //move further away from the wall, left goes slower
-                        right.setPower(MOTOR_POWER);
-                        left.setPower(MOTOR_POWER-POWER_DELTA);
+                    double POWER_DELTA=.4;
+                    double frontDistance=frontRanger.getDistance(DistanceUnit.INCH);
+                    double backDistance=backRanger.getDistance(DistanceUnit.INCH);
+                    double distanceDifference=frontDistance-backDistance;
+                    if(distanceDifference>.5){//turn to the right
+                        right.setPower(-.3);
+                        left.setPower(.3);
+                    }else if(distanceDifference<-.5){//turn left
+                        right.setPower(.3);
+                        left.setPower(-.3);
                     }else{
                         //drive straight
                         right.setPower(MOTOR_POWER);
                         left.setPower(MOTOR_POWER);
                     }
+
+//                    if(rangeSensorDistance>DISTANCE_FROM_WALL+.5){
+//                        //move closer to the wall, right goes slower
+//                        right.setPower(MOTOR_POWER-POWER_DELTA);
+//                        left.setPower(MOTOR_POWER);
+//                    }else if(rangeSensorDistance<DISTANCE_FROM_WALL-.5){
+//                        //move further away from the wall, left goes slower
+//                        right.setPower(MOTOR_POWER);
+//                        left.setPower(MOTOR_POWER-POWER_DELTA);
+//                    }else{
+//                        //drive straight
+//                        right.setPower(MOTOR_POWER);
+//                        left.setPower(MOTOR_POWER);
+//                    }
+
                 }else{
                     left.setPower(0);
                     right.setPower(0);
@@ -196,14 +231,14 @@ public class RedAutoSixWheel extends OpMode {
                         }
                     }
                 }else{//furthest button from the robot
-                    if(right.getCurrentPosition()<startPosition+methods.Counts(5)){//drive forwards 5 inches
-                        right.setPower(.1);
-                        left.setPower(.1);
+                    if(right.getCurrentPosition()<startPosition+methods.Counts(7)){//drive forwards 5 inches
+                        right.setPower(.2);
+                        left.setPower(.2);
                     }else{//then push wheel out and drive forward 5 inches
                         buttonServo.setPosition(WHEEL_OUT);
-                        if(right.getCurrentPosition()<startPosition+methods.Counts(10)){//drive forward another 5 inches(intentionally "Counts(10)")
-                            right.setPower(.1);
-                            left.setPower(.1);
+                        if(right.getCurrentPosition()<startPosition+methods.Counts(15)){//drive forward another 5 inches(intentionally "Counts(10)")
+                            right.setPower(.2);
+                            left.setPower(.2);
                         }else{//retract wheel and move to next beacon
                             beaconsPressed++;
                             buttonServo.setPosition(WHEEL_IN);
@@ -219,8 +254,11 @@ public class RedAutoSixWheel extends OpMode {
 
             case Stop:
                 //do nothing
+                left.setPower(0);
+                right.setPower(0);
                 break;
         }
+        telemetry.addData("State",robotState.toString());
         telemetry.addData("RF",floorSensor.red());
         telemetry.addData("GF",floorSensor.green());
         telemetry.addData("BF",floorSensor.blue());
@@ -229,6 +267,7 @@ public class RedAutoSixWheel extends OpMode {
         telemetry.addData("BB", beaconSensor.blue());
         telemetry.addData("left encoder",left.getCurrentPosition());
         telemetry.addData("right encoder",right.getCurrentPosition());
-        telemetry.addData("distance",rangeSensor.getDistance(DistanceUnit.INCH));
+        telemetry.addData("frontDistance",frontRanger.getDistance(DistanceUnit.INCH));
+        telemetry.addData("backDistance",backRanger.getDistance(DistanceUnit.INCH));
     }
 }

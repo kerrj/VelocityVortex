@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import com.vuforia.CameraDevice;
 import com.vuforia.DataSet;
+import com.vuforia.HINT;
 import com.vuforia.ObjectTracker;
 import com.vuforia.STORAGE_TYPE;
 import com.vuforia.State;
@@ -257,7 +258,8 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
                 trackable.setUserData(name);
                 
                 Log.d(LOGTAG, "UserData: Set the following user data " + trackable.getUserData());
-                }//for
+                Vuforia.setHint(HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 4);
+            }//for
             
             }//for
         
