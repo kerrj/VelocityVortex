@@ -14,9 +14,11 @@ public class AbsoluteEncoder{
     /**
      *
      * @param angleOffset zero point of encoder in degrees
+     * @param ai encoder to be used (analoginput in ftc cdim)
      */
-    public AbsoluteEncoder(double angleOffset) {
+    public AbsoluteEncoder(double angleOffset,AnalogInput ai) {
         this.angleOffset = Math.toRadians(angleOffset);
+        this.ai=ai;
     }
 
     public AbsoluteEncoder(double angleOffset, boolean flipped) {

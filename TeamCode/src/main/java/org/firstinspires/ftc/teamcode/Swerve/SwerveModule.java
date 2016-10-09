@@ -8,12 +8,15 @@ import com.qualcomm.robotcore.hardware.Servo;
  * @author Duncan
  */
 public class SwerveModule {
-    DcMotor driveMotor; //SpeedController used so this can be talon, victor, jaguar, CAN talon...
-    Servo steerServo;
-    public AbsoluteEncoder steerEncoder;
-    double positionX, positionY; //position of this wheel relative to the center of the robot
+    private DcMotor driveMotor; //SpeedController used so this can be talon, victor, jaguar, CAN talon...
+    private Servo steerServo;
+    private AbsoluteEncoder steerEncoder;
+    public double positionX, positionY; //position of this wheel relative to the center of the robot
     //from the robot's perspective, +y is forward and +x is to the right
-    boolean enabled = false;
+    private boolean enabled = false;
+    private double targetAngle=0;//initialize these as 0
+    private double motorPower=0;
+
 
     /**
      * @param driveMotor motor controller for drive motor
@@ -29,6 +32,8 @@ public class SwerveModule {
         this.positionX = positionX;
         this.positionY = positionY;
     }
+
+
     /**
      * @param angle in radians
      * @param speed motor speed [-1 to 1]
@@ -43,8 +48,8 @@ public class SwerveModule {
             angle = wrapAngle(angle + Math.PI);
             speed *= -1;
         }
-        steerServo.setPosition(angle);
-        driveMotor.setPower(Math.max(-1, Math.min(1, speed))); //coerce speed between -1 and 1
+        targetAngle=angle;
+        motorPower=Math.max(-1, Math.min(1, speed));
     }
     public void enable() {
         enabled = true;
@@ -60,9 +65,33 @@ public class SwerveModule {
         driveMotor.setPower(0);
     }
 
+
     private double wrapAngle(double angle) {
         angle %= 2*Math.PI;
         if (angle<0) angle += 2*Math.PI;
         return angle;
+    }
+
+    /**
+     * Method called every loop iteration. Handle power/position setting here
+     */
+    public void update(){
+        driveMotor.setPower(motorPower);//set the motor power
+        //if the servo is at the right position, don't move, otherwise move
+        if(Math.abs(steerEncoder.getAngle()-targetAngle)<.02){
+            steerServo.setPosition(.5);
+        }else{
+            Vector targetVector=new Vector(Math.cos(targetAngle),Math.sin(targetAngle));
+            Vector currentVector=new Vector(Math.cos(steerEncoder.getAngle()),Math.sin(steerEncoder.getAngle()));
+            //angleBetween is the angle from currentPosition to Target position in radians
+            //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise
+            double angleBetween = Math.atan2(currentVector.x*targetVector.y-currentVector.y*targetVector.x,currentVector.x*targetVector.x+currentVector.y*targetVector.y);
+            if(angleBetween>.02){//counterclockwise outside 1 degree of correct angle, rotate servo counterclockwise
+                steerServo.setPosition(0);
+            }else if(angleBetween<-.02){//clockwise outside 1 degree of correct angle, rotate servo clockwise
+                steerServo.setPosition(1);
+            }
+        }
+
     }
 }
