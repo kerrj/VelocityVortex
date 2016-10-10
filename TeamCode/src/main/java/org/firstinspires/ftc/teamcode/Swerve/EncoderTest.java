@@ -20,8 +20,8 @@ public class EncoderTest extends OpMode {
     }
     public void loop(){
         telemetry.addData("endcoder angle", enc1.getAngle());
-        telemetry.addData("endcoder voltage", enc1.getVoltage());
-        telemetry.addData("endcoder max voltage", enc1.getMaxVoltage());
+//        telemetry.addData("endcoder voltage", enc1.getVoltage());
+//        telemetry.addData("endcoder max voltage", enc1.getMaxVoltage());
 
 
 

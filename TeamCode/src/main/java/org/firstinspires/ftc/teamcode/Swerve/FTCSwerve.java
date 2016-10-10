@@ -28,7 +28,7 @@ public class FTCSwerve {
         swerveDrive=new SwerveDrive(frontLeft,frontRight,backLeft,backRight,//encoders
                                     front,back,//motors
                                     frontLeftServo,frontRightServo,backLeftServo,backRightServo,//servos
-                                    16,16);//width and length
+                                    robotWidth,robotLength);//width and length
         swerveDrive.setPivot(0,0);//the robot will only rotate around the origin
     }
 
@@ -72,8 +72,11 @@ public class FTCSwerve {
 
     /**
      * Call this method every loop iteration
+     * @param waitForServos when true the robot doesn't move the motors until the servos are in the correct position,
+     *                      should only be used during autonomous
      */
-    public void update(){
-        swerveDrive.update();
+    public void update(boolean waitForServos){
+        swerveDrive.update(waitForServos);
     }
+
 }

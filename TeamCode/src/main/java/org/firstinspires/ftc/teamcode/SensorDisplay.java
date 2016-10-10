@@ -8,42 +8,48 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
+import com.qualcomm.robotcore.hardware.I2cAddr;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.IrSeekerSensor;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 import com.qualcomm.robotcore.robocol.TelemetryMessage;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 /**
  * Created by Justin on 10/7/2016.
  */
 @TeleOp
 public class SensorDisplay extends OpMode {
-    private UltrasonicSensor ultra;
+    private ModernRoboticsI2cRangeSensor range;
     private ColorSensor color;
-    private DcMotor motor;
     private GyroSensor gyro;
     private TouchSensor touch;
     private IrSeekerSensor ir;
 
     @Override
     public void init() {
-        ultra=hardwareMap.ultrasonicSensor.get("ultra");
+        I2cDeviceSynch deviceSynch=hardwareMap.i2cDeviceSynch.get("range");
+        range=new ModernRoboticsI2cRangeSensor(deviceSynch);
         color=hardwareMap.colorSensor.get("color");
-        motor=hardwareMap.dcMotor.get("motor");
+        I2cAddr coloraddress=I2cAddr.create8bit(0x3c);
+        color.setI2cAddress(coloraddress);
+        color.enableLed(true);
         gyro=hardwareMap.gyroSensor.get("gyro");
         touch=hardwareMap.touchSensor.get("touch");
         ir=hardwareMap.irSeekerSensor.get("ir");
+        gyro.calibrate();
     }
 
     @Override
     public void loop() {
-        telemetry.addData("Distance",ultra.getUltrasonicLevel());
+        telemetry.addData("Distance",range.getDistance(DistanceUnit.INCH));
         telemetry.addData("red",color.red());
         telemetry.addData("green",color.green());
         telemetry.addData("blue",color.blue());
         telemetry.addData("Heading",gyro.getHeading());
         telemetry.addData("Touch",touch.isPressed());
-        telemetry.addData("Counts",motor.getCurrentPosition());
         telemetry.addData("IRAngle",ir.getAngle());
     }
 }

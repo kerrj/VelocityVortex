@@ -126,11 +126,12 @@ public class SwerveDrive {
         /**
          * Method called every loop iteration, handle all pid control here
          */
-        public void update(){
+        public void update(boolean waitForServos){
             for (SwerveModule module:modules){
-                module.update();
+                module.update(waitForServos);
             }
         }
+
     }
 
 

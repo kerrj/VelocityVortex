@@ -18,7 +18,6 @@ import java.util.HashMap;
  * Created by Justin on 9/2/2016.
  */
 
-@TeleOp(name="Vuforia: Swivel",group="Vuforia")
 public class SwivelResqMarker extends OpMode {
     private static final double HEAD_MAX=.6;
     private static final double HEAD_MIN=0;
