@@ -29,8 +29,6 @@ public class BlueSwerveVuforiaAuto extends OpMode {
     //the first beacon has the WHEELS image target, and the second has the LEGOS image target
     //---------------------------------------------------------------------------------------
 
-    private static final double WIDTH=16;
-    private static final double LENGTH=16;
 
     private boolean resetPosition=true;
 

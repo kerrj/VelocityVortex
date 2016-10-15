@@ -53,15 +53,21 @@ public class ServoModule {
         //angleBetween is the angle from currentPosition to target position in radians
         //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
         double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
-        targetVector = new Vector(Math.cos(targetAngle), Math.sin(targetAngle));
-        currentVector = new Vector(Math.cos(steerEncoder.getAngle()), Math.sin(steerEncoder.getAngle()));
-        //angleBetween is the angle from currentPosition to target position in radians
-        //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
-        double scaleFactor = 2*angleBetween / Math.PI;
-        if (angleBetween > 0) {//counterclockwise outside 1 degree of correct angle, rotate servo counterclockwise
-            steerServo.setPosition(.5 - .5 * Math.abs(scaleFactor));
-        } else if (angleBetween < 0) {//clockwise outside 1 degree of correct angle, rotate servo clockwise
-            steerServo.setPosition(.5 - .5 * Math.abs(scaleFactor));
+
+
+        //give the servo a piecewise scaling function: full speed until about 5 degrees away, then linearly slower
+        if (angleBetween > .1) {//counterclockwise outside 1 degree of correct angle, rotate servo counterclockwise
+            steerServo.setPosition(0);
+        } else if (angleBetween < -.1) {//clockwise outside 1 degree of correct angle, rotate servo clockwise
+            steerServo.setPosition(1);
+        }else{
+            double scaleFactor = Math.abs(angleBetween) / .1;
+            if(angleBetween>0){
+                steerServo.setPosition(.5 - .5 * Math.abs(scaleFactor));
+            }else if(angleBetween<0){
+                steerServo.setPosition(.5 + .5 * Math.abs(scaleFactor));
+
+            }
         }
         //set power if close enough
     }

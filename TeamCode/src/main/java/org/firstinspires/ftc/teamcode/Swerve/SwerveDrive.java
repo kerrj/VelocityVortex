@@ -11,7 +11,6 @@ import com.qualcomm.robotcore.hardware.Servo;
  */
 
 public class SwerveDrive {
-    double pivotX, pivotY;
     DcMotor left, right;
     //Add values when swerve is done and also look at what absolute encoder is for
     ServoModule[] modules;
@@ -38,14 +37,6 @@ public class SwerveDrive {
         };
     }
 
-    /**
-     * @param pivotX x coordinate in inches of pivot point relative to center of robot
-     * @param pivotY y coordinate in inches of pivot point relative to center of robot
-     */
-    public void setPivot(double pivotX, double pivotY) {
-        this.pivotX = pivotX;
-        this.pivotY = pivotY;
-    }
 
     public void translate(Vector direction,double power){
         leftTargetPower=power;
@@ -76,20 +67,20 @@ public class SwerveDrive {
 
         //left side
         modules[0].set(Math.PI/4);
-        modules[2].set(-Math.PI/4);
+        modules[2].set(3*Math.PI/4);
         if(modules[0].getDelta()>Math.PI/2){
             leftTargetPower*=-1;
             modules[0].set(Math.PI/4+Math.PI);
-            modules[2].set(-Math.PI/4+Math.PI);
+            modules[2].set(3*Math.PI/4+Math.PI);
         }
 
         //right side
-        modules[1].set(-Math.PI/4);
-        modules[3].set(Math.PI/4);
+        modules[1].set(7*Math.PI/4);
+        modules[3].set(5*Math.PI/4);
         if(modules[1].getDelta()>Math.PI/2){
             rightTargetPower*=-1;
-            modules[1].set(-Math.PI/4+Math.PI);
-            modules[3].set(Math.PI/4+Math.PI);
+            modules[1].set(7*Math.PI/4+Math.PI);
+            modules[3].set(5*Math.PI/4+Math.PI);
         }
     }
 
@@ -113,6 +104,11 @@ public class SwerveDrive {
                 right.setPower(0);
             }
         }
+    }
+
+    public void stop(){
+        leftTargetPower=0;
+        rightTargetPower=0;
     }
 
 }

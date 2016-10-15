@@ -28,7 +28,6 @@ public class SwerveTeleop extends OpMode {
         lba=hardwareMap.analogInput.get("lba");
         rfa=hardwareMap.analogInput.get("rfa");
         rba=hardwareMap.analogInput.get("rba");
-
         swerveDrive=new FTCSwerve(lfa,rfa,lba,rba,left,right,lf,rf,lb,rb);
     }
 

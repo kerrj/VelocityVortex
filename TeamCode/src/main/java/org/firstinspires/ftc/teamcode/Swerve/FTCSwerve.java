@@ -58,6 +58,9 @@ public class FTCSwerve {
         return distance;
     }
 
+    public void stop(){
+        swerveDrive.stop();
+    }
     /**
      * Resets the displacement of the robot to 0. getInchesTravelled will again return 0
      */
