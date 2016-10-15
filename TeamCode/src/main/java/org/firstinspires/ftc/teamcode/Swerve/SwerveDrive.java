@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Swerve;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsUsbLegacyModule;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -10,128 +11,110 @@ import com.qualcomm.robotcore.hardware.Servo;
  */
 
 public class SwerveDrive {
-        double pivotX, pivotY;
-        DcMotor front, back;
-        Servo frontleft, frontright, backleft, backright;
-        //Add values when swerve is done and also look at what absolute encoder is for
-        Double WHEEL_BASE_WIDTH;//initialized in constructor
-        Double WHEEL_BASE_LENGTH;
-        SwerveModule[] modules;
+    double pivotX, pivotY;
+    DcMotor left, right;
+    //Add values when swerve is done and also look at what absolute encoder is for
+    ServoModule[] modules;
+    private double leftTargetPower=0;
+    private double rightTargetPower=0;
 
-        /**
-         * Custom constructor for current robot.
-         */
-        public SwerveDrive(AnalogInput frontLeft,AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
-                            DcMotor front,DcMotor back,
-                            Servo frontleftServo,Servo frontRightServo,Servo backLeftServo,Servo backRightServo,
-                            double robotWidth,double robotLength){
-            this.front=front;
-            this.back=back;
-            this.frontleft=frontleftServo;
-            this.frontright=frontRightServo;
-            this.backleft=backLeftServo;
-            this.backright=backRightServo;
-            WHEEL_BASE_LENGTH=robotLength;
-            WHEEL_BASE_WIDTH=robotWidth;
-            //initialize array of modules
-            //array can be any size, as long as the position of each module is specified in its constructor
-            modules = new SwerveModule[] {
-                    //front left
-                    new SwerveModule(front, frontleft, new AbsoluteEncoder(0,frontLeft), -WHEEL_BASE_WIDTH/2, WHEEL_BASE_LENGTH/2),
-                    //front right
-                    new SwerveModule(front, frontright, new AbsoluteEncoder(0,frontRight), WHEEL_BASE_WIDTH/2, WHEEL_BASE_LENGTH/2),
-                    //back left
-                    new SwerveModule(back, backleft, new AbsoluteEncoder(0,backLeft), -WHEEL_BASE_WIDTH/2,-WHEEL_BASE_LENGTH/2),
-                    //back right
-                    new SwerveModule(back, backright, new AbsoluteEncoder(0,backRight), WHEEL_BASE_WIDTH, -WHEEL_BASE_LENGTH/2)
-            };
-        }
-
-        /**
-         * @param pivotX x coordinate in inches of pivot point relative to center of robot
-         * @param pivotY y coordinate in inches of pivot point relative to center of robot
-         */
-        public void setPivot(double pivotX, double pivotY) {
-            this.pivotX = pivotX;
-            this.pivotY = pivotY;
-        }
-
-        /**
-         * Drive with field oriented capability
-         * @param translationX relative speed in left/right direction (-1 to 1)
-         * @param translationY relative speed in forward/reverse direction (-1 to 1)
-         * @param rotation relative rate of rotation around pivot point (-1 to 1) positive is clockwise
-         * @param heading offset in heading in radians (used for field oriented control)
-         */
-        private void driveWithOrient(double translationX, double translationY, double rotation, double heading,double powerScale) {
-            Vector[] vects = new Vector[modules.length];
-            Vector transVect = new Vector(translationX, translationY),
-                    pivotVect = new Vector(pivotX, pivotY);
-
-            //if there is only one module ignore rotation
-            if (modules.length < 2)
-                for (SwerveModule module : modules)
-                    module.set(transVect.getAngle(), Math.min(1, transVect.getMagnitude())); //cap magnitude at 1
-
-            double maxDist = 0;
-            for (int i = 0; i < modules.length; i++) {
-                vects[i] = new Vector(modules[i].positionX, modules[i].positionY);
-                vects[i].subtract(pivotVect); //calculate module's position relative to pivot point
-                maxDist = Math.max(maxDist, vects[i].getMagnitude()); //find farthest distance from pivot
-            }
-
-            double maxPower = 1;
-            for (int i = 0; i < modules.length; i++) {
-                //rotation motion created by driving each module perpendicular to
-                //the vector from the pivot point
-                vects[i].makePerpendicular();
-                //scale by relative rate and normalize to the farthest module
-                //i.e. the farthest module drives with power equal to 'rotation' variable
-                vects[i].scale(rotation / maxDist);
-                vects[i].add(transVect);
-                //calculate largest power assigned to modules
-                //if any exceed 100%, all must be scale down
-                maxPower = Math.max(maxPower, vects[i].getMagnitude());
-            }
-
-            double power;
-            for (int i = 0; i < modules.length; i++) {
-                power = vects[i].getMagnitude() / maxPower; //scale down by the largest power that exceeds 100%
-                if (power > .05) {
-                    modules[i].set(vects[i].getAngle()-Math.PI/2, power*powerScale);
-                } else {
-                    modules[i].rest();
-                }
-            }
-        }
-
-        /**
-         * Regular robot oriented control.
-         * @param translationX relative speed in left/right direction (-1 to 1)
-         * @param translationY relative speed in forward/reverse direction (-1 to 1)
-         * @param rotation relative rate of rotation around pivot point (-1 to 1) positive is clockwise
-         */
-        public void driveNormal(double translationX, double translationY, double rotation,double powerScale) {
-            driveWithOrient(translationX, translationY, rotation, 0,powerScale);
-        }
-
-        public void enable() {
-            for (SwerveModule module : modules) module.enable();
-        }
-
-        public void disable() {
-            for (SwerveModule module : modules) module.disable();
-        }
-
-        /**
-         * Method called every loop iteration, handle all pid control here
-         */
-        public void update(boolean waitForServos){
-            for (SwerveModule module:modules){
-                module.update(waitForServos);
-            }
-        }
-
+    /**
+     * Custom constructor for current robot.
+     */
+    public SwerveDrive(AnalogInput frontLeft,AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
+                        DcMotor left,DcMotor right,
+                        Servo frontleftServo,Servo frontRightServo,Servo backLeftServo,Servo backRightServo){
+        //initialize array of modules
+        //array can be any size, as long as the position of each module is specified in its constructor
+        modules = new ServoModule[] {
+                //front left
+                new ServoModule(frontleftServo, new AbsoluteEncoder(Constants.FL_OFFSET, frontLeft)),
+                //front right
+                new ServoModule(frontRightServo, new AbsoluteEncoder(Constants.FR_OFFSET, frontRight)),
+                //back left
+                new ServoModule(backLeftServo, new AbsoluteEncoder(Constants.BL_OFFSET, backLeft)),
+                //back right
+                new ServoModule(backRightServo, new AbsoluteEncoder(Constants.BR_OFFSET, backRight))
+        };
     }
+
+    /**
+     * @param pivotX x coordinate in inches of pivot point relative to center of robot
+     * @param pivotY y coordinate in inches of pivot point relative to center of robot
+     */
+    public void setPivot(double pivotX, double pivotY) {
+        this.pivotX = pivotX;
+        this.pivotY = pivotY;
+    }
+
+    public void translate(Vector direction,double power){
+        leftTargetPower=power;
+        rightTargetPower=power;
+
+        //left side
+        modules[0].set(direction.getAngle());
+        modules[2].set(direction.getAngle());
+        if(modules[0].getDelta()>Math.PI/2){
+            leftTargetPower*=-1;
+            modules[0].set(direction.getAngle()+Math.PI);
+            modules[2].set(direction.getAngle()+Math.PI);
+        }
+
+        //right side
+        modules[1].set(direction.getAngle());
+        modules[3].set(direction.getAngle());
+        if(modules[1].getDelta()>Math.PI/2){
+            rightTargetPower*=-1;
+            modules[1].set(direction.getAngle()+Math.PI);
+            modules[3].set(direction.getAngle()+Math.PI);
+        }
+    }
+
+    public void rotate(double power){
+        leftTargetPower=power;
+        rightTargetPower=-power;//intentionally negative
+
+        //left side
+        modules[0].set(Math.PI/4);
+        modules[2].set(-Math.PI/4);
+        if(modules[0].getDelta()>Math.PI/2){
+            leftTargetPower*=-1;
+            modules[0].set(Math.PI/4+Math.PI);
+            modules[2].set(-Math.PI/4+Math.PI);
+        }
+
+        //right side
+        modules[1].set(-Math.PI/4);
+        modules[3].set(Math.PI/4);
+        if(modules[1].getDelta()>Math.PI/2){
+            rightTargetPower*=-1;
+            modules[1].set(-Math.PI/4+Math.PI);
+            modules[3].set(Math.PI/4+Math.PI);
+        }
+    }
+
+    /**
+     * Method called every loop iteration
+     */
+    public void update(boolean waitForServos){
+        for (ServoModule module : modules) {
+            module.update();
+        }
+
+        if(!waitForServos) {
+            left.setPower(leftTargetPower);
+            right.setPower(rightTargetPower);
+        }else{
+            if(modules[0].getDelta()<.25&&modules[1].getDelta()<.25&&modules[2].getDelta()<.25&& modules[3].getDelta()<.25){
+                left.setPower(leftTargetPower);
+                right.setPower(rightTargetPower);
+            }else{
+                left.setPower(0);
+                right.setPower(0);
+            }
+        }
+    }
+
+}
 
 

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.CameraStuff;
 
 import android.app.Activity;
 import android.os.AsyncTask;
@@ -15,6 +15,7 @@ import com.vuforia.Tracker;
 import com.vuforia.TrackerManager;
 import com.vuforia.Vuforia;
 import com.vuforia.VuforiaBase;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -29,7 +30,7 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
     private boolean mStarted = false;
     private boolean mInit = false;
     private boolean mCameraRunning = false;
-    
+
             private HashMap<String, double[]> vuforiaData = new HashMap<String, double[]>();
     private ArrayList<String> fileNames = new ArrayList<String>();
     
@@ -68,7 +69,6 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
         if (success) {
             startVuforiaCamera();
             CameraDevice.getInstance().setFocusMode(CameraDevice.FOCUS_MODE.FOCUS_MODE_CONTINUOUSAUTO);
-            
             mInit = true;
             return true;
             }//if
@@ -343,7 +343,8 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
             }//if
         
         }//stopCamera
-    
+
+
             /**
      * This is the Vuforia callback. When Vuforia finds an object
      * this method is called
@@ -351,7 +352,6 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
      */
             @Override
     public void Vuforia_onUpdate(State s) {
-        
         synchronized (dataLock) {
             int numResults = s.getNumTrackableResults();
             vuforiaData.clear();

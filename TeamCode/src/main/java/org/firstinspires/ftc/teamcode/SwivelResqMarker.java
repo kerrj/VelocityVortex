@@ -1,16 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.vuforia.CameraDevice;
-import com.vuforia.SmartTerrainBuilder;
-import com.vuforia.SmartTerrainTrackable;
-import com.vuforia.SmartTerrainTracker;
-import com.vuforia.Vuforia;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
+import org.firstinspires.ftc.teamcode.CameraStuff.FTCVuforia;
 
 import java.util.HashMap;
 

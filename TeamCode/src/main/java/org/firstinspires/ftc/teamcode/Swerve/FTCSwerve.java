@@ -13,23 +13,19 @@ public class FTCSwerve {
     private final double GEAR_RATIO=1.5;
     private final int COUNTS_PER_REV=1680;
     private double startPosition=0;
-    private DcMotor front,back;
+    DcMotor left;
 //    Servo frontLeftServo,frontRightServo,backLeftServo,backRightServo;
 //    AnalogInput frontLeftEncoder,frontRightEncoder,backLeftEncoder,backRightEncoder;
 
     SwerveDrive swerveDrive;
 
     public FTCSwerve(AnalogInput frontLeft,AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
-                     DcMotor front,DcMotor back,
-                     Servo frontLeftServo,Servo frontRightServo,Servo backLeftServo,Servo backRightServo,
-                     double robotWidth,double robotLength){
-        this.front=front;
-        this.back=back;
+                     DcMotor left,DcMotor right,
+                     Servo frontLeftServo,Servo frontRightServo,Servo backLeftServo,Servo backRightServo){
+        this.left=left;
         swerveDrive=new SwerveDrive(frontLeft,frontRight,backLeft,backRight,//encoders
-                                    front,back,//motors
-                                    frontLeftServo,frontRightServo,backLeftServo,backRightServo,//servos
-                                    robotWidth,robotLength);//width and length
-        swerveDrive.setPivot(0,0);//the robot will only rotate around the origin
+                                    left,right,//motors
+                                    frontLeftServo,frontRightServo,backLeftServo,backRightServo);
     }
 
     /**
@@ -38,16 +34,15 @@ public class FTCSwerve {
      * @param powerScale a scalar multiple which changes robot speed, must be <=1
      */
     public void driveTowards(Vector direction,double powerScale){
-        swerveDrive.driveNormal(direction.x,direction.y,0,powerScale);
+        swerveDrive.translate(direction,powerScale);
     }
 
     /**
      *
-     * @param direction counterclockwise is negative,clockwise is positive
-     *@param powerScale a scalar multiple which changes robot speed, must be <=1
+     *@param power negative is counterclockwise, positive is clockwise
      */
-    public void rotate(double direction,double powerScale){
-        swerveDrive.driveNormal(0,0,direction,powerScale);
+    public void rotate(double power){
+        swerveDrive.rotate(power);
     }
 
 
@@ -56,10 +51,10 @@ public class FTCSwerve {
      * @return  number of inches of displacement since last resetPosition, only use with linear motion
      */
     public double getInchesTravelled(){
-        double deltaCounts=front.getCurrentPosition()-startPosition;
+        double deltaCounts=left.getCurrentPosition()-startPosition;
         double circumference=Math.PI*WHEEL_DIAMETER;
         double revolutions=deltaCounts/COUNTS_PER_REV;
-        double distance=revolutions*circumference;
+        double distance=revolutions*circumference*GEAR_RATIO;
         return distance;
     }
 
@@ -67,7 +62,7 @@ public class FTCSwerve {
      * Resets the displacement of the robot to 0. getInchesTravelled will again return 0
      */
     public void resetPosition(){
-        startPosition=front.getCurrentPosition();
+        startPosition=left.getCurrentPosition();
     }
 
     /**
