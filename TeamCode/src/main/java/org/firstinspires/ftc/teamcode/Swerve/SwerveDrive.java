@@ -91,7 +91,6 @@ public class SwerveDrive {
         for (ServoModule module : modules) {
             module.update();
         }
-
         if(!waitForServos) {
             left.setPower(leftTargetPower);
             right.setPower(rightTargetPower);

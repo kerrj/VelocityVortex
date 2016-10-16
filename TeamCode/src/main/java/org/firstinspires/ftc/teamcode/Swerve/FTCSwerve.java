@@ -14,11 +14,8 @@ public class FTCSwerve {
     private final int COUNTS_PER_REV=1680;
     private double startPosition=0;
     DcMotor left;
-//    Servo frontLeftServo,frontRightServo,backLeftServo,backRightServo;
-//    AnalogInput frontLeftEncoder,frontRightEncoder,backLeftEncoder,backRightEncoder;
 
     SwerveDrive swerveDrive;
-
     public FTCSwerve(AnalogInput frontLeft,AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
                      DcMotor left,DcMotor right,
                      Servo frontLeftServo,Servo frontRightServo,Servo backLeftServo,Servo backRightServo){
@@ -33,7 +30,7 @@ public class FTCSwerve {
      * @param direction the direction the robot moves, origin is the middle of the robot. x is right y is up
      * @param powerScale a scalar multiple which changes robot speed, must be <=1
      */
-    public void driveTowards(Vector direction,double powerScale){
+    public void translate(Vector direction,double powerScale){
         swerveDrive.translate(direction,powerScale);
     }
 

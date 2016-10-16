@@ -15,6 +15,7 @@ import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity
 import org.firstinspires.ftc.teamcode.CameraStuff.FTCCamera;
 import org.firstinspires.ftc.teamcode.FTCTarget;
 import org.firstinspires.ftc.teamcode.CameraStuff.FTCVuforia;
+import org.firstinspires.ftc.teamcode.Robot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +24,7 @@ import java.util.HashMap;
  * Created by Justin on 10/7/2016.
  */
 @Autonomous
-public class BlueSwerveVuforiaAuto extends OpMode {
+public class BlueSwerveVuforiaAuto extends Robot {
 
     //---------------------------------------------------------------------------------------
     //the first beacon has the WHEELS image target, and the second has the LEGOS image target
@@ -36,7 +37,6 @@ public class BlueSwerveVuforiaAuto extends OpMode {
         MoveAwayFromWall,DriveToFirstBeacon,AlignWithBeacon,PressBeacon,DriveToSecondBeacon,Stop
     }
 
-    private FTCSwerve swerveDrive;
     private RobotState robotState=RobotState.AlignWithBeacon;//initialize start state here
 
     private FTCVuforia vuforia;
@@ -51,18 +51,11 @@ public class BlueSwerveVuforiaAuto extends OpMode {
 
     @Override
     public void init() {
+        super.init();
+
         vuforia=new FTCVuforia(FtcRobotControllerActivity.getActivity());
         vuforia.initVuforia();
         vuforia.addTrackables("FTC_2016-17.xml");
-        swerveDrive=new FTCSwerve(hardwareMap.analogInput.get("frontLeftEncoder"),hardwareMap.analogInput.get("frontRightEncoder"),
-                                  hardwareMap.analogInput.get("backLeftEncoder"),hardwareMap.analogInput.get("backRightEncoder"),
-                                  hardwareMap.dcMotor.get("front"),hardwareMap.dcMotor.get("back"),
-                                  hardwareMap.servo.get("frontLeftServo"),hardwareMap.servo.get("frontRightServo"),
-                                  hardwareMap.servo.get("backLeftServo"),hardwareMap.servo.get("backRightServo"));
-        hardwareMap.dcMotor.get("front").setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        hardwareMap.dcMotor.get("back").setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-
 //        // STUFF FOR CAMERA USAGE IN THE FUTURE
 //        ftcCamera=new FTCCamera(1280,720);
 //        renderScript=RenderScript.create(FtcRobotControllerActivity.getActivity().getBaseContext());
@@ -101,7 +94,7 @@ public class BlueSwerveVuforiaAuto extends OpMode {
                     resetPosition=false;
                 }
                 if(swerveDrive.getInchesTravelled()<5) {
-                    swerveDrive.driveTowards(new Vector(0, 1), 1);
+                    swerveDrive.translate(new Vector(0, 1), 1);
                 }else{
                     resetPosition=true;
                     robotState=RobotState.DriveToFirstBeacon;
@@ -109,7 +102,7 @@ public class BlueSwerveVuforiaAuto extends OpMode {
                 break;
             case DriveToFirstBeacon:
                 if(!getTargets(data).contains("Wheels")) {
-                    swerveDrive.driveTowards(new Vector(1, 1), .5);
+                    swerveDrive.translate(new Vector(1, 1), .5);
                 }else{
                     resetPosition=true;
                     robotState=RobotState.AlignWithBeacon;
@@ -132,14 +125,14 @@ public class BlueSwerveVuforiaAuto extends OpMode {
                         swerveDrive.rotate(.2);
                     } else {//beacon is parallel, continue aligning
                         if (currentBeacon.getAngle() < -.05) {//if beacon is to the left, move left(relative to the beacon, which is up relative to the robot)
-                            swerveDrive.driveTowards(new Vector(0, 1), .5);
+                            swerveDrive.translate(new Vector(0, 1), .5);
                         } else if (currentBeacon.getAngle() > .05) {//if beacon is to the right, move right ("")
-                            swerveDrive.driveTowards(new Vector(0, -1), .5);
+                            swerveDrive.translate(new Vector(0, -1), .5);
                         } else {//if beacon is centered relative to the robot, drive towards it
                             if (currentBeacon.getDistance() > 175) {//if distance is more than 175mm
-                                swerveDrive.driveTowards(new Vector(1, 0), .2);
+                                swerveDrive.translate(new Vector(1, 0), .2);
                             }else{//robot is fully aligned
-                                swerveDrive.driveTowards(new Vector(1,0),0);
+                                swerveDrive.translate(new Vector(1,0),0);
 //                                robotState=RobotState.PressBeacon;
                                 beaconsPressed++;
                                 if(beaconsPressed==1){
@@ -151,7 +144,7 @@ public class BlueSwerveVuforiaAuto extends OpMode {
                         }
                     }
                 }else{
-                    swerveDrive.driveTowards(new Vector(1,1),0);
+                    swerveDrive.translate(new Vector(1,1),0);
                 }
                 break;
             case PressBeacon:
@@ -159,13 +152,13 @@ public class BlueSwerveVuforiaAuto extends OpMode {
                 break;
             case DriveToSecondBeacon:
                 if(!getTargets(data).contains("Legos")){
-                    swerveDrive.driveTowards(new Vector(-.5,1),.5);
+                    swerveDrive.translate(new Vector(-.5,1),.5);
                 }else{
                     robotState=RobotState.AlignWithBeacon;
                 }
                 break;
             case Stop:
-                swerveDrive.driveTowards(new Vector(1,1),0);
+                swerveDrive.translate(new Vector(1,1),0);
                 break;
         }//switch
         swerveDrive.update(true);
