@@ -64,19 +64,20 @@ public class BlueSwerveVuforiaAuto extends Robot {
     }
 
     @Override
-    public void loop() {//CURRENTLY NOT GOING ON TO PRESS BEACON
+    public void loop() {
         //first grab an instance of FTCTarget for each target we care about: Wheels and Legos
         HashMap<String,double[]> data=vuforia.getVuforiaData();
         FTCTarget wheels=new FTCTarget();
         FTCTarget legos=new FTCTarget();
         if(getTargets(data).contains("Wheels")){
             wheels=new FTCTarget(data,"Wheels");
+            telemetry.addData("Wheels","ok");
+        }else{
+            telemetry.addData("Wheels","no");
         }
         if(getTargets(data).contains("Legos")){
             legos=new FTCTarget(data,"Legos");
         }
-
-
 
         switch(robotState){
             case MoveAwayFromWall:
@@ -85,7 +86,7 @@ public class BlueSwerveVuforiaAuto extends Robot {
                     resetPosition=false;
                 }
                 if(swerveDrive.getInchesTravelled()<5) {
-                    swerveDrive.translate(new Vector(0, 1), 1);
+                    swerveDrive.drive(0,1,0, 1);
                 }else{
                     resetPosition=true;
                     robotState=RobotState.DriveToFirstBeacon;
@@ -93,7 +94,7 @@ public class BlueSwerveVuforiaAuto extends Robot {
                 break;
             case DriveToFirstBeacon:
                 if(!getTargets(data).contains("Wheels")) {
-                    swerveDrive.translate(new Vector(1, 1), .5);
+                    swerveDrive.drive(1,1,0, .5);
                 }else{
                     resetPosition=true;
                     robotState=RobotState.AlignWithBeacon;
@@ -111,20 +112,22 @@ public class BlueSwerveVuforiaAuto extends Robot {
                 if(currentBeacon.isFound()) {//if the target is available
                     //align to be mostly parallel with the beacon
                     if (currentBeacon.getYRotation() < -.02) {//if angle is negative, rotate counterclockwise
-                        swerveDrive.rotate(-.2);
+                        swerveDrive.drive(0,0,-.2,1);
                     } else if (currentBeacon.getYRotation() > .02) {//if angle is positive, rotate clockwise
-                        swerveDrive.rotate(.2);
+                        swerveDrive.drive(0,0,.2,1);
                     } else {//beacon is parallel, continue aligning
                         if (currentBeacon.getAngle() < -.05) {//if beacon is to the left, move left(relative to the beacon, which is up relative to the robot)
-                            swerveDrive.translate(new Vector(0, 1), .5);
+                            swerveDrive.drive(0,1,0, .5);
                         } else if (currentBeacon.getAngle() > .05) {//if beacon is to the right, move right ("")
-                            swerveDrive.translate(new Vector(0, -1), .5);
+                            swerveDrive.drive(0,-1,0, .5);
                         } else {//if beacon is centered relative to the robot, drive towards it
                             if (currentBeacon.getDistance() > 175) {//if distance is more than 175mm
-                                swerveDrive.translate(new Vector(1, 0), .2);
+                                swerveDrive.drive(1,0,0, .2);
                             }else{//robot is fully aligned
-                                swerveDrive.translate(new Vector(1,0),0);
+                                swerveDrive.stop();
 //                                robotState=RobotState.PressBeacon;
+
+                                //temporary code which should go in pressbeacon instead
                                 beaconsPressed++;
                                 if(beaconsPressed==1){
                                     robotState=RobotState.DriveToSecondBeacon;
@@ -135,7 +138,7 @@ public class BlueSwerveVuforiaAuto extends Robot {
                         }
                     }
                 }else{
-                    swerveDrive.translate(new Vector(1,1),0);
+                    swerveDrive.stop();
                 }
                 break;
             case PressBeacon:
@@ -143,13 +146,13 @@ public class BlueSwerveVuforiaAuto extends Robot {
                 break;
             case DriveToSecondBeacon:
                 if(!getTargets(data).contains("Legos")){
-                    swerveDrive.translate(new Vector(-.5,1),.5);
+                    swerveDrive.drive(-.5,1,0,.5);
                 }else{
                     robotState=RobotState.AlignWithBeacon;
                 }
                 break;
             case Stop:
-                swerveDrive.translate(new Vector(1,1),0);
+                swerveDrive.stop();
                 break;
         }//switch
         swerveDrive.update(true);

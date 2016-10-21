@@ -4,7 +4,7 @@ package org.firstinspires.ftc.teamcode.Swerve.Core;
  * Created by Justin on 10/8/2016.
  */
 public class Vector {
-    double x = 0, y = 0;
+    public double x = 0, y = 0;
 
     public Vector(double x, double y) {
         this.x = x;

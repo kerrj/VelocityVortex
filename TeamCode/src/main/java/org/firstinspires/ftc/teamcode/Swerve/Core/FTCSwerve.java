@@ -17,12 +17,12 @@ public class FTCSwerve {
 
     SwerveDrive swerveDrive;
     public FTCSwerve(AnalogInput frontLeft,AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
-                     DcMotor left,DcMotor right,
-                     Servo frontLeftServo,Servo frontRightServo,Servo backLeftServo,Servo backRightServo){
+                     DcMotor lf,DcMotor rf,DcMotor lb,DcMotor rb,
+                     Servo frontLeftServo,Servo frontRightServo,Servo backLeftServo,Servo backRightServo,double width,double length){
         this.left=left;
         swerveDrive=new SwerveDrive(frontLeft,frontRight,backLeft,backRight,//encoders
-                                    left,right,//motors
-                                    frontLeftServo,frontRightServo,backLeftServo,backRightServo);
+                                    lf,rf,lb,rb,//motors
+                                    frontLeftServo,frontRightServo,backLeftServo,backRightServo,width,length);
     }
 
     /**
@@ -30,17 +30,17 @@ public class FTCSwerve {
      * @param direction the direction the robot moves, origin is the middle of the robot. x is right y is up
      * @param powerScale a scalar multiple which changes robot speed, must be <=1
      */
-    public void translate(Vector direction,double powerScale){
-        swerveDrive.translate(direction,powerScale);
-    }
+//    public void translate(Vector direction,double powerScale){
+//        swerveDrive.translate(direction,powerScale);
+//    }
 
     /**
      *
      *@param power negative is counterclockwise, positive is clockwise
      */
-    public void rotate(double power){
-        swerveDrive.rotate(power);
-    }
+//    public void rotate(double power){
+//        swerveDrive.rotate(power);
+//    }
 
 
     /**
@@ -58,6 +58,10 @@ public class FTCSwerve {
     public void stop(){
         swerveDrive.stop();
     }
+
+    public void lockWheels(){
+        swerveDrive.lockWheels();
+    }
     /**
      * Resets the displacement of the robot to 0. getInchesTravelled will again return 0
      */
@@ -72,6 +76,11 @@ public class FTCSwerve {
      */
     public void update(boolean waitForServos){
         swerveDrive.update(waitForServos);
+    }
+
+
+    public void drive(double translationX,double translationY,double rotation,double powerscale){
+        swerveDrive.driveWithOrient(-translationX,translationY,-rotation,0,powerscale);
     }
 
 }
