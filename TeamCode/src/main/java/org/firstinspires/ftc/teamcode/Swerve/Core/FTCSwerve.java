@@ -10,16 +10,16 @@ import com.qualcomm.robotcore.hardware.Servo;
  */
 public class FTCSwerve {
     private final int WHEEL_DIAMETER=3;//inches
-    private final double GEAR_RATIO=1.5;
-    private final int COUNTS_PER_REV=1680;
+    private final double GEAR_RATIO=2;
+    private final int COUNTS_PER_REV=1120;
     private double startPosition=0;
-    DcMotor left;
+    DcMotor motor;
 
     SwerveDrive swerveDrive;
     public FTCSwerve(AnalogInput frontLeft,AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
                      DcMotor lf,DcMotor rf,DcMotor lb,DcMotor rb,
                      Servo frontLeftServo,Servo frontRightServo,Servo backLeftServo,Servo backRightServo,double width,double length){
-        this.left=left;
+        this.motor=lf;
         swerveDrive=new SwerveDrive(frontLeft,frontRight,backLeft,backRight,//encoders
                                     lf,rf,lb,rb,//motors
                                     frontLeftServo,frontRightServo,backLeftServo,backRightServo,width,length);
@@ -47,8 +47,8 @@ public class FTCSwerve {
      *
      * @return  number of inches of displacement since last resetPosition, only use with linear motion
      */
-    public double getInchesTravelled(){
-        double deltaCounts=left.getCurrentPosition()-startPosition;
+    public double getLinearInchesTravelled(){
+        double deltaCounts=Math.abs(motor.getCurrentPosition()-startPosition);
         double circumference=Math.PI*WHEEL_DIAMETER;
         double revolutions=deltaCounts/COUNTS_PER_REV;
         double distance=revolutions*circumference*GEAR_RATIO;
@@ -63,10 +63,10 @@ public class FTCSwerve {
         swerveDrive.lockWheels();
     }
     /**
-     * Resets the displacement of the robot to 0. getInchesTravelled will again return 0
+     * Resets the displacement of the robot to 0. getLinearInchesTravelled will again return 0
      */
     public void resetPosition(){
-        startPosition=left.getCurrentPosition();
+        startPosition=motor.getCurrentPosition();
     }
 
     /**
@@ -74,8 +74,8 @@ public class FTCSwerve {
      * @param waitForServos when true the robot doesn't move the motors until the servos are in the correct position,
      *                      should only be used during autonomous
      */
-    public void update(boolean waitForServos){
-        swerveDrive.update(waitForServos);
+    public void update(boolean waitForServos,double threshold){
+        swerveDrive.update(waitForServos,threshold);
     }
 
 

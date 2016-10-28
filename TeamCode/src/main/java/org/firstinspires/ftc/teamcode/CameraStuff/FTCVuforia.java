@@ -18,6 +18,7 @@ import com.vuforia.VuforiaBase;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.SynchronousQueue;
 
 public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
     private final Object shutdownLock = new Object();
@@ -30,6 +31,7 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
     private boolean mStarted = false;
     private boolean mInit = false;
     private boolean mCameraRunning = false;
+    private double lastupdate=0;
 
             private HashMap<String, double[]> vuforiaData = new HashMap<String, double[]>();
     private ArrayList<String> fileNames = new ArrayList<String>();
@@ -353,6 +355,9 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
             @Override
     public void Vuforia_onUpdate(State s) {
         synchronized (dataLock) {
+            double dt= System.currentTimeMillis()-lastupdate;
+            Log.d("Time since last frame",Double.toString(dt));
+            lastupdate=System.currentTimeMillis();
             int numResults = s.getNumTrackableResults();
             vuforiaData.clear();
             

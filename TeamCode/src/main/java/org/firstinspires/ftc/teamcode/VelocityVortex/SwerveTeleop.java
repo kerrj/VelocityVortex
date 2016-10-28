@@ -48,9 +48,6 @@ public class SwerveTeleop extends Robot {
             swerveDrive.drive(0,1,0,0);
         }
 
-
-
-
-        swerveDrive.update(true);
+        swerveDrive.update(true,25);
     }
 }

@@ -13,8 +13,11 @@ public class SwerveDrive {
     DcMotor left, right;
     //Add values when swerve is done and also look at what absolute encoder is for
     SwerveModule[] modules;
-    private double leftTargetPower=0;
-    private double rightTargetPower=0;
+    double[] angles={0,0,0,0};
+    double[] powers={0,0,0,0};
+    boolean[] atPositions={false,false,false,false};
+//    private double leftTargetPower=0;
+//    private double rightTargetPower=0;
 
     /**
      * Custom constructor for current robot.
@@ -65,11 +68,20 @@ public class SwerveDrive {
             //if any exceed 100%, all must be scale down
             maxPower = Math.max(maxPower, vects[i].getMagnitude());
         }
+        angles[0]=vects[0].getAngle()+Math.PI;
+        angles[1]=vects[1].getAngle()+Math.PI;
+        angles[2]=vects[2].getAngle()+Math.PI;
+        angles[3]=vects[3].getAngle();
 
-        modules[0].set(vects[0].getAngle()+Math.PI,  (vects[0].getMagnitude() / maxPower)*powerScale);
-        modules[2].set(vects[2].getAngle()+Math.PI, (vects[2].getMagnitude() / maxPower)*powerScale);
-        modules[1].set(vects[1].getAngle()+Math.PI, (vects[1].getMagnitude() / maxPower)*powerScale);
-        modules[3].set(vects[3].getAngle(), (vects[2].getMagnitude() / maxPower)*powerScale);
+        powers[0]=(vects[0].getMagnitude() / maxPower)*powerScale;
+        powers[1]=(vects[1].getMagnitude() / maxPower)*powerScale;
+        powers[2]=(vects[2].getMagnitude() / maxPower)*powerScale;
+        powers[3]=(vects[2].getMagnitude() / maxPower)*powerScale;
+
+//        modules[0].set(vects[0].getAngle()+Math.PI,  (vects[0].getMagnitude() / maxPower)*powerScale);
+//        modules[2].set(vects[2].getAngle()+Math.PI, (vects[2].getMagnitude() / maxPower)*powerScale);
+//        modules[1].set(vects[1].getAngle()+Math.PI, (vects[1].getMagnitude() / maxPower)*powerScale);
+//        modules[3].set(vects[3].getAngle(), (vects[2].getMagnitude() / maxPower)*powerScale);
     }
 
 
@@ -128,29 +140,64 @@ public class SwerveDrive {
     /**
      * Method called every loop iteration
      */
-    public void update(boolean waitForServos){
-//        for (ServoModule module : modules) {
-//            module.update();
-//        }
-//        if(!waitForServos) {
-//            left.setPower(leftTargetPower);
-//            right.setPower(rightTargetPower);
-//        }else{
-//            if(modules[0].getDelta()<.25&&modules[1].getDelta()<.25&&modules[2].getDelta()<.25&& modules[3].getDelta()<.25){
-//                left.setPower(leftTargetPower);
-//                right.setPower(rightTargetPower);
-//            }else{
-//                left.setPower(0);
-//                right.setPower(0);
-//            }
-//        }
-        for(SwerveModule module:modules){
-            module.update(waitForServos);
+    public void update(boolean waitForServos,double threshold){
+        if(!waitForServos) {
+            for(int i=0;i<modules.length;i++){
+                SwerveModule module=modules[i];
+                module.set(angles[i],powers[i]);
+                module.update();
+            }
+        }else{
+            boolean atPosition=true;
+            for(int i=0;i<modules.length;i++){
+                SwerveModule module=modules[i];
+                module.set(angles[i],0);//necessary
+                if (Math.abs(module.getDelta())>Math.toRadians(threshold)){
+                    atPosition=false;
+                    atPositions[i]=false;
+                }else{
+                    atPositions[i]=true;
+                }
+            }
+
+
+            if(atPosition){//if all are at the correct position
+                for(int i=0;i<modules.length;i++){
+                    SwerveModule module=modules[i];
+                    module.set(angles[i],powers[i]);
+                    module.update();
+                }
+            }else{
+                for(int i=0;i<modules.length;i++){
+                    SwerveModule module=modules[i];
+                    if(atPositions[i]){
+                        module.set(angles[i],0);
+                    }else{
+                        if(module.getDirection()== SwerveModule.ModuleDirection.clockwise){
+                            if(i==3){
+                                module.setPower(-.1);//intentionally different
+                            }else {
+                                module.setPower(.1);//adjust signs on these depending on motor direction
+                            }
+                        }else{
+                            if(i==3){
+                                module.setPower(.1);//intentionally different
+                            }else {
+                                module.setPower(-.1);
+                            }
+                        }
+
+                    }
+                    module.update();
+                }
+            }
         }
     }
 
     public void stop(){
-        for(SwerveModule module:modules){
+        for(int i=0;i<modules.length;i++){
+            SwerveModule module=modules[i];
+            powers[i]=0;
             module.stop();
         }
     }
@@ -162,6 +209,11 @@ public class SwerveDrive {
         modules[1].set(Math.PI/4,0);
         modules[2].set(Math.PI/4,0);
         modules[3].set(3*Math.PI/4,0);
+        for(int i=0;i<modules.length;i++){
+            SwerveModule module=modules[i];
+            powers[i]=0;
+            module.stop();
+        }
     }
 
 }
