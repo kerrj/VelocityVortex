@@ -5,8 +5,11 @@ import android.os.AsyncTask;
 import android.util.Log;
 import com.vuforia.CameraDevice;
 import com.vuforia.DataSet;
+import com.vuforia.Frame;
 import com.vuforia.HINT;
+import com.vuforia.Image;
 import com.vuforia.ObjectTracker;
+import com.vuforia.PIXEL_FORMAT;
 import com.vuforia.STORAGE_TYPE;
 import com.vuforia.State;
 import com.vuforia.Trackable;
@@ -32,8 +35,13 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
     private boolean mInit = false;
     private boolean mCameraRunning = false;
     private double lastupdate=0;
+    private Image lastImage;
 
-            private HashMap<String, double[]> vuforiaData = new HashMap<String, double[]>();
+    public Image getLastFrame(){
+        return lastImage;
+    }
+
+    private HashMap<String, double[]> vuforiaData = new HashMap<String, double[]>();
     private ArrayList<String> fileNames = new ArrayList<String>();
     
             /**
@@ -71,13 +79,18 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
         if (success) {
             startVuforiaCamera();
             CameraDevice.getInstance().setFocusMode(CameraDevice.FOCUS_MODE.FOCUS_MODE_CONTINUOUSAUTO);
+            CameraDevice.getInstance().setFlashTorchMode(true);
+            Vuforia.setFrameFormat(PIXEL_FORMAT.RGB565, true);
             mInit = true;
             return true;
             }//if
         
         return false;
         }//onInitDone
-    
+
+    public void cameraLight(boolean enabled){
+        CameraDevice.getInstance().setFlashTorchMode(enabled);
+    }
             /**
      * This kills any initialization processes. It stops that camera and Vuforia to save battery
      * @throws Exception If the Vuforia SDK cannot de-initialize
@@ -355,9 +368,17 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
             @Override
     public void Vuforia_onUpdate(State s) {
         synchronized (dataLock) {
-            double dt= System.currentTimeMillis()-lastupdate;
-            Log.d("Time since last frame",Double.toString(dt));
-            lastupdate=System.currentTimeMillis();
+            Image RGBImage = null;
+            Frame frame = s.getFrame();
+
+            for (int i = 0; i < frame.getNumImages(); ++i) {
+                Image image = frame.getImage(i);
+                if (image.getFormat() == PIXEL_FORMAT.RGB565) {
+                    RGBImage = image;
+                    break;
+                }
+            }
+            lastImage=RGBImage;
             int numResults = s.getNumTrackableResults();
             vuforiaData.clear();
             

@@ -23,13 +23,13 @@ import java.io.IOException;
  */
 public class SwerveModule {
     private DcMotor driveMotor; //SpeedController used so this can be talon, victor, jaguar, CAN talon...
-    private Servo steerServo;
-    private AbsoluteEncoder steerEncoder;
+    public  Servo steerServo;
+    public AbsoluteEncoder steerEncoder;
     public double positionX, positionY; //position of this wheel relative to the center of the robot
     //from the robot's perspective, +y is forward and +x is to the right
     private double targetAngle = 0;//initialize these as 0
     private double motorPower = 0;
-    private PID pid;
+    public  PID pid;
     public enum ModuleDirection{counterclockwise,clockwise}
 
     private File directory;
@@ -84,7 +84,7 @@ public class SwerveModule {
             e.printStackTrace();
             pid=new PID(2/Math.PI,0,0);
         }
-        pid=new PID(2/3,2,0);
+        pid=new PID(2/3.0,3.0,0);
     }
     /**
      * @param angle in radians
@@ -152,67 +152,20 @@ public class SwerveModule {
         //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
         double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
         if (angleBetween > 0) {
-            Log.d("Direction","counterclockwise");
             return ModuleDirection.counterclockwise;
         } else {
             return ModuleDirection.clockwise;
         }
     }
 
-
     public void update() {
             driveMotor.setPower(motorPower);//set the motor power
             Vector targetVector = new Vector(Math.cos(targetAngle), Math.sin(targetAngle));
             Vector currentVector = new Vector(Math.cos(steerEncoder.getAngle()), Math.sin(steerEncoder.getAngle()));
-
             //angleBetween is the angle from currentPosition to target position in radians
             //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
             double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
             setServoPower( pid.setPIDpower(-angleBetween), .5);//negative
-//            Vector targetVector = new Vector(Math.cos(targetAngle), Math.sin(targetAngle));
-//            Vector currentVector = new Vector(Math.cos(steerEncoder.getAngle()), Math.sin(steerEncoder.getAngle()));
-//            //angleBetween is the angle from currentPosition to target position in radians
-//            //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
-//            double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
-//            //give the servo a piecewise scaling function: full speed until about 5 degrees away, then linearly slower
-//            if (angleBetween > Math.toRadians(50)){
-//                steerServo.setPosition(0);
-//            } else if (angleBetween < -Math.toRadians(50)) {
-//                steerServo.setPosition(1);
-//            }else{
-//                double scaleFactor = Math.abs(angleBetween) / Math.toRadians(50);
-//                if(angleBetween>0){
-//                    steerServo.setPosition(.5 - .5 * Math.abs(scaleFactor));
-//                }else if(angleBetween<0){
-//                    steerServo.setPosition(.5 + .5 * Math.abs(scaleFactor));
-//
-//                }
-
-
-
-//            Vector targetVector = new Vector(Math.cos(targetAngle), Math.sin(targetAngle));
-//            Vector currentVector = new Vector(Math.cos(steerEncoder.getAngle()), Math.sin(steerEncoder.getAngle()));
-//            //angleBetween is the angle from currentPosition to target position in radians
-//            //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
-//            double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
-//            //give the servo a piecewise scaling function: full speed until about 5 degrees away, then linearly slower
-//            if (angleBetween > Math.toRadians(40)){
-//                steerServo.setPosition(0);
-//            } else if (angleBetween < -Math.toRadians(40)) {
-//                steerServo.setPosition(1);
-//            }else{
-//                double scaleFactor = Math.abs(angleBetween) / Math.toRadians(40);
-//                if(angleBetween>0){
-//                    steerServo.setPosition(.5 - .5 * Math.abs(scaleFactor));
-//                }else if(angleBetween<0){
-//                    steerServo.setPosition(.5 + .5 * Math.abs(scaleFactor));
-//
-//                }
-//            }
-//            if(Math.abs(angleBetween)<Math.toRadians(40)){
-//                driveMotor.setPower(motorPower);
-//            }
-
     }
 
     public void stop(){

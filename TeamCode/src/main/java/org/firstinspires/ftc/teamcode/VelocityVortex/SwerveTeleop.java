@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.VelocityVortex;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.VelocityVortex.Robot;
 import org.firstinspires.ftc.teamcode.Swerve.Core.Vector;
@@ -13,6 +14,7 @@ import java.util.Random;
 @TeleOp
 public class SwerveTeleop extends Robot {
 
+    Vector direction=new Vector(0,1);
 
     @Override
     public void init() {
@@ -21,7 +23,7 @@ public class SwerveTeleop extends Robot {
 
     @Override
     public void loop() {
-        Vector direction=new Vector(gamepad1.left_stick_x, gamepad1.left_stick_y);
+        Vector d=new Vector(gamepad1.left_stick_x, gamepad1.left_stick_y);
 //        if(direction.getMagnitude()>.1){
 ////            swerveDrive.translate(direction,direction.getMagnitude());
 //        }else{
@@ -34,10 +36,11 @@ public class SwerveTeleop extends Robot {
 ////            swerveDrive.rotate(gamepad1.right_stick_x);
 //
 //        }
-        if(direction.getMagnitude()>.1||Math.abs(gamepad1.right_stick_x)>.1) {
+        if(d.getMagnitude()>.1||Math.abs(gamepad1.right_stick_x)>.1) {
+            direction=d;
             swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x, 1);
         }else{
-            swerveDrive.stop();
+            swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x, 0);
         }
 
 
@@ -48,6 +51,10 @@ public class SwerveTeleop extends Robot {
             swerveDrive.drive(0,1,0,0);
         }
 
-        swerveDrive.update(true,25);
+        swerveDrive.update(true,45);
+        telemetry.addData("digitalpower",rb.getPosition());
+    }
+    public void stop(){
+        super.stop();
     }
 }

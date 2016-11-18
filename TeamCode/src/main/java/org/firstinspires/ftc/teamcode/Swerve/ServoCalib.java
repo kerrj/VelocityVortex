@@ -19,10 +19,10 @@ public class ServoCalib extends Robot {
     public void init() {
         super.init();
 
-        lfe=new AbsoluteEncoder(Constants.FL_OFFSET,lfa);
-        lbe=new AbsoluteEncoder(Constants.BL_OFFSET,lba);
-        rfe=new AbsoluteEncoder(Constants.FR_OFFSET,rfa);
-        rbe=new AbsoluteEncoder(Constants.BR_OFFSET,rba);
+        lfe=new AbsoluteEncoder(0,lfa);
+        lbe=new AbsoluteEncoder(0,lba);
+        rfe=new AbsoluteEncoder(0,rfa);
+        rbe=new AbsoluteEncoder(0,rba);
 
     }
 

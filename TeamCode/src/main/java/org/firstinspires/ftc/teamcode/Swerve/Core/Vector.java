@@ -11,6 +11,11 @@ public class Vector {
         this.y = y;
     }
 
+    public void normalize(){
+        double mag=getMagnitude();
+        x/=mag;
+        y/=mag;
+    }
     public double getAngle() {
         return Math.atan2(y, x);
     }
@@ -29,9 +34,10 @@ public class Vector {
         y += v.y;
     }
 
-    public void subtract(Vector v) {
+    public Vector subtract(Vector v) {
         x -= v.x;
         y -= v.y;
+        return new Vector(x,y);
     }
 
     public void makePerpendicular() {

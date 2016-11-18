@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.CameraStuff;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -32,7 +34,7 @@ public class FTCCamera {
     /*
     This class sets up the camera for renderscript/opencv interaction and delivers Allocations in an interface each frame
      */
-    public interface AllocationListener{
+    public interface AllocationListener {
         public void onAllocationAvailable(Allocation allocation);
     }
 
@@ -45,7 +47,7 @@ public class FTCCamera {
     private RenderScript mRS;
     private AllocationListener allocationListener;
 
-    private Allocation.OnBufferAvailableListener listener=new Allocation.OnBufferAvailableListener() {
+    private Allocation.OnBufferAvailableListener listener = new Allocation.OnBufferAvailableListener() {
         @Override
         public void onBufferAvailable(Allocation a) {
             mAllocationIn.ioReceive();//mAllocationIn now has the current camera frame, is ready for processing
@@ -54,21 +56,20 @@ public class FTCCamera {
     };
 
 
-    public void setListener(AllocationListener listener){
-        this.allocationListener=listener;
+    public void setListener(AllocationListener listener) {
+        this.allocationListener = listener;
     }
-    public FTCCamera(int WIDTH,int HEIGHT){
-        mRS=RenderScript.create(context);
-        context=FtcRobotControllerActivity.getActivity().getBaseContext();
-        mAllocationIn=Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), WIDTH, HEIGHT),
-                                             Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_IO_INPUT | Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
+
+    public FTCCamera(int WIDTH, int HEIGHT) {
+        mRS = RenderScript.create(FtcRobotControllerActivity.getActivity().getBaseContext());
+        context = FtcRobotControllerActivity.getActivity().getBaseContext();
+        mAllocationIn = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), WIDTH, HEIGHT),
+                                               Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_IO_INPUT | Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
         //first initialize OpenCV
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, FtcRobotControllerActivity.getActivity().getBaseContext(), new LoaderCallbackInterface() {
             @Override
             public void onManagerConnected(int status) {
-                if(status==LoaderCallbackInterface.SUCCESS){
-                    startHandler();
-                    setupCamera();
+                if (status == LoaderCallbackInterface.SUCCESS) {
                 }
             }
 
@@ -78,26 +79,31 @@ public class FTCCamera {
             }
         });
     }
+    public void init(){
+        startHandler();
+        setupCamera();
+    }
 
 
-    private void startHandler(){
-        HandlerThread mHandlerThread=new HandlerThread("CameraThread");
+    private void startHandler() {
+        HandlerThread mHandlerThread = new HandlerThread("CameraThread");
         mHandlerThread.start();
-        mHandler=new Handler(mHandlerThread.getLooper());
+        mHandler = new Handler(mHandlerThread.getLooper());
 
     }
 
 
-    CameraDevice.StateCallback callback=new CameraDevice.StateCallback(){
+    private CameraDevice.StateCallback callback = new CameraDevice.StateCallback() {
         @Override
-        public void onOpened(CameraDevice cameraDevice){
-            mCameraDevice=cameraDevice;
+        public void onOpened(CameraDevice cameraDevice) {
+            mCameraDevice = cameraDevice;
+            startPreview();
         }
 
         @Override
-        public void onDisconnected(CameraDevice cameraDevice){
+        public void onDisconnected(CameraDevice cameraDevice) {
             cameraDevice.close();
-            mCameraDevice=null;
+            mCameraDevice = null;
         }
 
         @Override
@@ -106,21 +112,21 @@ public class FTCCamera {
         }
     };
 
-    public void setupCamera(){
-        mCameraManager= (CameraManager)context.getSystemService(Context.CAMERA_SERVICE);
+    private void setupCamera() {
+        mCameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
 
         try {
-            for(String id:mCameraManager.getCameraIdList()){
-                CameraCharacteristics mCameraCharacteristics=mCameraManager.getCameraCharacteristics(id);
-                if(mCameraCharacteristics.get(CameraCharacteristics.LENS_FACING)==CameraCharacteristics.LENS_FACING_BACK){
-                    mCameraId=id;
+            for (String id : mCameraManager.getCameraIdList()) {
+                CameraCharacteristics mCameraCharacteristics = mCameraManager.getCameraCharacteristics(id);
+                if (mCameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK) {
+                    mCameraId = id;
                 }
             }
-            CameraCharacteristics mCameraCharacteristics=mCameraManager.getCameraCharacteristics(mCameraId);
-            StreamConfigurationMap mStreamConfigurationMap=mCameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-            Size[] sizes=mStreamConfigurationMap.getOutputSizes(ImageFormat.YUV_420_888);
-            mCameraManager.openCamera(mCameraId,callback,mHandler);
-            startPreview();
+            CameraCharacteristics mCameraCharacteristics = mCameraManager.getCameraCharacteristics(mCameraId);
+            StreamConfigurationMap mStreamConfigurationMap = mCameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            Size[] sizes = mStreamConfigurationMap.getOutputSizes(ImageFormat.YUV_420_888);
+
+            mCameraManager.openCamera(mCameraId, callback, mHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -128,7 +134,7 @@ public class FTCCamera {
 
 
 
-    public void startPreview(){
+    private void startPreview(){
         mAllocationIn.setOnBufferAvailableListener(listener);
         try {
             final CaptureRequest.Builder mCaptureRequestBuilder=mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);

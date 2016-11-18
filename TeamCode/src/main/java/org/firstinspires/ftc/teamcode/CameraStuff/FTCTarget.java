@@ -71,4 +71,9 @@ public class FTCTarget  {
     public double getAngle(){
         return Math.atan2(x,z);
     }
+
+    public double getHorizontalDistance(){
+        return -x;
+    }
+
 }

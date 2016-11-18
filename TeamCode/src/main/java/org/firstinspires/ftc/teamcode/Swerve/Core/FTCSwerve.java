@@ -9,20 +9,14 @@ import com.qualcomm.robotcore.hardware.Servo;
  * This class is an FTC wrapper of an FRC swerve drive which provides all the interfacing functionality
  */
 public class FTCSwerve {
-    private final int WHEEL_DIAMETER=3;//inches
-    private final double GEAR_RATIO=2;
-    private final int COUNTS_PER_REV=1120;
-    private double startPosition=0;
-    DcMotor motor;
 
-    SwerveDrive swerveDrive;
+    public SwerveDrive swerveDrive;
     public FTCSwerve(AnalogInput frontLeft,AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
                      DcMotor lf,DcMotor rf,DcMotor lb,DcMotor rb,
                      Servo frontLeftServo,Servo frontRightServo,Servo backLeftServo,Servo backRightServo,double width,double length){
-        this.motor=lf;
         swerveDrive=new SwerveDrive(frontLeft,frontRight,backLeft,backRight,//encoders
                                     lf,rf,lb,rb,//motors
-                                    frontLeftServo,frontRightServo,backLeftServo,backRightServo,width,length);
+                                    frontLeftServo,frontRightServo,backLeftServo,backRightServo,width,length,this);
     }
 
     /**
@@ -48,11 +42,7 @@ public class FTCSwerve {
      * @return  number of inches of displacement since last resetPosition, only use with linear motion
      */
     public double getLinearInchesTravelled(){
-        double deltaCounts=Math.abs(motor.getCurrentPosition()-startPosition);
-        double circumference=Math.PI*WHEEL_DIAMETER;
-        double revolutions=deltaCounts/COUNTS_PER_REV;
-        double distance=revolutions*circumference*GEAR_RATIO;
-        return distance;
+        return swerveDrive.getLinearInchesTravelled();
     }
 
     public void stop(){
@@ -66,7 +56,7 @@ public class FTCSwerve {
      * Resets the displacement of the robot to 0. getLinearInchesTravelled will again return 0
      */
     public void resetPosition(){
-        startPosition=motor.getCurrentPosition();
+        swerveDrive.resetPosition();
     }
 
     /**
