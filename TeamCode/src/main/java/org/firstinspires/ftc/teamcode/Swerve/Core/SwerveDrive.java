@@ -183,19 +183,6 @@ public class SwerveDrive {
                     SwerveModule module=modules[i];
                     module.set(angles[i],powers[i]);
                     module.update();
-                    if(i!=1) {
-                        if (module.steerServo.getPosition() > .6) {
-                            module.steerServo.setPosition(1);
-                        } else if (module.steerServo.getPosition() < .4) {
-                            module.steerServo.setPosition(0);
-                        }else if(module.steerServo.getPosition()>.5&&module.steerServo.getPosition()<.6){
-                            double scale=module.steerServo.getPosition()-.5;
-                            module.steerServo.setPosition(.5+scale*2);
-                        }else if(module.steerServo.getPosition()>.4&&module.steerServo.getPosition()<.5){
-                            double scale=.5-module.steerServo.getPosition();
-                            module.steerServo.setPosition(.5-scale*2);
-                        }
-                    }
                     double average=0;
                     for(int j=0;j<positions.length;j++){
                         average+=Math.abs(positions[j]-motors[j].getCurrentPosition());
@@ -220,20 +207,6 @@ public class SwerveDrive {
                         }
                     }
                     module.update();
-                    if(i!=1){
-                        if(module.steerServo.getPosition()>.6){
-                            module.steerServo.setPosition(1);
-                        }else if(module.steerServo.getPosition()<.4){
-                            module.steerServo.setPosition(0);
-                        }
-                        else if(module.steerServo.getPosition()>.5&&module.steerServo.getPosition()<.6){
-                            double scale=module.steerServo.getPosition()-.5;
-                            module.steerServo.setPosition(.5+scale*2);
-                        }else if(module.steerServo.getPosition()>.4&&module.steerServo.getPosition()<.5){
-                            double scale=.5-module.steerServo.getPosition();
-                            module.steerServo.setPosition(.5-scale*2);
-                        }
-                    }
                 }
             }
         }

@@ -123,13 +123,27 @@ public class SwerveModule {
     }
 
     public void update() {
-            driveMotor.setPower(motorPower);//set the motor power
-            Vector targetVector = new Vector(Math.cos(targetAngle), Math.sin(targetAngle));
-            Vector currentVector = new Vector(Math.cos(steerEncoder.getAngle()), Math.sin(steerEncoder.getAngle()));
-            //angleBetween is the angle from currentPosition to target position in radians
-            //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
-            double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
-            setServoPower( pid.setPIDpower(-angleBetween), .5);//negative
+        driveMotor.setPower(motorPower);//set the motor power
+        Vector targetVector = new Vector(Math.cos(targetAngle), Math.sin(targetAngle));
+        Vector currentVector = new Vector(Math.cos(steerEncoder.getAngle()), Math.sin(steerEncoder.getAngle()));
+        //angleBetween is the angle from currentPosition to target position in radians
+        //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
+        double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
+        setServoPower( pid.setPIDpower(-angleBetween), .5);//negative
+        //power curve adjustment
+        if(steerServo.getPosition()>.6){
+            steerServo.setPosition(1);
+        }else if(steerServo.getPosition()<.4){
+            steerServo.setPosition(0);
+        }
+        else if(steerServo.getPosition()>.5&&steerServo.getPosition()<.6){
+            double scale=steerServo.getPosition()-.5;
+            steerServo.setPosition(.5+scale*2);
+        }else if(steerServo.getPosition()>.4&&steerServo.getPosition()<.5){
+            double scale=.5-steerServo.getPosition();
+            steerServo.setPosition(.5-scale*2);
+        }
+
     }
 
     public void stop(){
