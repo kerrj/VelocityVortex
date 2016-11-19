@@ -48,7 +48,7 @@ public class SwerveModule {
         this.steerEncoder = steerEncoder;
         this.positionX = positionX;
         this.positionY = positionY;
-        pid=new PID(2/3.0,3.0,0);
+        pid=new PID(2/3.0,2.5,0);
     }
     /**
      * @param angle in radians

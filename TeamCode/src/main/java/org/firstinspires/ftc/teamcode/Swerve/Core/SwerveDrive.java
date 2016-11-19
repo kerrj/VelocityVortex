@@ -82,7 +82,7 @@ public class SwerveDrive {
             maxPower = Math.max(maxPower, vects[i].getMagnitude());
         }
         angles[0]=vects[0].getAngle()-Math.PI/2;
-        angles[1]=vects[1].getAngle()+Math.PI/2;
+        angles[1]=vects[1].getAngle()-Math.PI/2;
         angles[2]=vects[2].getAngle()-Math.PI/2;
         angles[3]=vects[3].getAngle()+Math.PI/2;
 

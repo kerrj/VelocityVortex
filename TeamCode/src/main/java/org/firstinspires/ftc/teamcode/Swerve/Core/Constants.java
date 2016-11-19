@@ -13,6 +13,6 @@ import java.util.concurrent.locks.Lock;
  public class Constants {
     public static final double FL_OFFSET=-98.7;
     public static final double BL_OFFSET=-236.8;
-    public static final double FR_OFFSET=-169;
+    public static final double FR_OFFSET=-344.5;
     public static final double BR_OFFSET=-200.8;
 }
