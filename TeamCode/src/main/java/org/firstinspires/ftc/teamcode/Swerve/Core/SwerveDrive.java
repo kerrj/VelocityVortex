@@ -81,10 +81,10 @@ public class SwerveDrive {
             //if any exceed 100%, all must be scale down
             maxPower = Math.max(maxPower, vects[i].getMagnitude());
         }
-        angles[0]=vects[0].getAngle()+Math.PI;
-        angles[1]=vects[1].getAngle();
-        angles[2]=vects[2].getAngle()+Math.PI;
-        angles[3]=vects[3].getAngle()+Math.PI;
+        angles[0]=vects[0].getAngle()-Math.PI/2;
+        angles[1]=vects[1].getAngle()+Math.PI/2;
+        angles[2]=vects[2].getAngle()-Math.PI/2;
+        angles[3]=vects[3].getAngle()+Math.PI/2;
 
         powers[0]=(vects[0].getMagnitude() / maxPower)*powerScale;
         powers[1]=(vects[1].getMagnitude() / maxPower)*powerScale;
@@ -183,19 +183,19 @@ public class SwerveDrive {
                     SwerveModule module=modules[i];
                     module.set(angles[i],powers[i]);
                     module.update();
-//                    if(i==3) {
-//                        if (module.steerServo.getPosition() > .6) {
-//                            module.steerServo.setPosition(1);
-//                        } else if (module.steerServo.getPosition() < .4) {
-//                            module.steerServo.setPosition(0);
-//                        }else if(module.steerServo.getPosition()>.5&&module.steerServo.getPosition()<.6){
-//                            double scale=module.steerServo.getPosition()-.5;
-//                            module.steerServo.setPosition(.5+scale*2);
-//                        }else if(module.steerServo.getPosition()>.4&&module.steerServo.getPosition()<.5){
-//                            double scale=.5-module.steerServo.getPosition();
-//                            module.steerServo.setPosition(.5-scale*2);
-//                        }
-//                    }
+                    if(i!=1) {
+                        if (module.steerServo.getPosition() > .6) {
+                            module.steerServo.setPosition(1);
+                        } else if (module.steerServo.getPosition() < .4) {
+                            module.steerServo.setPosition(0);
+                        }else if(module.steerServo.getPosition()>.5&&module.steerServo.getPosition()<.6){
+                            double scale=module.steerServo.getPosition()-.5;
+                            module.steerServo.setPosition(.5+scale*2);
+                        }else if(module.steerServo.getPosition()>.4&&module.steerServo.getPosition()<.5){
+                            double scale=.5-module.steerServo.getPosition();
+                            module.steerServo.setPosition(.5-scale*2);
+                        }
+                    }
                     double average=0;
                     for(int j=0;j<positions.length;j++){
                         average+=Math.abs(positions[j]-motors[j].getCurrentPosition());
@@ -220,20 +220,20 @@ public class SwerveDrive {
                         }
                     }
                     module.update();
-//                    if(i==3){
-//                        if(module.steerServo.getPosition()>.6){
-//                            module.steerServo.setPosition(1);
-//                        }else if(module.steerServo.getPosition()<.4){
-//                            module.steerServo.setPosition(0);
-//                        }
-//                        else if(module.steerServo.getPosition()>.5&&module.steerServo.getPosition()<.6){
-//                            double scale=module.steerServo.getPosition()-.5;
-//                            module.steerServo.setPosition(.5+scale*2);
-//                        }else if(module.steerServo.getPosition()>.4&&module.steerServo.getPosition()<.5){
-//                            double scale=.5-module.steerServo.getPosition();
-//                            module.steerServo.setPosition(.5-scale*2);
-//                        }
-//                    }
+                    if(i!=1){
+                        if(module.steerServo.getPosition()>.6){
+                            module.steerServo.setPosition(1);
+                        }else if(module.steerServo.getPosition()<.4){
+                            module.steerServo.setPosition(0);
+                        }
+                        else if(module.steerServo.getPosition()>.5&&module.steerServo.getPosition()<.6){
+                            double scale=module.steerServo.getPosition()-.5;
+                            module.steerServo.setPosition(.5+scale*2);
+                        }else if(module.steerServo.getPosition()>.4&&module.steerServo.getPosition()<.5){
+                            double scale=.5-module.steerServo.getPosition();
+                            module.steerServo.setPosition(.5-scale*2);
+                        }
+                    }
                 }
             }
         }
