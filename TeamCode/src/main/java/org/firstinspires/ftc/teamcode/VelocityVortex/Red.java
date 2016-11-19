@@ -42,10 +42,10 @@ import java.util.HashMap;
  * Created by Justin on 10/7/2016.
  */
 @Autonomous
-public class BlueSwerveVuforiaAuto extends Robot {
+public class Red extends Robot {
 
     //---------------------------------------------------------------------------------------
-    //the first beacon has the WHEELS image target, and the second has the LEGOS image target
+    //the first beacon has the TOOLS image target, and the second has the GEARS image target
     //---------------------------------------------------------------------------------------
 
 
@@ -75,8 +75,8 @@ public class BlueSwerveVuforiaAuto extends Robot {
     private final double BUTTON_OFFSET_FROM_TARGET=65;
     private final double CAMERA_OFFSET_FROM_PLOW=40;
     private final double SPONGE_OFFSET_FROM_CAMERA=75;
-    private final double BUTTON_OFFSET_FROM_WALL=40;
-    private final double BUTTON_HEIGHT_ABOVE_CAMERA=80;
+    private final double BUTTON_OFFSET_FROM_WALL=60;
+    private final double BUTTON_HEIGHT_ABOVE_CAMERA=100;
     private Vector spongeVector;
     private Vector buttonVector;
     private double neckUpPosition;
@@ -119,46 +119,43 @@ public class BlueSwerveVuforiaAuto extends Robot {
                                                    Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
         red=new ScriptC_red(mRS);
         blue=new ScriptC_blue(mRS);
-        swerveDrive.drive(.5,-1,0,0);
         swerveDrive.resetPosition();
-//        dataLogger.start();
+        //        dataLogger.start();
     }
 
     @Override
     public void loop() {
         //first gra b an instance of FTCTarget for each target we care about: Wheels and Legos
         HashMap<String, double[]> data = vuforia.getVuforiaData();
-        FTCTarget wheels = new FTCTarget();
-        FTCTarget legos = new FTCTarget();
+        FTCTarget tools = new FTCTarget();
+        FTCTarget gears = new FTCTarget();
         try {
-            if (getTargets(data).contains("Wheels")) {
-                wheels = new FTCTarget(data, "Wheels");
+            if (getTargets(data).contains("Tools")) {
+                tools = new FTCTarget(data, "Tools");
             }
-            if (getTargets(data).contains("Legos")) {
-                legos = new FTCTarget(data, "Legos");
+            if (getTargets(data).contains("Gears")) {
+                gears = new FTCTarget(data, "Gears");
             }
         }catch(NullPointerException e){
             e.printStackTrace();
         }
         FTCTarget currentBeacon;
         if(beaconsPressed==0){
-            currentBeacon=wheels;
+            currentBeacon=tools;
         }else{
-            currentBeacon=legos;
+            currentBeacon=gears;
         }
-
         switch(robotState){
             case DriveToFirstBeacon:
                 vuforia.cameraLight(true);
-                double DISTANCE=50;
-                if(!getTargets(data).contains("Wheels")) {
-                    swerveDrive.drive(.5,-1,0, .6-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
+                double DISTANCE=100;
+                if(!getTargets(data).contains("Tools")) {
+                    swerveDrive.drive(.25,1,0, .6-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
                 }else{
                     resetPosition=true;
                     robotState=RobotState.AlignWithBeacon;
                 }
                 break;
-
             case AlignWithBeacon:
                 double Y_ROTATION_TOLERANCE=5;//degrees
                 if(currentBeacon.isFound()) {
@@ -182,9 +179,8 @@ public class BlueSwerveVuforiaAuto extends Robot {
                     swerveDrive.stop();
                 }
                 break;
-
             case AnalyzeBeacon:
-                vuforia.cameraLight(true);
+                vuforia.cameraLight(false);
                 if(beaconAnalysisResult==0){
                     swerveDrive.stop();
                     if(Math.abs(neck.getPosition()-neckUpPosition)<.01){
@@ -202,36 +198,35 @@ public class BlueSwerveVuforiaAuto extends Robot {
                     resetPosition=true;
                 }
                 break;
-
             case PressBeacon:
                 vuforia.cameraLight(true);
                 neck.setPosition(NECK_FLAT);
                 buttonWheel.setPosition(WHEEL_OUT);
                 if(Math.abs(neck.getPosition()-NECK_FLAT)<.01) {
-                        if (resetPosition) {
-                            if(currentBeacon.isFound()) {
-                                resetPosition = false;
-                                swerveDrive.resetPosition();
-                                spongeVector = new Vector(currentBeacon.getDistance()-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL, currentBeacon.getHorizontalDistance() + CAMERA_OFFSET_FROM_PLOW);
-                                if (beaconAnalysisResult == 1) {
-                                    buttonVector = new Vector(spongeVector.x, spongeVector.y - BUTTON_OFFSET_FROM_TARGET);
-                                } else if (beaconAnalysisResult == -1) {
-                                    buttonVector = new Vector(spongeVector.x, spongeVector.y + BUTTON_OFFSET_FROM_TARGET);
-                                }
-                                DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude()+1);
-                            }else{
-                                swerveDrive.stop();
-                                break;
+                    if (resetPosition) {
+                        if(currentBeacon.isFound()) {
+                            resetPosition = false;
+                            swerveDrive.resetPosition();
+                            spongeVector = new Vector(currentBeacon.getDistance()-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL, currentBeacon.getHorizontalDistance() + CAMERA_OFFSET_FROM_PLOW);
+                            if (beaconAnalysisResult == -1) {
+                                buttonVector = new Vector(spongeVector.x, spongeVector.y - BUTTON_OFFSET_FROM_TARGET);
+                            } else if (beaconAnalysisResult == 1) {
+                                buttonVector = new Vector(spongeVector.x, spongeVector.y + BUTTON_OFFSET_FROM_TARGET);
                             }
+                            DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude()+1);
+                        }else{
+                            swerveDrive.stop();
+                            break;
                         }
                     }
-                    if (swerveDrive.getLinearInchesTravelled() < DRIVE_DISTANCE) {
-                        swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .4);
-                    } else {
-                        robotState = RobotState.BackUp;
-                        pushTime=System.currentTimeMillis();
-                        resetPosition = true;
-                    }
+                }
+                if (swerveDrive.getLinearInchesTravelled() < DRIVE_DISTANCE) {
+                    swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .4);
+                } else {
+                    robotState = RobotState.BackUp;
+                    pushTime=System.currentTimeMillis();
+                    resetPosition = true;
+                }
                 break;
 
             case BackUp:
@@ -257,83 +252,87 @@ public class BlueSwerveVuforiaAuto extends Robot {
                         swerveDrive.drive(0,0, currentBeacon.getYRotation(), .2);
                     } else {//robot is fully aligned
                         swerveDrive.stop();
-                        robotState = RobotState.DriveToSecondBeacon;
                         beaconsPressed++;
+                        if(beaconsPressed==1){
+                            robotState=RobotState.DriveToSecondBeacon;
+                        }else{
+                            robotState=RobotState.Stop;
+                        }
                         beaconAnalysisResult = 0;
                     }
                 }else{
                     swerveDrive.stop();
                 }
                 break;
-//            case ReAlignWithBeacon:
-//                vuforia.cameraLight(true);
-//                Y_ROTATION_TOLERANCE=5;//degrees
-//                if(currentBeacon.isFound()) {
-//                    Vector direction = new Vector(currentBeacon.getDistance() - 250, currentBeacon.getHorizontalDistance());
-//                    if (direction.getMagnitude() > 20||Math.abs(currentBeacon.getYRotation())>Math.toRadians(Y_ROTATION_TOLERANCE)) {//10mm tolerance
-//                        swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation(), scale(direction.getMagnitude(),0,250,.05,.2));
-//                    } else {//robot is fully aligned
-//                        swerveDrive.stop();
-//                        robotState = RobotState.DoubleCheckBeacon;
-//                        beaconAnalysisResult = 0;
-//                        bookKeepingTime =System.currentTimeMillis();
-//                        wait = false;
-//                        double angle=Math.toDegrees(Math.asin(BUTTON_HEIGHT_ABOVE_CAMERA/(currentBeacon.getDistance()-BUTTON_OFFSET_FROM_WALL)));
-//                        double position=NECK_FLAT-degreesToServoPosition(angle);
-//                        if(position>1){
-//                            position=1;
-//                        }
-//                        neckUpPosition =position;
-//                        neck.setPosition(neckUpPosition);
-//                    }
-//                }else{
-//                    swerveDrive.stop();
-//                }
-//                break;
+            //            case ReAlignWithBeacon:
+            //                vuforia.cameraLight(true);
+            //                Y_ROTATION_TOLERANCE=5;//degrees
+            //                if(currentBeacon.isFound()) {
+            //                    Vector direction = new Vector(currentBeacon.getDistance() - 250, currentBeacon.getHorizontalDistance());
+            //                    if (direction.getMagnitude() > 20||Math.abs(currentBeacon.getYRotation())>Math.toRadians(Y_ROTATION_TOLERANCE)) {//10mm tolerance
+            //                        swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation(), scale(direction.getMagnitude(),0,250,.05,.2));
+            //                    } else {//robot is fully aligned
+            //                        swerveDrive.stop();
+            //                        robotState = RobotState.DoubleCheckBeacon;
+            //                        beaconAnalysisResult = 0;
+            //                        bookKeepingTime =System.currentTimeMillis();
+            //                        wait = false;
+            //                        double angle=Math.toDegrees(Math.asin(BUTTON_HEIGHT_ABOVE_CAMERA/(currentBeacon.getDistance()-BUTTON_OFFSET_FROM_WALL)));
+            //                        double position=NECK_FLAT-degreesToServoPosition(angle);
+            //                        if(position>1){
+            //                            position=1;
+            //                        }
+            //                        neckUpPosition =position;
+            //                        neck.setPosition(neckUpPosition);
+            //                    }
+            //                }else{
+            //                    swerveDrive.stop();
+            //                }
+            //                break;
 
-//            case DoubleCheckBeacon:
-//                vuforia.cameraLight(true);
-//                if(beaconAnalysisResult==0){
-//                    if(System.currentTimeMillis()- bookKeepingTime >1000){
-//                        robotState=RobotState.DriveToSecondBeacon;
-//                        wait=true;
-//                        resetPosition=true;
-//                    }
-//                    swerveDrive.stop();
-//                    if(Math.abs(neck.getPosition()-neckUpPosition)<.01){
-//                        beaconAnalysisResult=analyzeBeacon();
-//                    }
-//                }else if(beaconAnalysisResult==1||beaconAnalysisResult==-1) {
-//                    wait = true;
-//                    buttonWheel.setPosition(WHEEL_OUT);
-//                    neck.setPosition(NECK_FLAT);
-//                    robotState=RobotState.PressBeacon;
-//                    resetPosition=true;
-//                }else if(beaconAnalysisResult==2){//all blue
-//                    robotState=RobotState.DriveToSecondBeacon;
-//                    resetPosition=true;
-//                    wait=true;
-//                }else if(beaconAnalysisResult==3){//all red
-//                    if(System.currentTimeMillis()- pushTime >5000){
-//                        wait=true;
-//                        beaconAnalysisResult=1;//intentionally here to trick pushbeacon into going a direction
-//                        neck.setPosition(NECK_FLAT);
-//                        robotState= RobotState.PressBeacon;
-//                        resetPosition=true;
-//                    }
-//                }
-//                break;
+            //            case DoubleCheckBeacon:
+            //                vuforia.cameraLight(true);
+            //                if(beaconAnalysisResult==0){
+            //                    if(System.currentTimeMillis()- bookKeepingTime >1000){
+            //                        robotState=RobotState.DriveToSecondBeacon;
+            //                        wait=true;
+            //                        resetPosition=true;
+            //                    }
+            //                    swerveDrive.stop();
+            //                    if(Math.abs(neck.getPosition()-neckUpPosition)<.01){
+            //                        beaconAnalysisResult=analyzeBeacon();
+            //                    }
+            //                }else if(beaconAnalysisResult==1||beaconAnalysisResult==-1) {
+            //                    wait = true;
+            //                    buttonWheel.setPosition(WHEEL_OUT);
+            //                    neck.setPosition(NECK_FLAT);
+            //                    robotState=RobotState.PressBeacon;
+            //                    resetPosition=true;
+            //                }else if(beaconAnalysisResult==2){//all blue
+            //                    robotState=RobotState.DriveToSecondBeacon;
+            //                    resetPosition=true;
+            //                    wait=true;
+            //                }else if(beaconAnalysisResult==3){//all red
+            //                    if(System.currentTimeMillis()- pushTime >5000){
+            //                        wait=true;
+            //                        beaconAnalysisResult=1;//intentionally here to trick pushbeacon into going a direction
+            //                        neck.setPosition(NECK_FLAT);
+            //                        robotState= RobotState.PressBeacon;
+            //                        resetPosition=true;
+            //                    }
+            //                }
+            //                break;
 
             case DriveToSecondBeacon:
-                 vuforia.cameraLight(true);
+                vuforia.cameraLight(true);
                 neck.setPosition(NECK_FLAT);
                 if(resetPosition){
                     swerveDrive.resetPosition();
                     resetPosition=false;
                 }
                 DISTANCE=40;
-                if(!getTargets(data).contains("Legos")){
-                    swerveDrive.drive(-.2,-1,0,.6-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.35));
+                if(!getTargets(data).contains("Gears")){
+                    swerveDrive.drive(.3,1,0,.6-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
                 }else{
                     beaconAnalysisResult=0;
                     robotState=RobotState.AlignWithBeacon;
@@ -415,17 +414,17 @@ public class BlueSwerveVuforiaAuto extends Robot {
             Utils.bitmapToMat(RGB565Bitmap, original);
             Imgproc.cvtColor(original,original,Imgproc.COLOR_BGR2BGRA);
             Utils.matToBitmap(original, RGBABitmap);
-//            try {
-//                File directory = FtcRobotControllerActivity.getActivity().getBaseContext().getExternalFilesDir(null);
-//                File image = new File(directory, Long.toString(System.currentTimeMillis()) + ".jpeg");
-//                image.createNewFile();
-//                FileOutputStream fos = new FileOutputStream(image);
-//                RGBABitmap.compress(Bitmap.CompressFormat.JPEG, 50,fos) ;
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
+            try {
+                File directory = FtcRobotControllerActivity.getActivity().getBaseContext().getExternalFilesDir(null);
+                File image = new File(directory, Long.toString(System.currentTimeMillis()) + ".jpeg");
+                image.createNewFile();
+                FileOutputStream fos = new FileOutputStream(image);
+                RGBABitmap.compress(Bitmap.CompressFormat.JPEG, 50,fos) ;
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             //split color onto blueMat Mat
             Log.d("alive","2");
             mAllocationIn.copyFrom(RGBABitmap);

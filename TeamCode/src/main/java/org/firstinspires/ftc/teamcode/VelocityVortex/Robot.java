@@ -22,7 +22,6 @@ public class Robot extends OpMode {
     public static final double WHEEL_IN=.95;
     public static final double WHEEL_OUT=.3;
     public static final double NECK_FLAT=.4;
-    public static final double NECK_UP=.2;
     public DcMotor lfm,lbm,rfm,rbm;
     public Servo lf,lb,rf,rb;
     public AnalogInput lfa,lba,rfa,rba;

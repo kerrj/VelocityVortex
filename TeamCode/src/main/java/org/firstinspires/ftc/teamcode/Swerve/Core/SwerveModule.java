@@ -48,42 +48,6 @@ public class SwerveModule {
         this.steerEncoder = steerEncoder;
         this.positionX = positionX;
         this.positionY = positionY;
-        directory= FtcRobotControllerActivity.getActivity().getBaseContext().getExternalFilesDir(null);
-        pidFile=new File(directory,"pid.txt");
-        if(!pidFile.exists()){
-            try {
-                pidFile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        String contents="";
-        try {
-            FileInputStream fis=new FileInputStream(pidFile);
-            byte[] buf=new byte[fis.available()];
-            fis.read(buf,0,buf.length);
-            contents=new String(buf,"UTF-8");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        String p = contents.substring(0, contents.indexOf(";"));
-        String id = contents.substring(contents.indexOf(";")+1);
-        String i = id.substring(0, id.indexOf(";"));
-        String d = id.substring(id.indexOf(";")+1);
-        Log.d("P", p);
-        Log.d("I", i);
-        Log.d("D", d);
-        try {
-            double KP = Double.valueOf(p);
-            double KI = Double.valueOf(i);
-            double KD = Double.valueOf(d);
-            pid=new PID(KP, KI,KD);
-        }catch(NumberFormatException e){
-            e.printStackTrace();
-            pid=new PID(2/Math.PI,0,0);
-        }
         pid=new PID(2/3.0,3.0,0);
     }
     /**
