@@ -121,7 +121,15 @@ public class Blue extends Robot {
         blue=new ScriptC_blue(mRS);
         swerveDrive.resetPosition();
 //        dataLogger.start();
+
     }
+
+    @Override
+    public void init_loop(){
+        swerveDrive.drive(.25,-1,0,0);
+        swerveDrive.update(true,15);
+    }
+
 
     @Override
     public void loop() {

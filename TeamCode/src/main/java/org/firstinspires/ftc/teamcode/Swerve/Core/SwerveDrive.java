@@ -238,8 +238,7 @@ public class SwerveDrive {
             }
         }
     }
-
-    private double turnPower=.07;
+    private double turnPower=.12;
     public void setTurnPower(double turnPower){
         this.turnPower=turnPower;
     }
