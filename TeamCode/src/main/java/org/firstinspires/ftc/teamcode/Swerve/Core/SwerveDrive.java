@@ -94,11 +94,6 @@ public class SwerveDrive {
 
 
 
-
-
-
-
-
 //    public void translate(Vector direction,double power){
 //        leftTargetPower=power;
 //        rightTargetPower=power;

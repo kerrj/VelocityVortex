@@ -35,6 +35,7 @@ public class SwerveModule {
     private File directory;
     private File pidFile;
 
+
     /**
      * @param driveMotor motor controller for drive motor
      * @param steerServo servo controller for steer motor
@@ -48,7 +49,8 @@ public class SwerveModule {
         this.steerEncoder = steerEncoder;
         this.positionX = positionX;
         this.positionY = positionY;
-        pid=new PID(2/3.0,2.5,0);
+        pid=new PID(2/3.0,3.0,0,driveMotor,10);
+
     }
     /**
      * @param angle in radians

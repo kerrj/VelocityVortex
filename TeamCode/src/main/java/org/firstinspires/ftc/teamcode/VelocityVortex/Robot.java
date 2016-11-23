@@ -2,10 +2,12 @@ package org.firstinspires.ftc.teamcode.VelocityVortex;
 
 import android.view.GestureDetector;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -32,12 +34,13 @@ public class Robot extends OpMode {
     public static final double CAP_LEFT_HOLD=.35;
     public static final int SLIDE_DOWN=0;
     public static final int SLIDE_UP=1000;//TBD
+    public static final double SHOOTER_DOWN=5;
+    public static final double SHOOTER_UP=0;
 
-    public DcMotor lfm,lbm,rfm,rbm,slideMotor;
-    public Servo lf,lb,rf,rb;
+    public DcMotor lfm,lbm,rfm,rbm,slideMotor,shootLeft,shootRight;
+    public Servo lf,lb,rf,rb,neck,buttonWheel, capLeft, capRight,shootServo;
     public AnalogInput lfa,lba,rfa,rba;
     public FTCSwerve swerveDrive;
-    public Servo neck,buttonWheel, capLeft, capRight;
     public AbsoluteEncoder lfe,rfe,rbe,lbe;
 //    public DataLogger dataLogger;
     public FTCVuforia vuforia;
@@ -55,6 +58,11 @@ public class Robot extends OpMode {
         rfm=hardwareMap.dcMotor.get("rfm");
         lbm=hardwareMap.dcMotor.get("lbm");
         rbm=hardwareMap.dcMotor.get("rbm");
+//        shootLeft=hardwareMap.dcMotor.get("shootLeft");
+//        shootRight=hardwareMap.dcMotor.get("shootRight");
+//        shootRight.setDirection(DcMotorSimple.Direction.REVERSE);
+//        shootLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        shootRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         rbm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         lbm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -63,9 +71,11 @@ public class Robot extends OpMode {
         lb=hardwareMap.servo.get("lb");
         rf=hardwareMap.servo.get("rf");
         rb=hardwareMap.servo.get("rb");
+//        shootServo=hardwareMap.servo.get("shootServo");
 //        slideMotor=hardwareMap.dcMotor.get("slideMotor");
 //        slideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 //        slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        slideStartPosition=slideMotor.getCurrentPosition();
         lf.setPosition(.5);
         lb.setPosition(.5);
         rf.setPosition(.5);

@@ -7,27 +7,19 @@ import org.firstinspires.ftc.teamcode.Swerve.Core.Vector;
  */
 public class TeleOp extends Robot {
     Vector direction=new Vector(0,1);
+    long lastSet,lastPush;
+    double power = 0;
 
     public void init(){
         super.init();
-
+        lastSet=System.currentTimeMillis();
+        lastPush=System.currentTimeMillis();
     }
 
 
     public void loop(){
         Vector d=new Vector(gamepad1.left_stick_x, gamepad1.left_stick_y);
-        //        if(direction.getMagnitude()>.1){
-        ////            swerveDrive.translate(direction,direction.getMagnitude());
-        //        }else{
-        //            swerveDrive.stop();
-        //        }
-        //
-        //
-        //
-        //        if(Math.abs(gamepad1.right_stick_x)>.1){
-        ////            swerveDrive.rotate(gamepad1.right_stick_x);
-        //
-        //        }
+
         if(d.getMagnitude()>.1||Math.abs(gamepad1.right_stick_x)>.1) {
             direction=d;
             swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x, 1);
@@ -44,17 +36,27 @@ public class TeleOp extends Robot {
         }
 
         swerveDrive.update(true,45);
-        telemetry.addData("digitalpower",rb.getPosition());
-// Raise/lower Linear Slide
-        if (Math.abs(gamepad2.right_stick_y)>.1) {
-            slideMotor.setPower(gamepad2.right_stick_y);
+        // Raise/lower Linear Slide
+        if (gamepad2.right_stick_y>.1) {
+            if(slideMotor.getCurrentPosition()<SLIDE_UP) {
+                slideMotor.setPower(gamepad2.right_stick_y);
+            }else{
+                slideMotor.setPower(0);
+            }
+        }else if(gamepad2.right_stick_y<-.1){
+            if(slideMotor.getCurrentPosition()>SLIDE_DOWN){
+                slideMotor.setPower(gamepad2.right_stick_y);
+            }else{
+                slideMotor.setPower(0);
+            }
+        }else{
+            slideMotor.setPower(0);
         }
-// ball collection
+        // cap ball collection
         if (gamepad2.dpad_right) {
             capLeft.setPosition(CAP_LEFT_OUT);
             capRight.setPosition(CAP_RIGHT_OUT);
         } //set cap ball servo to out position
-
         else if(gamepad2.dpad_down){
             capLeft.setPosition(CAP_LEFT_HOLD);
             capRight.setPosition(CAP_RIGHT_HOLD);
@@ -65,10 +67,44 @@ public class TeleOp extends Robot {
             capRight.setPosition(CAP_RIGHT_IN);
         } // initial position for servo
 
-        if(gamepad2.a){
 
-
+        //shooter servo
+        if(gamepad2.right_bumper){
+            shootServo.setPosition(SHOOTER_DOWN); //turn servo down for half a second before it reverts to original position
+            lastPush=System.currentTimeMillis();
         }
+        if(System.currentTimeMillis()-lastPush>300){
+            shootServo.setPosition(SHOOTER_UP);
+        }
+
+        if(System.currentTimeMillis()-lastSet>200){
+            if(gamepad2.x){ //decrement power by pressing X
+                power-=.05;
+                if(power<.7){
+                    power=.7;
+                }
+                lastSet=System.currentTimeMillis();
+            }
+            if(gamepad1.y && power <= .85) {//increment power by pressing Y
+                power += .05;
+                if (power > .85) {
+                    power = .85;
+                }
+                lastSet=System.currentTimeMillis();
+            }
+            if (gamepad2.b) {
+                power = 0;
+            }
+            if (gamepad2.a) {
+                power = .75;
+            }
+        }
+        shootLeft.setPower(power);
+        shootRight.setPower(power);
+
+        telemetry.addData("Power",power);
+
+
     }
 
 
