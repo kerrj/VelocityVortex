@@ -9,15 +9,18 @@ public class TeleOp extends Robot {
     Vector direction=new Vector(0,1);
     long lastSet,lastPush;
     double power = 0;
+    boolean wheelIn;
 
     public void init(){
         super.init();
         lastSet=System.currentTimeMillis();
         lastPush=System.currentTimeMillis();
+        wheelIn=true;
     }
 
 
     public void loop(){
+        super.loop();
         Vector d=new Vector(gamepad1.left_stick_x, gamepad1.left_stick_y);
 
         if(d.getMagnitude()>.1||Math.abs(gamepad1.right_stick_x)>.1) {
@@ -102,6 +105,14 @@ public class TeleOp extends Robot {
         shootLeft.setPower(power);
         shootRight.setPower(power);
 
+        if(gamepad2.left_bumper&&wheelIn){
+            buttonWheel.setPosition(WHEEL_OUT);
+            wheelIn=false;
+        }
+        if(gamepad2.left_bumper&&!wheelIn){
+            buttonWheel.setPosition(WHEEL_IN);
+            wheelIn=true;
+        }
         telemetry.addData("Power",power);
 
 

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Swerve.Core;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -10,7 +12,6 @@ import com.qualcomm.robotcore.hardware.Servo;
  */
 
 public class SwerveDrive {
-    DcMotor left, right;
     //Add values when swerve is done and also look at what absolute encoder is for
     SwerveModule[] modules;
     double[] angles={0,0,0,0};
@@ -32,8 +33,6 @@ public class SwerveDrive {
     public SwerveDrive(AnalogInput frontLeft,AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
                         DcMotor lf,DcMotor rf,DcMotor lb,DcMotor rb,
                         Servo frontleftServo,Servo frontRightServo,Servo backLeftServo,Servo backRightServo,double width,double length,FTCSwerve ftcSwerve){
-        this.left=left;
-        this.right=right;
         //initialize array of modules
         //array can be any size, as long as the position of each module is specified in its constructor
         modules = new SwerveModule[] {
@@ -139,6 +138,11 @@ public class SwerveDrive {
 //            modules[3].set(5*Math.PI/4+Math.PI);
 //        }
 //    }
+    public void refreshValues(){
+        for(SwerveModule m:modules){
+            m.refreshValues();
+        }
+    }
 
     /**
      * Method called every loop iteration
@@ -148,23 +152,24 @@ public class SwerveDrive {
             for(int i=0;i<modules.length;i++){
                 SwerveModule module=modules[i];
                 module.set(angles[i],powers[i]);
+                Log.d("Update","Start===========================");
                 module.update();
+                Log.d("Update","end===============");
                 //distance travelled
                 double average=0;
                 for(int j=0;j<positions.length;j++){
-                    if(j!=2) {
-                        average += Math.abs(positions[j] - motors[j].getCurrentPosition());
-                        positions[j] = motors[j].getCurrentPosition();
-                    }
+                    int position=motors[j].getCurrentPosition();
+                    average += Math.abs(positions[j] -position);
+                    positions[j] = position;
                 }
-                average/=3;
+                average/=4;
                 deltaCounts+=average;
             }
         }else{
             boolean atPosition=true;
             for(int i=0;i<modules.length;i++){
                 SwerveModule module=modules[i];
-                module.set(angles[i],0);//necessary
+                module.set(angles[i],powers[i]);//necessary
                 if (Math.abs(module.getDelta())>Math.toRadians(threshold)){
                     atPosition=false;
                     atPositions[i]=false;
@@ -176,12 +181,15 @@ public class SwerveDrive {
             if(atPosition){//if all are at the correct position
                 for(int i=0;i<modules.length;i++){
                     SwerveModule module=modules[i];
-                    module.set(angles[i],powers[i]);
+                    Log.d("Update","Start===========================");
                     module.update();
+                    Log.d("Update","end===========================");
+
                     double average=0;
                     for(int j=0;j<positions.length;j++){
-                        average+=Math.abs(positions[j]-motors[j].getCurrentPosition());
-                        positions[j]=motors[j].getCurrentPosition();
+                        int position=motors[j].getCurrentPosition();
+                        average += Math.abs(positions[j] -position);
+                        positions[j] = position;
                     }
                     average/=4;
                     deltaCounts+=average;
@@ -193,7 +201,7 @@ public class SwerveDrive {
                 for(int i=0;i<modules.length;i++){
                     SwerveModule module=modules[i];
                     if(atPositions[i]){
-                        module.set(angles[i],0);
+                        module.setPower(0);
                     }else{
                         if(module.getDirection()== SwerveModule.ModuleDirection.clockwise){
                             module.setPower(turnPower);//adjust signs on these depending on motor direction
@@ -201,7 +209,11 @@ public class SwerveDrive {
                             module.setPower(-turnPower);
                         }
                     }
+                    Log.d("Update","Start===========================");
+
                     module.update();
+                    Log.d("Update","end===========================");
+
                 }
             }
         }

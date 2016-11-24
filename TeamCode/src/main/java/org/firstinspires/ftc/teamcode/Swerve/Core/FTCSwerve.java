@@ -13,7 +13,7 @@ public class FTCSwerve {
     public SwerveDrive swerveDrive;
     public FTCSwerve(AnalogInput frontLeft,AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
                      DcMotor lf,DcMotor rf,DcMotor lb,DcMotor rb,
-                     Servo frontLeftServo,Servo frontRightServo,Servo backLeftServo,Servo backRightServo,double width,double length){
+                     CRServo frontLeftServo,CRServo frontRightServo,CRServo backLeftServo,CRServo backRightServo,double width,double length){
         swerveDrive=new SwerveDrive(frontLeft,frontRight,backLeft,backRight,//encoders
                                     lf,rf,lb,rb,//motors
                                     frontLeftServo,frontRightServo,backLeftServo,backRightServo,width,length,this);
@@ -71,6 +71,10 @@ public class FTCSwerve {
 
     public void drive(double translationX,double translationY,double rotation,double powerscale){
         swerveDrive.driveWithOrient(-translationX,translationY,-rotation,0,powerscale);
+    }
+
+    public void refreshValues(){
+        swerveDrive.refreshValues();
     }
 
 }

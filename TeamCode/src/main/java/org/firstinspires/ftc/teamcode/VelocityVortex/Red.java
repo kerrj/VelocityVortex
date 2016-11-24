@@ -124,12 +124,14 @@ public class Red extends Robot {
     }
     @Override
     public void init_loop(){
+        swerveDrive.refreshValues();
         swerveDrive.drive(.25,1,0,0);
         swerveDrive.update(true,15);
     }
 
     @Override
     public void loop() {
+        super.loop();
         //first gra b an instance of FTCTarget for each target we care about: Wheels and Legos
         HashMap<String, double[]> data = vuforia.getVuforiaData();
         FTCTarget tools = new FTCTarget();

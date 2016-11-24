@@ -6,6 +6,7 @@ import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.I2cAddr;
@@ -33,12 +34,13 @@ public class Robot extends OpMode {
     public static final double CAP_RIGHT_HOLD=.8;
     public static final double CAP_LEFT_HOLD=.35;
     public static final int SLIDE_DOWN=0;
-    public static final int SLIDE_UP=1000;//TBD
-    public static final double SHOOTER_DOWN=5;
+    public static final int SLIDE_UP=20200;
+    public static final double SHOOTER_DOWN=.5;
     public static final double SHOOTER_UP=0;
 
     public DcMotor lfm,lbm,rfm,rbm,slideMotor,shootLeft,shootRight;
-    public Servo lf,lb,rf,rb,neck,buttonWheel, capLeft, capRight,shootServo;
+    public CRServo lf,lb,rf,rb;
+    public Servo buttonWheel, capLeft, capRight,shootServo,neck;
     public AnalogInput lfa,lba,rfa,rba;
     public FTCSwerve swerveDrive;
     public AbsoluteEncoder lfe,rfe,rbe,lbe;
@@ -58,28 +60,28 @@ public class Robot extends OpMode {
         rfm=hardwareMap.dcMotor.get("rfm");
         lbm=hardwareMap.dcMotor.get("lbm");
         rbm=hardwareMap.dcMotor.get("rbm");
-//        shootLeft=hardwareMap.dcMotor.get("shootLeft");
-//        shootRight=hardwareMap.dcMotor.get("shootRight");
-//        shootRight.setDirection(DcMotorSimple.Direction.REVERSE);
-//        shootLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        shootRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shootLeft=hardwareMap.dcMotor.get("shootLeft");
+        shootRight=hardwareMap.dcMotor.get("shootRight");
+        shootRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        shootLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shootRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         rbm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         lbm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         rfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        lf=hardwareMap.servo.get("lf");
-        lb=hardwareMap.servo.get("lb");
-        rf=hardwareMap.servo.get("rf");
-        rb=hardwareMap.servo.get("rb");
-//        shootServo=hardwareMap.servo.get("shootServo");
-//        slideMotor=hardwareMap.dcMotor.get("slideMotor");
-//        slideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        slideStartPosition=slideMotor.getCurrentPosition();
-        lf.setPosition(.5);
-        lb.setPosition(.5);
-        rf.setPosition(.5);
-        rb.setPosition(.5);
+        lf=hardwareMap.crservo.get("lf");
+        lb=hardwareMap.crservo.get("lb");
+        rf=hardwareMap.crservo.get("rf");
+        rb=hardwareMap.crservo.get("rb");
+        shootServo=hardwareMap.servo.get("shootServo");
+        slideMotor=hardwareMap.dcMotor.get("slideMotor");
+        slideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        slideStartPosition=slideMotor.getCurrentPosition();
+        lf.setPower(.5);
+        lb.setPower(.5);
+        rf.setPower(.5);
+        rb.setPower(.5);
         neck=hardwareMap.servo.get("neck");
         buttonWheel=hardwareMap.servo.get("buttonWheel");
 //        capLeft=hardwareMap.servo.get("capLeft");
@@ -110,7 +112,7 @@ public class Robot extends OpMode {
 
     @Override
     public void loop(){
-
+        swerveDrive.refreshValues();
     }
     @Override
     public  void stop(){

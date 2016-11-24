@@ -28,12 +28,17 @@ public class SwerveModule {
     public double positionX, positionY; //position of this wheel relative to the center of the robot
     //from the robot's perspective, +y is forward and +x is to the right
     private double targetAngle = 0;//initialize these as 0
+    private double targetServoPower=.5;
     private double motorPower = 0;
     public  PID pid;
     public enum ModuleDirection{counterclockwise,clockwise}
 
     private File directory;
     private File pidFile;
+
+    public double currentAngle;
+    public double currentServoPower;
+    public double currentMotorPower;
 
 
     /**
@@ -49,8 +54,10 @@ public class SwerveModule {
         this.steerEncoder = steerEncoder;
         this.positionX = positionX;
         this.positionY = positionY;
-        pid=new PID(2/3.0,3.0,0,driveMotor,10);
-
+        pid=new PID(2.0/3.0,2.5,0,driveMotor,0);
+        currentAngle=steerEncoder.getAngle();
+        currentMotorPower=driveMotor.getPower();
+        currentServoPower=steerServo.getPosition();
     }
     /**
      * @param angle in radians
@@ -58,7 +65,7 @@ public class SwerveModule {
      */
     public void set(double angle, double speed) {
         angle = wrapAngle(angle);
-        Vector currentVector=new Vector(Math.cos(steerEncoder.getAngle()),Math.sin(steerEncoder.getAngle()));
+        Vector currentVector=new Vector(Math.cos(currentAngle),Math.sin(currentAngle));
         Vector targetVector =new Vector(Math.cos(angle),Math.sin(angle));
         double dist=Math.acos(Vector.dotProduct(currentVector,targetVector)/(currentVector.getMagnitude()*targetVector.getMagnitude()));
         //if the setpoint is more than 90 degrees from the current position, flip everything
@@ -97,12 +104,16 @@ public class SwerveModule {
         if(newSpeed<0){
             newSpeed=0;
         }
-        steerServo.setPosition(newSpeed);
+
+        targetServoPower=newSpeed;
     }
+
+
+
 
     public double getDelta(){
         Vector targetVector = new Vector(Math.cos(targetAngle), Math.sin(targetAngle));
-        Vector currentVector = new Vector(Math.cos(steerEncoder.getAngle()), Math.sin(steerEncoder.getAngle()));
+        Vector currentVector = new Vector(Math.cos(currentAngle), Math.sin(currentAngle));
 
         //angleBetween is the angle from currentPosition to target position in radians
         //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
@@ -112,7 +123,7 @@ public class SwerveModule {
 
     public ModuleDirection getDirection(){
         Vector targetVector = new Vector(Math.cos(targetAngle), Math.sin(targetAngle));
-        Vector currentVector = new Vector(Math.cos(steerEncoder.getAngle()), Math.sin(steerEncoder.getAngle()));
+        Vector currentVector = new Vector(Math.cos(currentAngle), Math.sin(currentAngle));
 
         //angleBetween is the angle from currentPosition to target position in radians
         //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
@@ -124,31 +135,39 @@ public class SwerveModule {
         }
     }
 
-    public void update() {
+    public void  update() {
         driveMotor.setPower(motorPower);//set the motor power
         Vector targetVector = new Vector(Math.cos(targetAngle), Math.sin(targetAngle));
-        Vector currentVector = new Vector(Math.cos(steerEncoder.getAngle()), Math.sin(steerEncoder.getAngle()));
+        Vector currentVector = new Vector(Math.cos(currentAngle), Math.sin(currentAngle));
         //angleBetween is the angle from currentPosition to target position in radians
         //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
         double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
-        setServoPower( pid.setPIDpower(-angleBetween), .5);//negative
+        setServoPower( pid.setPIDpower(-angleBetween,currentMotorPower), .5);//negative
         //power curve adjustment
-        if(steerServo.getPosition()>.6){
+        double upper=.6;
+        double lower=.4;
+        if(targetServoPower>upper){
             steerServo.setPosition(1);
-        }else if(steerServo.getPosition()<.4){
-            steerServo.setPosition(0);
+        }else if(targetServoPower<lower){
+            targetServoPower=0;
+        } else if(targetServoPower>.5&&targetServoPower<upper){
+            double scale=targetServoPower-.5;
+            targetServoPower=.5+scale*2;
+        }else if(targetServoPower>lower&&targetServoPower<.5){
+            double scale=.5-targetServoPower;
+            targetServoPower=.5-scale*2;
         }
-        else if(steerServo.getPosition()>.5&&steerServo.getPosition()<.6){
-            double scale=steerServo.getPosition()-.5;
-            steerServo.setPosition(.5+scale*2);
-        }else if(steerServo.getPosition()>.4&&steerServo.getPosition()<.5){
-            double scale=.5-steerServo.getPosition();
-            steerServo.setPosition(.5-scale*2);
-        }
-
+        Log.d("servo","start=========");
+        steerServo.setPosition(targetServoPower);
+        Log.d("Servo","end=======");
     }
-
     public void stop(){
         motorPower=0;
     }
+    public void refreshValues(){
+        currentServoPower=steerServo.getPosition();
+        currentMotorPower=driveMotor.getPower();
+        currentAngle=steerEncoder.getAngle();
+    }
+
 }
