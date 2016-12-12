@@ -27,7 +27,7 @@ public class PID {
     int[] positionHistory=new int[3];
     long[] positionTimes=new long[3];
     double acceleration=0;
-    double lastMotorPower;
+    double lastMotorPower=0;
 
 
     private DcMotor driveMotor;
@@ -40,8 +40,7 @@ public class PID {
         I_Gain = I;
         A_Gain=a;
         D_Gain = D;
-        time=System.currentTimeMillis();
-        lastMotorPower=driveMotor.getPower();
+        time=System.nanoTime()/1E6;
     }
     public double setPIDpower(double error,double motorPower){
         //update history of motor position and time taken
@@ -58,13 +57,14 @@ public class PID {
 //        //calculate "intermediate" time for upcoming acceleration calculation
 //        double[] intermediateTimes=new double[]{(positionTimes[0]+positionTimes[1])/2,(positionTimes[1]+positionTimes[2])/2};
 //        //calculate dv/dt
-//        double a=(v[1]-v[0])/(intermediateTimes[1]-intermediateTimes[0]);//acceleration!
+//        acceleration=(v[1]-v[0])/(intermediateTimes[1]-intermediateTimes[0]);//acceleration!
 
-        acceleration/=DECAY_CONSTANT;
-        acceleration+=motorPower-lastMotorPower;
+        dt=(System.nanoTime()/1E6)-time;//change in time
+        time=System.nanoTime()/1E6;//reset "last" time
+
+        acceleration/=(1+(dt/50));//decay more when more time has passed
+        acceleration=acceleration+motorPower-lastMotorPower;
         lastMotorPower=motorPower;
-        dt=(System.currentTimeMillis())-time;//change in time
-        time=System.currentTimeMillis();//reset "last" time
 
         if(Math.abs(error)<Math.toRadians(15)){
             integral+=(error*dt/1000.0);
@@ -80,7 +80,12 @@ public class PID {
         deriv=((error-previousError)*1000.0)/dt;
         previousError=error;
 
-        lastpow=(error*P_Gain)+(deriv*D_Gain)+(integral*I_Gain)-(acceleration*A_Gain);
+        lastpow=(error*P_Gain)+(deriv*D_Gain)+(integral*I_Gain)+(acceleration*A_Gain);
+        if(Math.abs(error)<Math.toRadians(1)&&acceleration<.1){
+            lastpow=0;
+        }
+        Log.d("TimeStep",Double.toString(dt));
+        Log.d("Accel",Double.toString(acceleration));
         return lastpow;
     }
 }

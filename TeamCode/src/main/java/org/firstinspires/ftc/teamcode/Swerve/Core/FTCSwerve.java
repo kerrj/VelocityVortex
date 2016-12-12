@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Swerve.Core;
 
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -11,9 +12,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class FTCSwerve {
 
     public SwerveDrive swerveDrive;
-    public FTCSwerve(AnalogInput frontLeft,AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
-                     DcMotor lf,DcMotor rf,DcMotor lb,DcMotor rb,
-                     CRServo frontLeftServo,CRServo frontRightServo,CRServo backLeftServo,CRServo backRightServo,double width,double length){
+    public FTCSwerve(AnalogInput frontLeft, AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
+                     DcMotor lf, DcMotor rf, DcMotor lb, DcMotor rb,
+                     Servo frontLeftServo, Servo frontRightServo, Servo backLeftServo, Servo backRightServo, double width, double length){
         swerveDrive=new SwerveDrive(frontLeft,frontRight,backLeft,backRight,//encoders
                                     lf,rf,lb,rb,//motors
                                     frontLeftServo,frontRightServo,backLeftServo,backRightServo,width,length,this);
@@ -64,8 +65,8 @@ public class FTCSwerve {
      * @param waitForServos when true the robot doesn't move the motors until the servos are in the correct position,
      *                      should only be used during autonomous
      */
-    public void update(boolean waitForServos,double threshold){
-        swerveDrive.update(waitForServos,threshold);
+    public void update(boolean waitForServos,double threshold,boolean accelerate){
+        swerveDrive.update(waitForServos,threshold,accelerate);
     }
 
 

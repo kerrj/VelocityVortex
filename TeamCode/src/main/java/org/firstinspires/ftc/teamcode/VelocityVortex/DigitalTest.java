@@ -7,34 +7,13 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  */
 @TeleOp
 public class DigitalTest extends Robot {
-    long last;
-    double pos=.5;
 
     public void init(){
         super.init();
-        last=System.currentTimeMillis();
     }
     public void loop(){
-        if(System.currentTimeMillis()-last>200){
-            if(gamepad1.a){
-                last=System.currentTimeMillis();
-                pos+=.01;
-                if(pos>1){
-                    pos=1;
-                }
-            }
-            if(gamepad1.b){
-                last=System.currentTimeMillis();
-                pos-=.01;
-                if(pos<0){
-                    pos=0;
-                }
-            }
-
-        }
-        rf.setPosition(pos);
-        rb.setPosition(pos);
-        telemetry.addData("power",rf.getPosition());
+//        rf.setPower(gamepad1.left_stick_y);
+//        telemetry.addData("power",rf.getPower());
     }
     public void stop(){
         super.stop();

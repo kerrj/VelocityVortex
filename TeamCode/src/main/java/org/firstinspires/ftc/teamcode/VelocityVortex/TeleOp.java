@@ -38,7 +38,7 @@ public class TeleOp extends Robot {
             swerveDrive.drive(0,1,0,0);
         }
 
-        swerveDrive.update(true,45);
+        swerveDrive.update(true,45,false);
         // Raise/lower Linear Slide
         if (gamepad2.right_stick_y>.1) {
             if(slideMotor.getCurrentPosition()<SLIDE_UP) {
@@ -55,6 +55,7 @@ public class TeleOp extends Robot {
         }else{
             slideMotor.setPower(0);
         }
+
         // cap ball collection
         if (gamepad2.dpad_right) {
             capLeft.setPosition(CAP_LEFT_OUT);

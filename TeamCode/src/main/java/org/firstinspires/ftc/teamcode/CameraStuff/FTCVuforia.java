@@ -319,7 +319,7 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
      */
             private boolean startVuforiaCamera() {
         
-        if (!CameraDevice.getInstance().init(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_DEFAULT)) {
+        if (!CameraDevice.getInstance().init(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_FRONT)) {
             return false;
             }//if
         

@@ -28,7 +28,7 @@ public class Debug extends Robot {
         }else{
             swerveDrive.stop();
         }
-        swerveDrive.update(true,15);
+        swerveDrive.update(true,15,true);
 //        Vector direction=new Vector(gamepad1.left_stick_x, gamepad1.left_stick_y);
 //        if(direction.getMagnitude()>.01||Math.abs(gamepad1.right_stick_y)>.01){
 //            swerveDrive.drive(direction.x,direction.y,0,.5);

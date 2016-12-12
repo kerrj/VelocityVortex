@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.justin.opencvcamera.ScriptC_blue;
 import com.justin.opencvcamera.ScriptC_red;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.vuforia.Image;
@@ -42,10 +43,10 @@ import java.util.HashMap;
  * Created by Justin on 10/7/2016.
  */
 @Autonomous
-public class Red extends Robot {
+public class Shoot extends Robot {
 
     //---------------------------------------------------------------------------------------
-    //the first beacon has the TOOLS image target, and the second has the GEARS image target
+    //the first beacon has the WHEELS image target, and the second has the LEGOS image target
     //---------------------------------------------------------------------------------------
 
 
@@ -81,11 +82,11 @@ public class Red extends Robot {
     private Vector buttonVector;
     private double neckUpPosition;
     private long bookKeepingTime;
+    boolean resetServoTime=true;
     private long pushTime, startTime,lastShot,servoTravelStart;
     private int shots=0;
     enum ShootServoState{MovingUp,MovingDown}
     private ShootServoState servoState=ShootServoState.MovingUp;
-    boolean resetServoTime=true;
 
 
 
@@ -124,38 +125,37 @@ public class Red extends Robot {
         red=new ScriptC_red(mRS);
         blue=new ScriptC_blue(mRS);
         swerveDrive.resetPosition();
+        shots=0;
         //        dataLogger.start();
+
     }
-    @Override
-    public void init_loop(){
-        swerveDrive.refreshValues();
-        swerveDrive.drive(.25,1,0,0);
-        swerveDrive.update(true,15,false);
-    }
+
+
 
     @Override
     public void loop() {
         super.loop();
         //first gra b an instance of FTCTarget for each target we care about: Wheels and Legos
         HashMap<String, double[]> data = vuforia.getVuforiaData();
-        FTCTarget tools = new FTCTarget();
-        FTCTarget gears = new FTCTarget();
+        FTCTarget wheels = new FTCTarget();
+        FTCTarget legos = new FTCTarget();
         try {
-            if (getTargets(data).contains("Tools")) {
-                tools = new FTCTarget(data, "Tools");
+            if (getTargets(data).contains("Wheels")) {
+                wheels = new FTCTarget(data, "Wheels");
             }
-            if (getTargets(data).contains("Gears")) {
-                gears = new FTCTarget(data, "Gears");
+            if (getTargets(data).contains("Legos")) {
+                legos = new FTCTarget(data, "Legos");
             }
         }catch(NullPointerException e){
             e.printStackTrace();
         }
         FTCTarget currentBeacon;
         if(beaconsPressed==0){
-            currentBeacon=gears;
+            currentBeacon=legos;
         }else{
-            currentBeacon=tools;
+            currentBeacon=wheels;
         }
+
         switch(robotState){
             case Shoot:
                 if(resetPosition){
@@ -176,7 +176,7 @@ public class Red extends Robot {
                             if(shots<2) {
                                 servoState = ShootServoState.MovingDown;
                             }else{
-                                robotState=RobotState.DriveForward;
+                                robotState=RobotState.Stop;
                                 shootLeft.setPower(0);
                                 shootRight.setPower(0);
                                 resetPosition=true;
@@ -211,7 +211,7 @@ public class Red extends Robot {
                 //                double DISTANCE=100;
                 double currentHeading=gyro.getHeading();
                 double desiredAngle=Math.toRadians(45);
-                Vector targetVector = new Vector(Math.cos(Math.PI/2), Math.sin(Math.PI/2));
+                Vector targetVector = new Vector(Math.cos(3*Math.PI/2), Math.sin(3*Math.PI/2));
                 Vector currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));
                 //angleBetween is the angle from currentPosition to target position in radians
                 //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
@@ -233,23 +233,18 @@ public class Red extends Robot {
                     robotState=RobotState.DriveToFirstBeacon;
                 }
                 break;
+
             case DriveToFirstBeacon:
                 vuforia.cameraLight(true);
-                double DISTANCE=30;
-                currentHeading=gyro.getHeading();
-                targetVector = new Vector(Math.cos(Math.PI/2), Math.sin(Math.PI/2));
-                currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));
-                //angleBetween is the angle from currentPosition to target position in radians
-                //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
-                angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
-
-                if(!getTargets(data).contains("Gears")){
-                    swerveDrive.drive(.5,1,angleBetween/2, .6-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
+                double DISTANCE=50;
+                if(!getTargets(data).contains("Wheels")){
+                    swerveDrive.drive(1,-1,0, .6-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
                 }else{
                     resetPosition=true;
                     robotState=RobotState.AlignWithBeacon;
                 }
                 break;
+
             case AlignWithBeacon:
                 double Y_ROTATION_TOLERANCE=5;//degrees
                 if(currentBeacon.isFound()) {
@@ -257,7 +252,7 @@ public class Red extends Robot {
                     if (direction.getMagnitude() > 20||Math.abs(currentBeacon.getYRotation())>Math.toRadians(Y_ROTATION_TOLERANCE)) {//10mm tolerance
                         swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation(), scale(direction.getMagnitude(),0,250,.02,.2));
                     } else {//robot is fully aligned
-                        swerveDrive.drive(direction.x,direction.y,0,0);
+                        swerveDrive.stop();
                         robotState = RobotState.AnalyzeBeacon;
                         beaconAnalysisResult = 0;
                         wait = false;
@@ -270,13 +265,14 @@ public class Red extends Robot {
                         neck.setPosition(neckUpPosition);
                     }
                 }else{
-                    swerveDrive.drive(1,0,0,0);
+                    swerveDrive.stop();
                 }
                 break;
+
             case AnalyzeBeacon:
                 vuforia.cameraLight(false);
                 if(beaconAnalysisResult==0){
-                    swerveDrive.drive(1,0,0,0);
+                    swerveDrive.stop();
                     if(Math.abs(neck.getPosition()-neckUpPosition)<.01){
                         beaconAnalysisResult=analyzeBeacon();
                         if(beaconAnalysisResult!=0) {
@@ -292,24 +288,25 @@ public class Red extends Robot {
                     resetPosition=true;
                 }
                 break;
+
             case PressBeacon:
                 vuforia.cameraLight(true);
                 neck.setPosition(NECK_FLAT);
                 buttonWheel.setPosition(WHEEL_OUT);
                 if(Math.abs(neck.getPosition()-NECK_FLAT)<.01) {
                     if (resetPosition) {
-                        if(currentBeacon.isFound()) {
+                        if(currentBeacon.isFound()){
                             resetPosition = false;
                             swerveDrive.resetPosition();
                             spongeVector = new Vector(currentBeacon.getDistance()-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL, currentBeacon.getHorizontalDistance() + CAMERA_OFFSET_FROM_PLOW);
-                            if (beaconAnalysisResult == -1) {
+                            if (beaconAnalysisResult == 1) {
                                 buttonVector = new Vector(spongeVector.x, spongeVector.y - BUTTON_OFFSET_FROM_TARGET);
-                            } else if (beaconAnalysisResult == 1) {
+                            } else if (beaconAnalysisResult == -1) {
                                 buttonVector = new Vector(spongeVector.x, spongeVector.y + BUTTON_OFFSET_FROM_TARGET);
                             }
                             DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude()+1);
                         }else{
-                            swerveDrive.drive(1,0,0,0);
+                            swerveDrive.stop();
                             break;
                         }
                     }
@@ -339,40 +336,24 @@ public class Red extends Robot {
 
                 break;
             case ReAlignWithBeacon:
-                currentHeading=gyro.getHeading();
-                targetVector = new Vector(Math.cos(Math.PI/2), Math.sin(Math.PI/2));
-                currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));
-                //angleBetween is the angle from currentPosition to target position in radians
-                //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
-                angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
-
                 vuforia.cameraLight(true);
                 Y_ROTATION_TOLERANCE=5;//degrees
-                if(Math.abs(angleBetween)>.05){
-                    swerveDrive.drive(0,0,angleBetween/2,.5);
-                }else{
-                    if(beaconsPressed==1){
-                        robotState=RobotState.DriveToSecondBeacon;
-                    }else{
-                        robotState=RobotState.Stop;
+                if(currentBeacon.isFound()) {
+                    if (Math.abs(currentBeacon.getYRotation())>Math.toRadians(Y_ROTATION_TOLERANCE)) {//10mm tolerance
+                        swerveDrive.drive(0,0, currentBeacon.getYRotation(), .2);
+                    } else {//robot is fully aligned
+                        swerveDrive.stop();
+                        beaconsPressed++;
+                        if(beaconsPressed==1){
+                            robotState=RobotState.DriveToSecondBeacon;
+                        }else{
+                            robotState=RobotState.Stop;
+                        }
+                        beaconAnalysisResult = 0;
                     }
+                }else{
+                    swerveDrive.stop();
                 }
-//                if(currentBeacon.isFound()) {
-//                    if (Math.abs(currentBeacon.getYRotation())>Math.toRadians(Y_ROTATION_TOLERANCE)) {//10mm tolerance
-//                        swerveDrive.drive(0,0, currentBeacon.getYRotation(), .2);
-//                    } else {//robot is fully aligned
-//                        swerveDrive.drive(1,0,0,0);
-//                        beaconsPressed++;
-//                        if(beaconsPressed==1){
-//                            robotState=RobotState.DriveToSecondBeacon;
-//                        }else{
-//                            robotState=RobotState.Stop;
-//                        }
-//                        beaconAnalysisResult = 0;
-//                    }
-//                }else{
-//                    swerveDrive.drive(1,0,0,0);
-//                }
                 break;
             //            case ReAlignWithBeacon:
             //                vuforia.cameraLight(true);
@@ -434,13 +415,6 @@ public class Red extends Robot {
             //                break;
 
             case DriveToSecondBeacon:
-                currentHeading=gyro.getHeading();
-                targetVector = new Vector(Math.cos(Math.PI/2), Math.sin(Math.PI/2));
-                currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));
-                //angleBetween is the angle from currentPosition to target position in radians
-                //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
-                angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
-
                 vuforia.cameraLight(true);
                 neck.setPosition(NECK_FLAT);
                 if(resetPosition){
@@ -448,8 +422,8 @@ public class Red extends Robot {
                     resetPosition=false;
                 }
                 DISTANCE=40;
-                if(!getTargets(data).contains("Tools")){
-                    swerveDrive.drive(-.3,1,angleBetween/2,.6-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
+                if(!getTargets(data).contains("Legos")){
+                    swerveDrive.drive(-.3,-1,0,.6-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
                 }else{
                     beaconAnalysisResult=0;
                     robotState=RobotState.AlignWithBeacon;
@@ -457,10 +431,10 @@ public class Red extends Robot {
                 break;
 
             case Stop:
-                swerveDrive.drive(1,0,0,0);
+                swerveDrive.stop();
                 break;
         }//switch
-        swerveDrive.update(wait,15,true);
+        swerveDrive.update(wait,15,false);
         telemetry.addData("State",robotState);
         telemetry.addData("result",beaconAnalysisResult);
     }//loop

@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.Swerve.Core;
 import android.util.Log;
 
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -16,6 +17,7 @@ public class SwerveDrive {
     SwerveModule[] modules;
     double[] angles={0,0,0,0};
     double[] powers={0,0,0,0};
+    double[] targetPowers={0,0,0,0};
     int[] positions;
     DcMotor[] motors;
     boolean[] atPositions={false,false,false,false};
@@ -24,15 +26,16 @@ public class SwerveDrive {
     private final double GEAR_RATIO=2;
     private final int COUNTS_PER_REV=1120;
     private double deltaCounts=0;
+    private double[] lastAcceleration;
 //    private double leftTargetPower=0;
 //    private double rightTargetPower=0;
 
     /**
      * Custom constructor for current robot.
      */
-    public SwerveDrive(AnalogInput frontLeft,AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
-                        DcMotor lf,DcMotor rf,DcMotor lb,DcMotor rb,
-                        Servo frontleftServo,Servo frontRightServo,Servo backLeftServo,Servo backRightServo,double width,double length,FTCSwerve ftcSwerve){
+    public SwerveDrive(AnalogInput frontLeft, AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
+                       DcMotor lf, DcMotor rf, DcMotor lb, DcMotor rb,
+                       Servo frontleftServo,Servo frontRightServo, Servo backLeftServo, Servo backRightServo, double width, double length, FTCSwerve ftcSwerve){
         //initialize array of modules
         //array can be any size, as long as the position of each module is specified in its constructor
         modules = new SwerveModule[] {
@@ -48,6 +51,7 @@ public class SwerveDrive {
         motors=new DcMotor[]{lf,rf,lb,rb};
         positions=new int[]{lf.getCurrentPosition(),rf.getCurrentPosition(),lb.getCurrentPosition(),rb.getCurrentPosition()};
         this.ftcSwerve=ftcSwerve;
+        lastAcceleration=new double[]{System.nanoTime()/1E6,System.nanoTime()/1E6,System.nanoTime()/1E6,System.nanoTime()/1E6};
     }
 
     public void driveWithOrient(double translationX, double translationY, double rotation, double heading, double powerScale) {
@@ -80,15 +84,15 @@ public class SwerveDrive {
             //if any exceed 100%, all must be scale down
             maxPower = Math.max(maxPower, vects[i].getMagnitude());
         }
-        angles[0]=vects[0].getAngle()-Math.PI/2;
+        angles[0]=vects[0].getAngle()+Math.PI/2;
         angles[1]=vects[1].getAngle()-Math.PI/2;
         angles[2]=vects[2].getAngle()-Math.PI/2;
-        angles[3]=vects[3].getAngle()+Math.PI/2;
+        angles[3]=vects[3].getAngle();
 
-        powers[0]=(vects[0].getMagnitude() / maxPower)*powerScale;
-        powers[1]=(vects[1].getMagnitude() / maxPower)*powerScale;
-        powers[2]=(vects[2].getMagnitude() / maxPower)*powerScale;
-        powers[3]=(vects[2].getMagnitude() / maxPower)*powerScale;
+        targetPowers[0]=(vects[0].getMagnitude() / maxPower)*powerScale;
+        targetPowers[1]=(vects[1].getMagnitude() / maxPower)*powerScale;
+        targetPowers[2]=(vects[2].getMagnitude() / maxPower)*powerScale;
+        targetPowers[3]=(vects[2].getMagnitude() / maxPower)*powerScale;
     }
 
 
@@ -147,14 +151,17 @@ public class SwerveDrive {
     /**
      * Method called every loop iteration
      */
-    public void update(boolean waitForServos,double threshold){
+    public void update(boolean waitForServos,double threshold, boolean accelerate){
         if(!waitForServos) {
             for(int i=0;i<modules.length;i++){
                 SwerveModule module=modules[i];
+                if(accelerate){
+                    accelerate(i);
+                }else{
+                    powers[i]=targetPowers[i];
+                }
                 module.set(angles[i],powers[i]);
-                Log.d("Update","Start===========================");
                 module.update();
-                Log.d("Update","end===============");
                 //distance travelled
                 double average=0;
                 for(int j=0;j<positions.length;j++){
@@ -169,6 +176,11 @@ public class SwerveDrive {
             boolean atPosition=true;
             for(int i=0;i<modules.length;i++){
                 SwerveModule module=modules[i];
+                if(accelerate){
+                    accelerate(i);
+                }else{
+                    powers[i]=targetPowers[i];
+                }
                 module.set(angles[i],powers[i]);//necessary
                 if (Math.abs(module.getDelta())>Math.toRadians(threshold)){
                     atPosition=false;
@@ -181,10 +193,7 @@ public class SwerveDrive {
             if(atPosition){//if all are at the correct position
                 for(int i=0;i<modules.length;i++){
                     SwerveModule module=modules[i];
-                    Log.d("Update","Start===========================");
                     module.update();
-                    Log.d("Update","end===========================");
-
                     double average=0;
                     for(int j=0;j<positions.length;j++){
                         int position=motors[j].getCurrentPosition();
@@ -209,15 +218,47 @@ public class SwerveDrive {
                             module.setPower(-turnPower);
                         }
                     }
-                    Log.d("Update","Start===========================");
-
                     module.update();
-                    Log.d("Update","end===========================");
-
                 }
             }
         }
+        try {
+            Thread.sleep(1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
+
+
+    private void  accelerate(int i){
+        double delta=targetPowers[i]-powers[i];
+        double dt=System.nanoTime()/1E6-lastAcceleration[i];
+        lastAcceleration[i]=System.nanoTime()/1E6;
+
+        if(Math.abs(delta)<.1){
+            powers[i]=targetPowers[i];
+        }else if(delta>0){
+            if(powers[i]>0) {
+                powers[i] += (dt) / 1000;
+            }else{
+                powers[i]=targetPowers[i];
+            }
+        }else if(delta<0){
+            if(powers[i]<0) {
+                powers[i] -= dt / 1000;
+            }else{
+                powers[i]=targetPowers[i];
+            }
+        }
+
+        if(powers[i]>1){
+            powers[i]=1;
+        }else if(powers[i]<-1){
+            powers[i]=-1;
+        }
+    }
+
+
     private double turnPower=.12;
     public void setTurnPower(double turnPower){
         this.turnPower=turnPower;
