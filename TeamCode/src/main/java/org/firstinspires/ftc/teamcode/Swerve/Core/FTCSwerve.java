@@ -78,4 +78,5 @@ public class FTCSwerve {
         swerveDrive.refreshValues();
     }
 
+    public void setPivotPoint(double x,double y){swerveDrive.setPivotPoint(x,y);}
 }

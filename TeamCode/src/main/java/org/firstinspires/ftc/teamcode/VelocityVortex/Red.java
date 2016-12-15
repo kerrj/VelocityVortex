@@ -19,6 +19,8 @@ import org.firstinspires.ftc.teamcode.CameraStuff.FTCCamera;
 import org.firstinspires.ftc.teamcode.CameraStuff.FTCTarget;
 import org.firstinspires.ftc.teamcode.CameraStuff.FTCVuforia;
 import org.firstinspires.ftc.teamcode.Swerve.Core.Vector;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.opencv.android.InstallCallbackInterface;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
@@ -31,6 +33,7 @@ import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -86,6 +89,7 @@ public class Red extends Robot {
     enum ShootServoState{MovingUp,MovingDown}
     private ShootServoState servoState=ShootServoState.MovingUp;
     boolean resetServoTime=true;
+    private JSONObject json;
 
 
 
@@ -125,17 +129,59 @@ public class Red extends Robot {
         blue=new ScriptC_blue(mRS);
         swerveDrive.resetPosition();
         //        dataLogger.start();
+        File directory=FtcRobotControllerActivity.getActivity().getExternalFilesDir(null);
+        File red=new File(directory,"red.txt");
+        if(!red.exists()){
+            try {
+                red.createNewFile();
+                FileOutputStream fos=new FileOutputStream(red);
+                String contents="{\"ShootPower\":.65,\"DriveAngle\":30}";
+                fos.write(contents.getBytes());
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        FileInputStream fis= null;
+        try {
+            fis = new FileInputStream(red);
+            byte[] data=new byte[fis.available()];
+            fis.read(data);
+            fis.close();
+            String contents=new String(data,"UTF-8");
+            json=new JSONObject(contents);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
     @Override
     public void init_loop(){
         swerveDrive.refreshValues();
-        swerveDrive.drive(.25,1,0,0);
+        swerveDrive.drive(1,0,0,0);
         swerveDrive.update(true,15,false);
     }
 
     @Override
     public void loop() {
         super.loop();
+        double shootPower;
+        double driveAngle;
+        try {
+            shootPower=json.getDouble("ShootPower");
+        } catch (JSONException e){
+            shootPower=.65;
+            e.printStackTrace();
+        }
+        try {
+            driveAngle=json.getDouble("DriveAngle");
+        } catch (JSONException e) {
+            driveAngle=30;
+            e.printStackTrace();
+        }
         //first gra b an instance of FTCTarget for each target we care about: Wheels and Legos
         HashMap<String, double[]> data = vuforia.getVuforiaData();
         FTCTarget tools = new FTCTarget();
@@ -162,8 +208,8 @@ public class Red extends Robot {
                     startTime=System.currentTimeMillis();
                     resetPosition=false;
                 }
-                shootRight.setPower(.65);
-                shootLeft.setPower(.65);
+                shootLeft.setPower(shootPower);
+                shootRight.setPower(shootPower);
                 if(System.currentTimeMillis()-startTime>500){
                     if(resetServoTime){
                         servoTravelStart=System.currentTimeMillis();
@@ -244,7 +290,7 @@ public class Red extends Robot {
                 angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
 
                 if(!getTargets(data).contains("Gears")){
-                    swerveDrive.drive(.5,1,angleBetween/2, .6-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
+                    swerveDrive.drive(Math.cos(driveAngle),Math.sin(driveAngle),angleBetween/2, .6-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
                 }else{
                     resetPosition=true;
                     robotState=RobotState.AlignWithBeacon;
