@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.VelocityVortex;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
  * Created by Justin on 11/13/2016.
  */
 @TeleOp
+@Disabled
 public class DigitalTest extends Robot {
 
     public void init(){

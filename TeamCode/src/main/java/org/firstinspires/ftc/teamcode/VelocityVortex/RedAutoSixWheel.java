@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -24,6 +25,7 @@ import org.firstinspires.ftc.teamcode.Autonomous_Methods;
  * Created by hunai on 9/23/2016.
  */
 @Autonomous
+@Disabled
 public class RedAutoSixWheel extends OpMode {
     final double WHEEL_IN=0;
     final double WHEEL_OUT=.7;

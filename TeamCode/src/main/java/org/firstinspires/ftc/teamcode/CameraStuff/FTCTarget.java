@@ -73,7 +73,7 @@ public class FTCTarget  {
     }
 
     public double getHorizontalDistance(){
-        return -x;
+        return x;
     }
 
 }

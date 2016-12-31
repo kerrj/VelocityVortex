@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.*;
  * Created by Justin on 11/24/2016.
  */
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp
+@Disabled
 public class MakeSwerveGreatAgain extends Robot {
 
     public void init(){

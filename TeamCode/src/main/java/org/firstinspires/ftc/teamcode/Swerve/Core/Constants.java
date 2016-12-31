@@ -11,8 +11,8 @@ import java.util.concurrent.locks.Lock;
  * Created by hunai on 9/30/2016.
  */
  public class Constants {
-    public static final double FL_OFFSET=-260.9;
-    public static final double BL_OFFSET=-300.3;
-    public static final double FR_OFFSET=-284.6;
-    public static final double BR_OFFSET=-350.8;
+    public static final double FL_OFFSET=-80.74;
+    public static final double BL_OFFSET=-121.3;
+    public static final double FR_OFFSET=-290;
+    public static final double BR_OFFSET=-172.9;
 }

@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.VelocityVortex;
 
 import android.graphics.Path;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,6 +13,7 @@ import com.qualcomm.robotcore.hardware.Servo;
  * Created by Justin on 11/11/2016.
  */
 @TeleOp
+@Disabled
 public class AlanMotorTest extends OpMode{
     DcMotor left,right;
     Servo servo;

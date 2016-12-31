@@ -16,6 +16,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 /**
  * Created by hunai on 9/14/2016.
@@ -51,61 +52,98 @@ public class SwerveDrive {
                        Servo frontleftServo,Servo frontRightServo, Servo backLeftServo, Servo backRightServo, double width, double length, FTCSwerve ftcSwerve){
         //initialize array of modules
         //array can be any size, as long as the position of each module is specified in its constructor
-//        directory= FtcRobotControllerActivity.getActivity().getExternalFilesDir(null);
-//        constants=new File(directory,"constants.txt");
-//        if(!constants.exists()){
-//            try {
-//                constants.createNewFile();
-//                String contents="{\"lf\":0,\"rf\":0,\"lb\":0,\"rb\":0}";
-//                FileOutputStream fos=new FileOutputStream(constants);
-//                byte[] data=contents.getBytes();
-//                fos.write(data,0,data.length);
-//                fos.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        try {
-//            FileInputStream fis=new FileInputStream(constants);
-//            byte[] data=new byte[fis.available()];
-//            fis.read(data);
-//            fis.close();
-//            String contents=new String(data,"UTF-8");
-//            JSONObject json=new JSONObject(contents);
-//            modules = new SwerveModule[] {
-//                    //front left
-//                    new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(json.getDouble("lf"), frontLeft),-width/2,length/2),
-//                    //front right
-//                    new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(json.getDouble("rf"), frontRight),width/2,length/2),
-//                    //back left
-//                    new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(json.getDouble("lb"), backLeft),-width/2,-length/2),
-//                    //back right
-//                    new SwerveModule(rb,backRightServo, new AbsoluteEncoder(json.getDouble("rb"), backRight),width/2,-length/2)
-//            };
-//            Log.d("lf",Double.toString(json.getDouble("lf")));
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            modules = new SwerveModule[] {
-//                    //front left
-//                    new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(Constants.FL_OFFSET, frontLeft),-width/2,length/2),
-//                    //front right
-//                    new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(Constants.FR_OFFSET, frontRight),width/2,length/2),
-//                    //back left
-//                    new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(Constants.BL_OFFSET, backLeft),-width/2,-length/2),
-//                    //back right
-//                    new SwerveModule(rb,backRightServo, new AbsoluteEncoder(Constants.BR_OFFSET, backRight),width/2,-length/2)
-//            };
-//        }
-        modules = new SwerveModule[] {
-                //front left
-                new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(Constants.FL_OFFSET, frontLeft),-width/2,length/2),
-                //front right
-                new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(Constants.FR_OFFSET, frontRight),width/2,length/2),
-                //back left
-                new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(Constants.BL_OFFSET, backLeft),-width/2,-length/2),
-                //back right
-                new SwerveModule(rb,backRightServo, new AbsoluteEncoder(Constants.BR_OFFSET, backRight),width/2,-length/2)
-        };
+        directory= FtcRobotControllerActivity.getActivity().getExternalFilesDir(null);
+        constants=new File(directory,"constants.txt");
+        if(!constants.exists()){
+            try {
+                constants.createNewFile();
+                String contents="{\"lf\":0,\"rf\":0,\"lb\":0,\"rb\":0}";
+                FileOutputStream fos=new FileOutputStream(constants);
+                byte[] data=contents.getBytes();
+                fos.write(data,0,data.length);
+                fos.close();
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+        try{
+            FileInputStream fis=new FileInputStream(constants);
+            byte[] data=new byte[fis.available()];
+            fis.read(data,0,data.length);
+            fis.close();
+            String contents=new String(data,"UTF-8");
+            JSONObject json=new JSONObject(contents);
+            Log.d("json",json.toString());
+            modules = new SwerveModule[]{
+                    //front left
+                    new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(-json.getDouble("lf"), frontLeft),-width/2,length/2),
+                    //front right
+                    new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(-json.getDouble("rf"), frontRight),width/2,length/2),
+                    //back left
+                    new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(-json.getDouble("lb"), backLeft),-width/2,-length/2),
+                    //back right
+                    new SwerveModule(rb,backRightServo, new AbsoluteEncoder(-json.getDouble("rb"), backRight),width/2,-length/2)
+            };
+            Log.d("lf",Double.toString(json.getDouble("lf")));
+        } catch (JSONException e) {
+            e.printStackTrace();
+            modules = new SwerveModule[] {
+                    //front left
+                    new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(Constants.FL_OFFSET, frontLeft),-width/2,length/2),
+                    //front right
+                    new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(Constants.FR_OFFSET, frontRight),width/2,length/2),
+                    //back left
+                    new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(Constants.BL_OFFSET, backLeft),-width/2,-length/2),
+                    //back right
+                    new SwerveModule(rb,backRightServo, new AbsoluteEncoder(Constants.BR_OFFSET, backRight),width/2,-length/2)
+            };
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            modules = new SwerveModule[] {
+                    //front left
+                    new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(Constants.FL_OFFSET, frontLeft),-width/2,length/2),
+                    //front right
+                    new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(Constants.FR_OFFSET, frontRight),width/2,length/2),
+                    //back left
+                    new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(Constants.BL_OFFSET, backLeft),-width/2,-length/2),
+                    //back right
+                    new SwerveModule(rb,backRightServo, new AbsoluteEncoder(Constants.BR_OFFSET, backRight),width/2,-length/2)
+            };
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            modules = new SwerveModule[] {
+                    //front left
+                    new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(Constants.FL_OFFSET, frontLeft),-width/2,length/2),
+                    //front right
+                    new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(Constants.FR_OFFSET, frontRight),width/2,length/2),
+                    //back left
+                    new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(Constants.BL_OFFSET, backLeft),-width/2,-length/2),
+                    //back right
+                    new SwerveModule(rb,backRightServo, new AbsoluteEncoder(Constants.BR_OFFSET, backRight),width/2,-length/2)
+            };
+        } catch (IOException e) {
+            e.printStackTrace();
+            modules = new SwerveModule[] {
+                    //front left
+                    new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(Constants.FL_OFFSET, frontLeft),-width/2,length/2),
+                    //front right
+                    new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(Constants.FR_OFFSET, frontRight),width/2,length/2),
+                    //back left
+                    new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(Constants.BL_OFFSET, backLeft),-width/2,-length/2),
+                    //back right
+                    new SwerveModule(rb,backRightServo, new AbsoluteEncoder(Constants.BR_OFFSET, backRight),width/2,-length/2)
+            };
+        }
+//                modules = new SwerveModule[] {
+//                //front left
+//                new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(Constants.FL_OFFSET, frontLeft),-width/2,length/2),
+//                //front right
+//                new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(Constants.FR_OFFSET, frontRight),width/2,length/2),
+//                //back left
+//                new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(Constants.BL_OFFSET, backLeft),-width/2,-length/2),
+//                //back right
+//                new SwerveModule(rb,backRightServo, new AbsoluteEncoder(Constants.BR_OFFSET, backRight),width/2,-length/2)
+//        };
         motors=new DcMotor[]{lf,rf,lb,rb};
         positions=new int[]{lf.getCurrentPosition(),rf.getCurrentPosition(),lb.getCurrentPosition(),rb.getCurrentPosition()};
         this.ftcSwerve=ftcSwerve;
@@ -144,10 +182,10 @@ public class SwerveDrive {
             //if any exceed 100%, all must be scale down
             maxPower = Math.max(maxPower, vects[i].getMagnitude());
         }
-        angles[0]=vects[0].getAngle()-Math.PI/2;
-        angles[1]=vects[1].getAngle()+Math.PI/2;
+        angles[0]=vects[0].getAngle()+Math.PI/2;
+        angles[1]=vects[1].getAngle()-Math.PI/2;
         angles[2]=vects[2].getAngle()+Math.PI/2;
-        angles[3]=vects[3].getAngle();
+        angles[3]=vects[3].getAngle()-Math.PI/2;
 
         targetPowers[0]=(vects[0].getMagnitude() / maxPower)*powerScale;
         targetPowers[1]=(vects[1].getMagnitude() / maxPower)*powerScale;
@@ -282,11 +320,6 @@ public class SwerveDrive {
                 }
             }
         }
-        try {
-            Thread.sleep(1);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
 
@@ -298,19 +331,17 @@ public class SwerveDrive {
         if(Math.abs(delta)<.05){
             powers[i]=targetPowers[i];
         }else if(delta>0){
-            powers[i] += (dt) / 2000;
-//            if(powers[i]>0) {
-//                powers[i] += (dt) / 2000;
-//            }else{
-//                powers[i]=targetPowers[i];
-//            }
+            if(powers[i]>0) {
+                powers[i] += (dt) / 1500;
+            }else{
+                powers[i]=targetPowers[i];
+            }
         }else if(delta<0){
-            powers[i] -= dt / 2000;
-//            if(powers[i]<0) {
-//                powers[i] -= dt / 2000;
-//            }else{
-//                powers[i]=targetPowers[i];
-//            }
+            if(powers[i]<0) {
+                powers[i] -= dt / 1500;
+            }else{
+                powers[i]=targetPowers[i];
+            }
         }
 
         if(powers[i]>1){
@@ -322,6 +353,7 @@ public class SwerveDrive {
 
 
     private double turnPower=.12;
+
     public void setTurnPower(double turnPower){
         this.turnPower=turnPower;
     }

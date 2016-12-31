@@ -27,8 +27,8 @@ import org.firstinspires.ftc.teamcode.Swerve.Core.FTCSwerve;
 public class Robot extends OpMode {
     public static final double WHEEL_IN=.95;
     public static final double WHEEL_OUT=.3;
-    public static final double NECK_FLAT=.4;
-    public static final double CAP_RIGHT_IN=.982;
+    public static final double NECK_FLAT=.45;
+    public static final double CAP_RIGHT_IN=.4;
     public static final double CAP_LEFT_IN=.08;
     public static final double CAP_RIGHT_OUT=.5;
     public static final double CAP_LEFT_OUT=.65;
@@ -73,10 +73,6 @@ public class Robot extends OpMode {
         shootRight.setDirection(DcMotorSimple.Direction.REVERSE);
         shootLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shootRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        lfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        rbm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        lbm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        rfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         lf=hardwareMap.servo.get("lf");
         lb=hardwareMap.servo.get("lb");
         rf=hardwareMap.servo.get("rf");
@@ -107,7 +103,7 @@ public class Robot extends OpMode {
         rfe=new AbsoluteEncoder(Constants.FR_OFFSET, rfa);
         rbe=new AbsoluteEncoder(Constants.BR_OFFSET, rba);
         lbe=new AbsoluteEncoder(Constants.BL_OFFSET, lba);
-        swerveDrive=new FTCSwerve(lfa,rfa,lba,rba,lfm,rfm,lbm,rbm,lf,rf,lb,rb,16,16);
+        swerveDrive=new FTCSwerve(lfa,rfa,lba,rba,lfm,rfm,lbm,rbm,lf,rf,lb,rb,14,14);
 //        dataLogger.mapHardware(this);
 //        I2cDeviceSynch i=hardwareMap.i2cDeviceSynch.get("leftRanger");
 //        leftRangeMeter=new ModernRoboticsI2cRangeSensor(i);

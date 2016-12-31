@@ -5,11 +5,13 @@ package org.firstinspires.ftc.teamcode.RESQ5795;
  */
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 /**
  * Created by hunai on 7/21/2016.
  */
+@TeleOp
 public class Lazybot extends LinearOpMode{
     DcMotor frontRight;
     DcMotor frontLeft;

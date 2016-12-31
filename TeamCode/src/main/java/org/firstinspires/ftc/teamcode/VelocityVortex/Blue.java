@@ -56,10 +56,10 @@ public class Blue extends Robot {
     private boolean resetPosition=true;
 
     private enum RobotState{//list states here
-        Shoot, RotateToFirstBeacon, DriveForward,DriveToFirstBeacon,AlignWithBeacon, AnalyzeBeacon, PressBeacon,DriveToSecondBeacon,Stop, VerifyBeacon,BackUp,DoubleCheckBeacon,ReAlignWithBeacon
+        Shoot, RotateToFirstBeacon, DriveForward,AlignWithBeacon, AnalyzeBeacon, PressBeacon,DriveToSecondBeacon,Stop, BackUp
     }
 
-    private RobotState robotState=RobotState.Shoot;//initialize start state here
+    private RobotState robotState=RobotState.DriveForward;//initialize start state here
 
     private int beaconsPressed=0;
 
@@ -91,17 +91,26 @@ public class Blue extends Robot {
     enum ShootServoState{MovingUp,MovingDown}
     private ShootServoState servoState=ShootServoState.MovingUp;
     private JSONObject json;
+    double shootPower;
+    double driveAngle;
+    double rotateConstant;
+    private AnalyzeThread analyzeThread;
+    private Object threadLock=new Object();
 
 
 
     @Override
     public void init() {
-
         super.init();
+        analyzeThread=new AnalyzeThread();
         lfm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rfm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lbm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rbm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rbm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lbm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         beaconsPressed=0;
         beaconAnalysisResult=0;
         wait=true;
@@ -131,7 +140,6 @@ public class Blue extends Robot {
         blue=new ScriptC_blue(mRS);
         swerveDrive.resetPosition();
         shots=0;
-//        dataLogger.start();
 
         File directory=FtcRobotControllerActivity.getActivity().getExternalFilesDir(null);
         File blue=new File(directory,"blue.txt");
@@ -161,15 +169,7 @@ public class Blue extends Robot {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-    }
 
-
-
-    @Override
-    public void loop() {
-        super.loop();
-        double shootPower;
-        double driveAngle;
         try {
             shootPower=json.getDouble("ShootPower");
         } catch (JSONException e) {
@@ -177,21 +177,40 @@ public class Blue extends Robot {
             e.printStackTrace();
         }
         try {
-            driveAngle=json.getDouble("DriveAngle");
+            driveAngle=Math.toRadians(json.getDouble("DriveAngle"));
         } catch (JSONException e) {
-            driveAngle=30;
+            driveAngle=Math.toRadians(30);
             e.printStackTrace();
         }
+        try {
+            rotateConstant=json.getDouble("RotateConstant");
+        } catch (JSONException e) {
+            rotateConstant=.3;
+            e.printStackTrace();
+        }
+    }
+
+    public void init_loop(){
+        swerveDrive.refreshValues();
+        swerveDrive.drive(-1,0,0,0);
+        swerveDrive.update(true,15,false);
+    }
+
+
+
+    @Override
+    public void loop() {
+        super.loop();
 
         //first gra b an instance of FTCTarget for each target we care about: Wheels and Legos
         HashMap<String, double[]> data = vuforia.getVuforiaData();
         FTCTarget wheels = new FTCTarget();
         FTCTarget legos = new FTCTarget();
         try {
-            if (getTargets(data).contains("Wheels")) {
+            if (getTargets(data).contains("Wheels")){
                 wheels = new FTCTarget(data, "Wheels");
             }
-            if (getTargets(data).contains("Legos")) {
+            if (getTargets(data).contains("Legos")){
                 legos = new FTCTarget(data, "Legos");
             }
         }catch(NullPointerException e){
@@ -205,14 +224,29 @@ public class Blue extends Robot {
         }
 
         switch(robotState){
+            case DriveForward:
+                if(resetPosition){
+                    swerveDrive.resetPosition();
+                    resetPosition=false;
+                    shootLeft.setPower(shootPower);
+                    shootRight.setPower(shootPower);
+                }
+                if(swerveDrive.getLinearInchesTravelled()<10){
+                    swerveDrive.drive(-1,0,0,.3);
+                }else{
+                    robotState=RobotState.Shoot;
+                    resetPosition=true;
+                }
+                break;
             case Shoot:
+                swerveDrive.drive(0,-1,rotateConstant,0);
                 if(resetPosition){
                     startTime=System.currentTimeMillis();
                     resetPosition=false;
                 }
                 shootLeft.setPower(shootPower);
                 shootRight.setPower(shootPower);
-                if(System.currentTimeMillis()-startTime>500){
+                if(System.currentTimeMillis()-startTime>200){
                     if(resetServoTime){
                         servoTravelStart=System.currentTimeMillis();
                         resetServoTime=false;
@@ -224,7 +258,7 @@ public class Blue extends Robot {
                             if(shots<2) {
                                 servoState = ShootServoState.MovingDown;
                             }else{
-                                robotState=RobotState.DriveForward;
+                                robotState=RobotState.RotateToFirstBeacon;
                                 shootLeft.setPower(0);
                                 shootRight.setPower(0);
                                 resetPosition=true;
@@ -241,22 +275,14 @@ public class Blue extends Robot {
                     }
                 }
                 break;
-            case DriveForward:
+
+
+            case RotateToFirstBeacon:
                 if(resetPosition){
                     swerveDrive.resetPosition();
                     resetPosition=false;
                 }
-                if(swerveDrive.getLinearInchesTravelled()<5){
-                    swerveDrive.drive(-1,0,0,.4);
-                }else{
-                    robotState=RobotState.RotateToFirstBeacon;
-                    resetPosition=true;
-                }
-                break;
-
-            case RotateToFirstBeacon:
-                //                vuforia.cameraLight(true);
-                //                double DISTANCE=100;
+                double DISTANCE=60;
                 double currentHeading=gyro.getHeading();
                 double desiredAngle=Math.toRadians(45);
                 Vector targetVector = new Vector(Math.cos(3*Math.PI/2), Math.sin(3*Math.PI/2));
@@ -265,40 +291,14 @@ public class Blue extends Robot {
                 //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
                 double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
                 telemetry.addData("angle",angleBetween);
-                //                if(!getTargets(data).contains("Legos")){
-                //                    swerveDrive.drive(Math.cos(angleBetween+desiredAngle),
-                //                                      -Math.sin(angleBetween+desiredAngle),
-                //                                      0,
-                //                                      .6-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
-                //                }else{
-                //                    resetPosition=true;
-                //                    robotState=RobotState.AlignWithBeacon;
-                //                }
-                if(Math.abs(angleBetween)>.05){
-                    swerveDrive.drive(0,0,angleBetween/2,.5);
-                }else{
-                    resetPosition=true;
-                    robotState=RobotState.DriveToFirstBeacon;
-                }
-                break;
-
-            case DriveToFirstBeacon:
-                vuforia.cameraLight(true);
-                currentHeading=gyro.getHeading();
-                desiredAngle=Math.toRadians(45);
-                targetVector = new Vector(Math.cos(3*Math.PI/2), Math.sin(3*Math.PI/2));
-                currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));
-                //angleBetween is the angle from currentPosition to target position in radians
-                //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
-                angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
-                double DISTANCE=30;
                 if(!getTargets(data).contains("Wheels")){
-                    swerveDrive.drive(Math.cos(driveAngle),-Math.sin(driveAngle),angleBetween/2, .6-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
+                    swerveDrive.drive(0,-1,rotateConstant,.5-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
                 }else{
                     resetPosition=true;
                     robotState=RobotState.AlignWithBeacon;
                 }
                 break;
+
 
             case AlignWithBeacon:
                 double Y_ROTATION_TOLERANCE=5;//degrees
@@ -326,26 +326,27 @@ public class Blue extends Robot {
 
             case AnalyzeBeacon:
                 vuforia.cameraLight(false);
-                if(beaconAnalysisResult==0){
+                double result;
+                synchronized (threadLock){
+                    result=beaconAnalysisResult;
+                }
+                if(result==0){
                     swerveDrive.drive(1,0,0,0);
                     if(Math.abs(neck.getPosition()-neckUpPosition)<.01){
-                        beaconAnalysisResult=analyzeBeacon();
-                        if(beaconAnalysisResult!=0) {
-                            wait = true;
-                        }else{
-                            //need to adjust here
-                        }
+                        analyzeThread=new AnalyzeThread();
+                        analyzeThread.start();
                     }
-                }else if(beaconAnalysisResult==1||beaconAnalysisResult==-1){
+                }else if(result==1||result==-1){
                     buttonWheel.setPosition(WHEEL_OUT);
                     neck.setPosition(NECK_FLAT);
                     robotState=RobotState.PressBeacon;
                     resetPosition=true;
+                }else if(result==999){//processing
+                    swerveDrive.drive(1,0,0,0);
                 }
                 break;
 
             case PressBeacon:
-                vuforia.cameraLight(true);
                 neck.setPosition(NECK_FLAT);
                 buttonWheel.setPosition(WHEEL_OUT);
                 if(Math.abs(neck.getPosition()-NECK_FLAT)<.01){
@@ -385,115 +386,25 @@ public class Blue extends Robot {
                 } else {
                     buttonWheel.setPosition(WHEEL_IN);
                     resetPosition = true;
-                    robotState=RobotState.ReAlignWithBeacon;
-                    beaconAnalysisResult=0;
-                }
-
-                break;
-            case ReAlignWithBeacon:
-                currentHeading=gyro.getHeading();
-                targetVector = new Vector(Math.cos(3*Math.PI/2), Math.sin(Math.PI/2));
-                currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));
-                //angleBetween is the angle from currentPosition to target position in radians
-                //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
-                angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
-
-                vuforia.cameraLight(true);
-                Y_ROTATION_TOLERANCE=5;//degrees
-                if(Math.abs(angleBetween)>.05){
-                    swerveDrive.drive(0,0,angleBetween/2,.5);
-                }else{
+                    beaconsPressed++;
                     if(beaconsPressed==1){
                         robotState=RobotState.DriveToSecondBeacon;
                     }else{
                         robotState=RobotState.Stop;
                     }
+                    beaconAnalysisResult=0;
                 }
-//                if(currentBeacon.isFound()) {
-//                    if (Math.abs(currentBeacon.getYRotation())>Math.toRadians(Y_ROTATION_TOLERANCE)) {//10mm tolerance
-//                        swerveDrive.drive(0,0, currentBeacon.getYRotation(), .2);
-//                    } else {//robot is fully aligned
-//                        swerveDrive.drive(1,0,0,0);
-//                        beaconsPressed++;
-//                        if(beaconsPressed==1){
-//                            robotState=RobotState.DriveToSecondBeacon;
-//                        }else{
-//                            robotState=RobotState.Stop;
-//                        }
-//                        beaconAnalysisResult = 0;
-//                    }
-//                }else{
-//                    swerveDrive.drive(1,0,0,0);
-//                }
-                break;
-//            case ReAlignWithBeacon:
-//                vuforia.cameraLight(true);
-//                Y_ROTATION_TOLERANCE=5;//degrees
-//                if(currentBeacon.isFound()) {
-//                    Vector direction = new Vector(currentBeacon.getDistance() - 250, currentBeacon.getHorizontalDistance());
-//                    if (direction.getMagnitude() > 20||Math.abs(currentBeacon.getYRotation())>Math.toRadians(Y_ROTATION_TOLERANCE)) {//10mm tolerance
-//                        swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation(), scale(direction.getMagnitude(),0,250,.05,.2));
-//                    } else {//robot is fully aligned
-//                        swerveDrive.stop();
-//                        robotState = RobotState.DoubleCheckBeacon;
-//                        beaconAnalysisResult = 0;
-//                        bookKeepingTime =System.currentTimeMillis();
-//                        wait = false;
-//                        double angle=Math.toDegrees(Math.asin(BUTTON_HEIGHT_ABOVE_CAMERA/(currentBeacon.getDistance()-BUTTON_OFFSET_FROM_WALL)));
-//                        double position=NECK_FLAT-degreesToServoPosition(angle);
-//                        if(position>1){
-//                            position=1;
-//                        }
-//                        neckUpPosition =position;
-//                        neck.setPosition(neckUpPosition);
-//                    }
-//                }else{
-//                    swerveDrive.stop();
-//                }
-//                break;
 
-//            case DoubleCheckBeacon:
-//                vuforia.cameraLight(true);
-//                if(beaconAnalysisResult==0){
-//                    if(System.currentTimeMillis()- bookKeepingTime >1000){
-//                        robotState=RobotState.DriveToSecondBeacon;
-//                        wait=true;
-//                        resetPosition=true;
-//                    }
-//                    swerveDrive.stop();
-//                    if(Math.abs(neck.getPosition()-neckUpPosition)<.01){
-//                        beaconAnalysisResult=analyzeBeacon();
-//                    }
-//                }else if(beaconAnalysisResult==1||beaconAnalysisResult==-1) {
-//                    wait = true;
-//                    buttonWheel.setPosition(WHEEL_OUT);
-//                    neck.setPosition(NECK_FLAT);
-//                    robotState=RobotState.PressBeacon;
-//                    resetPosition=true;
-//                }else if(beaconAnalysisResult==2){//all blue
-//                    robotState=RobotState.DriveToSecondBeacon;
-//                    resetPosition=true;
-//                    wait=true;
-//                }else if(beaconAnalysisResult==3){//all red
-//                    if(System.currentTimeMillis()- pushTime >5000){
-//                        wait=true;
-//                        beaconAnalysisResult=1;//intentionally here to trick pushbeacon into going a direction
-//                        neck.setPosition(NECK_FLAT);
-//                        robotState= RobotState.PressBeacon;
-//                        resetPosition=true;
-//                    }
-//                }
-//                break;
+                break;
 
             case DriveToSecondBeacon:
                 currentHeading=gyro.getHeading();
-                targetVector = new Vector(Math.cos(3*Math.PI/2), Math.sin(Math.PI/2));
+                targetVector = new Vector(Math.cos(3*Math.PI/2), Math.sin(3*Math.PI/2));
                 currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));
                 //angleBetween is the angle from currentPosition to target position in radians
                 //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
                 angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
 
-                vuforia.cameraLight(true);
                 neck.setPosition(NECK_FLAT);
                 if(resetPosition){
                     swerveDrive.resetPosition();
@@ -501,7 +412,7 @@ public class Blue extends Robot {
                 }
                 DISTANCE=40;
                 if(!getTargets(data).contains("Legos")){
-                    swerveDrive.drive(-.3,-1,angleBetween/2,.6-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
+                    swerveDrive.drive(-.3,-1,angleBetween/2,.5-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
                 }else{
                     beaconAnalysisResult=0;
                     robotState=RobotState.AlignWithBeacon;
@@ -517,13 +428,13 @@ public class Blue extends Robot {
         telemetry.addData("result",beaconAnalysisResult);
     }//loop
 
+
+
+
+
+
+
     //==========================================================================================================================
-
-
-
-
-
-
     public double mmToInch(double mm){
         return mm*.0393701;
     }
@@ -568,114 +479,119 @@ public class Blue extends Robot {
         return scaled;
     }
 
-    /**
-     *
-     * @return 0 if useless, -1 if RED is LEFT, 1 if RED is RIGHT,2 if all blue, 3 if all red
-     */
-    public int analyzeBeacon(){
-        Image i=vuforia.getLastFrame();
-        if(i!=null) {
-            ByteBuffer buf=i.getPixels();
-            RGB565Bitmap.copyPixelsFromBuffer(buf);
-            Mat original=new Mat();
-            Log.d("alive","1");
-            //convert to rgba from rgb565
-            Utils.bitmapToMat(RGB565Bitmap, original);
-            Imgproc.cvtColor(original,original,Imgproc.COLOR_BGR2BGRA);
-            Utils.matToBitmap(original, RGBABitmap);
-            try {
-                File directory = FtcRobotControllerActivity.getActivity().getBaseContext().getExternalFilesDir(null);
-                File image = new File(directory, Long.toString(System.currentTimeMillis()) + ".jpeg");
-                image.createNewFile();
-                FileOutputStream fos = new FileOutputStream(image);
-                RGBABitmap.compress(Bitmap.CompressFormat.JPEG, 50,fos) ;
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            //split color onto blueMat Mat
-            Log.d("alive","2");
-            mAllocationIn.copyFrom(RGBABitmap);
-            Log.d("alive","3");
-            blur.setInput(mAllocationIn);
-            blur.setRadius(10);
-            Log.d("alive","4");
-            blur.forEach(getmAllocationOut);
-            Log.d("alive","5");
-            blue.forEach_split(getmAllocationOut,mAllocationIn);
-            Log.d("alive","6");
-            mAllocationIn.copyTo(RGBABitmap);
-            Mat blueMat=new Mat();
-            Utils.bitmapToMat(RGBABitmap, blueMat);
-            Log.d("alive","7");
-            red.forEach_split(getmAllocationOut,mAllocationIn);
-            Log.d("alive","8");
-            mAllocationIn.copyTo(RGBABitmap);
-            Mat redMat=new Mat();
-            Utils.bitmapToMat(RGBABitmap, redMat);
-            //convert blueMat to grayscale for contours
-            Imgproc.cvtColor(blueMat,blueMat,Imgproc.COLOR_RGBA2GRAY);
-            ArrayList<MatOfPoint> contours=new ArrayList<>();
-            Mat hierarchy=new Mat();
-            Imgproc.findContours(blueMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-            double blueAverage=0;
-            double blueArea=0;
-            int index=0;
-            for(MatOfPoint p:contours){
-                MatOfPoint2f points2f=new MatOfPoint2f();
-                p.convertTo(points2f, CvType.CV_32FC2);
-                Point center=Imgproc.minAreaRect(points2f).center;
-                if(center.x>100&&center.x<1100){
-                    double area=Imgproc.contourArea(p);
-                    if(area>30000) {
-                        index+=area;
-                        blueAverage+=center.x*area;
+    public class AnalyzeThread extends Thread{
+        public void run(){
+            Image i=vuforia.getLastFrame();
+            if(i!=null) {
+                synchronized (threadLock) {
+                    beaconAnalysisResult = 999;
+                }
+                ByteBuffer buf=i.getPixels();
+                RGB565Bitmap.copyPixelsFromBuffer(buf);
+                Mat original=new Mat();
+                Log.d("alive","1");
+                //convert to rgba from rgb565
+                Utils.bitmapToMat(RGB565Bitmap, original);
+                Imgproc.cvtColor(original,original,Imgproc.COLOR_BGR2BGRA);
+                Utils.matToBitmap(original, RGBABitmap);
+                try {
+                    File directory = FtcRobotControllerActivity.getActivity().getBaseContext().getExternalFilesDir(null);
+                    File image = new File(directory, Long.toString(System.currentTimeMillis()) + ".jpeg");
+                    image.createNewFile();
+                    FileOutputStream fos = new FileOutputStream(image);
+                    RGBABitmap.compress(Bitmap.CompressFormat.JPEG, 50,fos) ;
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                //split color onto blueMat Mat
+                Log.d("alive","2");
+                mAllocationIn.copyFrom(RGBABitmap);
+                Log.d("alive","3");
+                blur.setInput(mAllocationIn);
+                blur.setRadius(10);
+                Log.d("alive","4");
+                blur.forEach(getmAllocationOut);
+                Log.d("alive","5");
+                blue.forEach_split(getmAllocationOut,mAllocationIn);
+                Log.d("alive","6");
+                mAllocationIn.copyTo(RGBABitmap);
+                Mat blueMat=new Mat();
+                Utils.bitmapToMat(RGBABitmap, blueMat);
+                Log.d("alive","7");
+                red.forEach_split(getmAllocationOut,mAllocationIn);
+                Log.d("alive","8");
+                mAllocationIn.copyTo(RGBABitmap);
+                Mat redMat=new Mat();
+                Utils.bitmapToMat(RGBABitmap, redMat);
+                //convert blueMat to grayscale for contours
+                Imgproc.cvtColor(blueMat,blueMat,Imgproc.COLOR_RGBA2GRAY);
+                ArrayList<MatOfPoint> contours=new ArrayList<>();
+                Mat hierarchy=new Mat();
+                Imgproc.findContours(blueMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+                double blueAverage=0;
+                double blueArea=0;
+                int index=0;
+                for(MatOfPoint p:contours){
+                    MatOfPoint2f points2f=new MatOfPoint2f();
+                    p.convertTo(points2f, CvType.CV_32FC2);
+                    Point center=Imgproc.minAreaRect(points2f).center;
+                    if(center.x>100&&center.x<1100){
+                        double area=Imgproc.contourArea(p);
+                        if(area>30000) {
+                            index+=area;
+                            blueAverage+=center.x*area;
+                        }
                     }
                 }
-            }
-            blueArea=index;
-            if(index==0)blueAverage=0;
-            if(index>0)blueAverage/=index;
+                blueArea=index;
+                if(index==0)blueAverage=0;
+                if(index>0)blueAverage/=index;
 
-            //repeat for red mat
-            Imgproc.cvtColor(redMat,redMat,Imgproc.COLOR_RGBA2GRAY);
-            contours=new ArrayList<>();
-            hierarchy=new Mat();
-            Imgproc.findContours(redMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-            double redAverage=0;
-            double redArea=0;
-            index=0;
-            for(MatOfPoint points:contours){
-                MatOfPoint2f points2f=new MatOfPoint2f();
-                points.convertTo(points2f, CvType.CV_32FC2);
-                Point center=Imgproc.minAreaRect(points2f).center;
-                if(center.x<1100&&center.x>100) {
-                    double area = Imgproc.contourArea(points);
-                    if (area > 30000) {
-                        index += area;
-                        redAverage += center.x * area;
+                //repeat for red mat
+                Imgproc.cvtColor(redMat,redMat,Imgproc.COLOR_RGBA2GRAY);
+                contours=new ArrayList<>();
+                hierarchy=new Mat();
+                Imgproc.findContours(redMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+                double redAverage=0;
+                double redArea=0;
+                index=0;
+                for(MatOfPoint points:contours){
+                    MatOfPoint2f points2f=new MatOfPoint2f();
+                    points.convertTo(points2f, CvType.CV_32FC2);
+                    Point center=Imgproc.minAreaRect(points2f).center;
+                    if(center.x<1100&&center.x>100) {
+                        double area = Imgproc.contourArea(points);
+                        if (area > 30000) {
+                            index += area;
+                            redAverage += center.x * area;
+                        }
                     }
                 }
-            }
-            redArea=index;
-            if(index==0)redAverage=0;
-            if(index>0)redAverage/=index;
+                redArea=index;
+                if(index==0)redAverage=0;
+                if(index>0)redAverage/=index;
 
-            int r=0;
-            if(redAverage>0&&blueAverage>0){
-                if(redAverage>blueAverage) r=-1;
-                if(redAverage<blueAverage) r=1;
-            }else if(redAverage>0&&blueAverage==0&&redArea>100000){
-                r=3;
-            }else if(blueAverage>0&&redAverage==0&&blueArea>100000){
-                r=2;
+                int r=0;
+                if(redAverage>0&&blueAverage>0){
+                    if(redAverage>blueAverage) r=1;
+                    if(redAverage<blueAverage) r=-1;
+                }else if(redAverage>0&&blueAverage==0&&redArea>100000){
+                    r=3;
+                }else if(blueAverage>0&&redAverage==0&&blueArea>100000){
+                    r=2;
+                }
+                Log.d("Result","=====================================================");
+                Log.d("Result",Integer.toString(r));
+                synchronized (threadLock) {
+                    beaconAnalysisResult = r;
+                }
+            }else{
+                synchronized (threadLock) {
+                    beaconAnalysisResult = 0;
+                }
             }
-            Log.d("Result","=====================================================");
-            Log.d("Result",Integer.toString(r));
-            return r;
-        }else{
-            return 0;
         }
     }
 }

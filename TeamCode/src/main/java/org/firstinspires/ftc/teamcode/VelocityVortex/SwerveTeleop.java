@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.VelocityVortex;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.VelocityVortex.Robot;
@@ -24,9 +25,18 @@ public class SwerveTeleop extends Robot {
     @Override
     public void init() {
         super.init();
+        lfm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rfm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lbm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rbm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        rbm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        lbm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        rfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         lastSet=System.currentTimeMillis();
         lastPush=System.currentTimeMillis();
         buttonWheel.setPosition(WHEEL_OUT);
+
     }
 
     @Override
@@ -36,21 +46,39 @@ public class SwerveTeleop extends Robot {
         telemetry.addData("right",capRight.getPosition());
         //drive ========================================================================================================
         Vector d=new Vector(gamepad1.left_stick_x, gamepad1.left_stick_y);
+        if(gamepad1.dpad_up&&gamepad1.dpad_right){
+            swerveDrive.setPivotPoint(7,7);
+        }else if(gamepad1.dpad_right&&gamepad1.dpad_down){
+            swerveDrive.setPivotPoint(7,-7);
+        }else if(gamepad1.dpad_down&&gamepad1.dpad_left){
+            swerveDrive.setPivotPoint(-7,-7);
+        }else if(gamepad1.dpad_left&&gamepad1.dpad_up){
+            swerveDrive.setPivotPoint(-7,7);
+        }else if(gamepad1.dpad_up){
+            swerveDrive.setPivotPoint(0,20);
+        }else if(gamepad1.dpad_right){
+            swerveDrive.setPivotPoint(20,0);
+        }else if(gamepad1.dpad_down){
+            swerveDrive.setPivotPoint(0,-20);
+        }else if(gamepad1.dpad_left){
+            swerveDrive.setPivotPoint(-20,0);
+        }else{
+            swerveDrive.setPivotPoint(0,0);
+        }
+
         if(gamepad1.left_bumper){
             if (d.getMagnitude() > .1 || Math.abs(gamepad1.right_stick_x) > .1) {
                 direction = d;
-                swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x, .3);
+                swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, .3);
             } else {
-                swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x, 0);
-                //            swerveDrive.stop();
+                swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, 0);
             }
         }else {
             if (d.getMagnitude() > .1 || Math.abs(gamepad1.right_stick_x) > .1) {
                 direction = d;
-                swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x, .75);
+                swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, .6);
             } else {
-                swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x, 0);
-                //            swerveDrive.stop();
+                swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, 0);
             }
         }
 
@@ -114,9 +142,9 @@ public class SwerveTeleop extends Robot {
 //            if (gamepad2.a) {
 //                power = .75;
 //            }
-            if(gamepad1.a){
+            if(gamepad2.a){
                 power=.75;
-            }else if(gamepad1.b){
+            }else if(gamepad2.b){
                 power=0;
             }
             //button pusher==========================================================================================================

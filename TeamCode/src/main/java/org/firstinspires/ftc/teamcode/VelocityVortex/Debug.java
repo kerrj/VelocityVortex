@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.VelocityVortex;
 
 import android.mtp.MtpConstants;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Swerve.Core.Vector;
@@ -10,6 +11,7 @@ import org.firstinspires.ftc.teamcode.Swerve.Core.Vector;
  * Created by Justin on 11/13/2016.
  */
 @TeleOp
+@Disabled
 public class Debug extends Robot {
     Long lastSet;
     boolean reset=true;
