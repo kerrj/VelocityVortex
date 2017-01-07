@@ -73,14 +73,14 @@ public class Blue extends Robot {
     private Bitmap RGBABitmap =Bitmap.createBitmap(1280, 720, Bitmap.Config.ARGB_8888);
     private FTCCamera ftcCamera;
 
-    private int beaconAnalysisResult=0;
+    private int beaconAnalysisResult=0, finalAnalysisResult;
     private boolean wait=true;
     private double DRIVE_DISTANCE;
     private final double BUTTON_OFFSET_FROM_TARGET=65;
-    private final double CAMERA_OFFSET_FROM_PLOW=40;
-    private final double SPONGE_OFFSET_FROM_CAMERA=75;
-    private final double BUTTON_OFFSET_FROM_WALL=60;
-    private final double BUTTON_HEIGHT_ABOVE_CAMERA=100;
+    private final double CAMERA_OFFSET_FROM_PLOW=42;//side to side
+    private final double SPONGE_OFFSET_FROM_CAMERA=70;//outwards
+    private final double BUTTON_OFFSET_FROM_WALL=50;
+    private final double BUTTON_HEIGHT_ABOVE_CAMERA=70;
     private Vector spongeVector;
     private Vector buttonVector;
     private double neckUpPosition;
@@ -185,7 +185,7 @@ public class Blue extends Robot {
         try {
             rotateConstant=json.getDouble("RotateConstant");
         } catch (JSONException e) {
-            rotateConstant=.3;
+            rotateConstant=.4;
             e.printStackTrace();
         }
     }
@@ -282,7 +282,7 @@ public class Blue extends Robot {
                     swerveDrive.resetPosition();
                     resetPosition=false;
                 }
-                double DISTANCE=60;
+                double DISTANCE=50;
                 double currentHeading=gyro.getHeading();
                 double desiredAngle=Math.toRadians(45);
                 Vector targetVector = new Vector(Math.cos(3*Math.PI/2), Math.sin(3*Math.PI/2));
@@ -301,7 +301,7 @@ public class Blue extends Robot {
 
 
             case AlignWithBeacon:
-                double Y_ROTATION_TOLERANCE=5;//degrees
+                double Y_ROTATION_TOLERANCE=3;//degrees
                 if(currentBeacon.isFound()) {
                     Vector direction = new Vector(currentBeacon.getDistance() - 250, currentBeacon.getHorizontalDistance());
                     if (direction.getMagnitude() > 20||Math.abs(currentBeacon.getYRotation())>Math.toRadians(Y_ROTATION_TOLERANCE)) {//10mm tolerance
@@ -318,6 +318,7 @@ public class Blue extends Robot {
                         }
                         neckUpPosition =position;
                         neck.setPosition(neckUpPosition);
+                        bookKeepingTime=System.currentTimeMillis();
                     }
                 }else{
                     swerveDrive.drive(1,0,0,0);
@@ -326,20 +327,22 @@ public class Blue extends Robot {
 
             case AnalyzeBeacon:
                 vuforia.cameraLight(false);
-                double result;
+                int result;
                 synchronized (threadLock){
                     result=beaconAnalysisResult;
                 }
-                if(result==0){
+                if(result==0){//inconclusive
                     swerveDrive.drive(1,0,0,0);
-                    if(Math.abs(neck.getPosition()-neckUpPosition)<.01){
+                    if(System.currentTimeMillis()-bookKeepingTime>300){
                         analyzeThread=new AnalyzeThread();
                         analyzeThread.start();
                     }
-                }else if(result==1||result==-1){
+                }else if(result==1||result==-1){//decision made
+                    finalAnalysisResult=result;
                     buttonWheel.setPosition(WHEEL_OUT);
                     neck.setPosition(NECK_FLAT);
                     robotState=RobotState.PressBeacon;
+                    bookKeepingTime=System.currentTimeMillis();
                     resetPosition=true;
                 }else if(result==999){//processing
                     swerveDrive.drive(1,0,0,0);
@@ -349,31 +352,34 @@ public class Blue extends Robot {
             case PressBeacon:
                 neck.setPosition(NECK_FLAT);
                 buttonWheel.setPosition(WHEEL_OUT);
-                if(Math.abs(neck.getPosition()-NECK_FLAT)<.01){
-                        if (resetPosition) {
-                            if(currentBeacon.isFound()){
-                                resetPosition = false;
-                                swerveDrive.resetPosition();
-                                spongeVector = new Vector(currentBeacon.getDistance()-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL, currentBeacon.getHorizontalDistance() + CAMERA_OFFSET_FROM_PLOW);
-                                if (beaconAnalysisResult == 1){
-                                    buttonVector = new Vector(spongeVector.x, spongeVector.y - BUTTON_OFFSET_FROM_TARGET);
-                                } else if (beaconAnalysisResult == -1){
-                                    buttonVector = new Vector(spongeVector.x, spongeVector.y + BUTTON_OFFSET_FROM_TARGET);
-                                }
-                                DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude()+1);
-                            }else{
-                                swerveDrive.drive(1,0,0,0);
-                                break;
+                if(System.currentTimeMillis()-bookKeepingTime>300){
+                    if (resetPosition) {
+                        if(currentBeacon.isFound()){
+                            resetPosition = false;
+                            swerveDrive.resetPosition();
+                            spongeVector = new Vector(currentBeacon.getDistance()-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL, currentBeacon.getHorizontalDistance() + CAMERA_OFFSET_FROM_PLOW);
+                            if (finalAnalysisResult == 1){
+                                buttonVector = new Vector(spongeVector.x, spongeVector.y - BUTTON_OFFSET_FROM_TARGET);
+                            } else if (finalAnalysisResult == -1){
+                                buttonVector = new Vector(spongeVector.x, spongeVector.y + BUTTON_OFFSET_FROM_TARGET);
                             }
+                            DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude()+1);
+                        }else{
+                            swerveDrive.drive(1,0,0,0);
+                            break;
                         }
                     }
-                    if (swerveDrive.getLinearInchesTravelled() < DRIVE_DISTANCE) {
-                        swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .4);
-                    } else {
-                        robotState = RobotState.BackUp;
-                        pushTime=System.currentTimeMillis();
-                        resetPosition = true;
-                    }
+                }else{
+                    swerveDrive.drive(1,0,0,0);
+                    break;
+                }
+                if (swerveDrive.getLinearInchesTravelled() < DRIVE_DISTANCE) {
+                    swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .4);
+                } else {
+                    robotState = RobotState.BackUp;
+                    pushTime=System.currentTimeMillis();
+                    resetPosition = true;
+                }
                 break;
 
             case BackUp:
@@ -398,6 +404,7 @@ public class Blue extends Robot {
                 break;
 
             case DriveToSecondBeacon:
+                sweeper.setPower(SWEEPER_OUTAKE);
                 currentHeading=gyro.getHeading();
                 targetVector = new Vector(Math.cos(3*Math.PI/2), Math.sin(3*Math.PI/2));
                 currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));

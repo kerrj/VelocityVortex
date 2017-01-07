@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.teamcode.VelocityVortex.Robot;
 import org.firstinspires.ftc.teamcode.Swerve.Core.Vector;
 
+import java.util.Currency;
 import java.util.Random;
 
 /**
@@ -19,7 +20,8 @@ public class SwerveTeleop extends Robot {
 
     Vector direction=new Vector(0,1);
     double power=0;
-    boolean wheelIn=true;
+    boolean wheelIn=true,wheelsRotated=false;
+
 
 
     @Override
@@ -67,17 +69,31 @@ public class SwerveTeleop extends Robot {
         }
 
         if(gamepad1.left_bumper){
-            if (d.getMagnitude() > .1 || Math.abs(gamepad1.right_stick_x) > .1) {
+            if (d.getMagnitude() > .02 || Math.abs(gamepad1.right_stick_x) > .02) {
                 direction = d;
                 swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, .3);
+                if(Math.abs(gamepad1.right_stick_x)>.02&&d.getMagnitude()<.02){
+                    wheelsRotated=true;
+                }else{
+                    wheelsRotated=false;
+                }
+            } else if(wheelsRotated) {
+                swerveDrive.drive(0,0,1,0);
             } else {
                 swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, 0);
             }
         }else {
-            if (d.getMagnitude() > .1 || Math.abs(gamepad1.right_stick_x) > .1) {
+            if (d.getMagnitude() > .02 || Math.abs(gamepad1.right_stick_x) > .02) {
                 direction = d;
                 swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, .6);
-            } else {
+                if(Math.abs(gamepad1.right_stick_x)>.02&&d.getMagnitude()<.02){
+                    wheelsRotated=true;
+                }else{
+                    wheelsRotated=false;
+                }
+            } else if(wheelsRotated){
+                swerveDrive.drive(0,0,1,0);
+            }else {
                 swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, 0);
             }
         }
@@ -151,10 +167,12 @@ public class SwerveTeleop extends Robot {
             if(gamepad2.left_bumper&&wheelIn){
                 buttonWheel.setPosition(WHEEL_OUT);
                 wheelIn=false;
+                lastSet=System.currentTimeMillis();
             }
             if(gamepad2.left_bumper&&!wheelIn){
                 buttonWheel.setPosition(WHEEL_IN);
                 wheelIn=true;
+                lastSet=System.currentTimeMillis();
             }
         }
         shootLeft.setPower(power);

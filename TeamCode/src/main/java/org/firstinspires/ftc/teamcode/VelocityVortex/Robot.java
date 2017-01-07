@@ -27,7 +27,7 @@ import org.firstinspires.ftc.teamcode.Swerve.Core.FTCSwerve;
 public class Robot extends OpMode {
     public static final double WHEEL_IN=.95;
     public static final double WHEEL_OUT=.3;
-    public static final double NECK_FLAT=.45;
+    public static final double NECK_FLAT=.5;
     public static final double CAP_RIGHT_IN=.4;
     public static final double CAP_LEFT_IN=.08;
     public static final double CAP_RIGHT_OUT=.5;
