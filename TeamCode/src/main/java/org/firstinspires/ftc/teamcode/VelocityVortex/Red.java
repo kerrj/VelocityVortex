@@ -96,6 +96,8 @@ public class Red extends Robot {
     double rotateConstant;
     private Object threadLock=new Object();
     private AnalyzeThread analyzeThread;
+    private Vector imageVector;
+
 
 
 
@@ -300,6 +302,7 @@ public class Red extends Robot {
                     if (direction.getMagnitude() > 20||Math.abs(currentBeacon.getYRotation())>Math.toRadians(Y_ROTATION_TOLERANCE)) {//10mm tolerance
                         swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation(), scale(direction.getMagnitude(),0,250,.02,.2));
                     } else {//robot is fully aligned
+                        imageVector=new Vector(currentBeacon.getDistance(),currentBeacon.getHorizontalDistance());
                         swerveDrive.drive(direction.x,direction.y,0,0);
                         robotState = RobotState.AnalyzeBeacon;
                         beaconAnalysisResult = 0;
@@ -346,31 +349,20 @@ public class Red extends Robot {
                 }
                 break;
             case PressBeacon:
-                vuforia.cameraLight(true);
                 neck.setPosition(NECK_FLAT);
                 buttonWheel.setPosition(WHEEL_OUT);
-                if(System.currentTimeMillis()-bookKeepingTime>300) {
-                    if (resetPosition){
-                        if(currentBeacon.isFound()) {
-                            resetPosition = false;
-                            swerveDrive.resetPosition();
-                            spongeVector = new Vector(currentBeacon.getDistance()-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL, currentBeacon.getHorizontalDistance() + CAMERA_OFFSET_FROM_PLOW);
-                            if (finalAnalysisResult == -1) {
-                                buttonVector = new Vector(spongeVector.x, spongeVector.y - BUTTON_OFFSET_FROM_TARGET);
-                            } else if (finalAnalysisResult == 1) {
-                                buttonVector = new Vector(spongeVector.x, spongeVector.y + BUTTON_OFFSET_FROM_TARGET);
-                            }
-                            DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude()+1);
-                        }else{
-                            swerveDrive.drive(1,0,0,0);
-                            break;
-                        }
+                if(resetPosition){
+                    resetPosition = false;
+                    swerveDrive.resetPosition();
+                    spongeVector = new Vector(imageVector.x-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL, imageVector.y + CAMERA_OFFSET_FROM_PLOW);
+                    if (finalAnalysisResult == -1){
+                        buttonVector = new Vector(spongeVector.x, spongeVector.y - BUTTON_OFFSET_FROM_TARGET);
+                    } else if (finalAnalysisResult == 1){
+                        buttonVector = new Vector(spongeVector.x, spongeVector.y + BUTTON_OFFSET_FROM_TARGET);
                     }
-                }else{
-                    swerveDrive.drive(1,0,0,0);
-                    break;
+                    DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude()+1);
                 }
-                if (swerveDrive.getLinearInchesTravelled() < DRIVE_DISTANCE){
+                if (swerveDrive.getLinearInchesTravelled() < DRIVE_DISTANCE) {
                     swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .4);
                 } else {
                     robotState = RobotState.BackUp;
@@ -378,6 +370,40 @@ public class Red extends Robot {
                     resetPosition = true;
                 }
                 break;
+//            case PressBeacon:
+//                vuforia.cameraLight(true);
+//                neck.setPosition(NECK_FLAT);
+//                buttonWheel.setPosition(WHEEL_OUT);
+//                if(System.currentTimeMillis()-bookKeepingTime>300) {
+//                    if (resetPosition){
+//                        if(currentBeacon.isFound()) {
+//                            resetPosition = false;
+//                            swerveDrive.resetPosition();
+//                            spongeVector = new Vector(currentBeacon.getDistance()-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL, currentBeacon.getHorizontalDistance() + CAMERA_OFFSET_FROM_PLOW);
+//                            if (finalAnalysisResult == -1) {
+//                                buttonVector = new Vector(spongeVector.x, spongeVector.y - BUTTON_OFFSET_FROM_TARGET);
+//                            } else if (finalAnalysisResult == 1) {
+//                                buttonVector = new Vector(spongeVector.x, spongeVector.y + BUTTON_OFFSET_FROM_TARGET);
+//                            }
+//                            DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude()+1);
+//                        }else{
+//                            swerveDrive.drive(1,0,0,0);
+//                            break;
+//                        }
+//                    }
+//                }else{
+//                    swerveDrive.drive(1,0,0,0);
+//                    break;
+//                }
+//                if (swerveDrive.getLinearInchesTravelled() < DRIVE_DISTANCE){
+//                    swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .4);
+//                } else {
+//                    robotState = RobotState.BackUp;
+//                    pushTime=System.currentTimeMillis();
+//                    resetPosition = true;
+//                }
+//                break;
+
 
             case BackUp:
                 if(resetPosition){
