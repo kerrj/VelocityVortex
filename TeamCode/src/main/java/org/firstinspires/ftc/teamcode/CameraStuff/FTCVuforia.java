@@ -323,7 +323,7 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
             return false;
             }//if
         
-        if (!CameraDevice.getInstance().selectVideoMode(CameraDevice.MODE.MODE_OPTIMIZE_SPEED)) {
+        if (!CameraDevice.getInstance().selectVideoMode(CameraDevice.MODE.MODE_DEFAULT)) {
             return false;
             }//if
         

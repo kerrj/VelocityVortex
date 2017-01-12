@@ -201,7 +201,7 @@ public class Red extends Robot {
     public void loop() {
         super.loop();
 
-        //first gra b an instance of FTCTarget for each target we care about: Wheels and Legos
+        //first grab an instance of FTCTarget for each target we care about: Wheels and Legos
         HashMap<String, double[]> data = vuforia.getVuforiaData();
         FTCTarget tools = new FTCTarget();
         FTCTarget gears = new FTCTarget();
@@ -221,6 +221,12 @@ public class Red extends Robot {
         }else{
             currentBeacon=tools;
         }
+        if(gyro.isCalibrating()){
+            swerveDrive.drive(1,0,0,0);
+            swerveDrive.update(true,15,false);
+            return;
+        }
+
         switch(robotState){
             case DriveForward:
                 if(resetPosition){
@@ -360,10 +366,10 @@ public class Red extends Robot {
                     } else if (finalAnalysisResult == 1){
                         buttonVector = new Vector(spongeVector.x, spongeVector.y + BUTTON_OFFSET_FROM_TARGET);
                     }
-                    DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude()+1);
+                    DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude());
                 }
                 if (swerveDrive.getLinearInchesTravelled() < DRIVE_DISTANCE) {
-                    swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .4);
+                    swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .3);
                 } else {
                     robotState = RobotState.BackUp;
                     pushTime=System.currentTimeMillis();
@@ -411,7 +417,7 @@ public class Red extends Robot {
                     resetPosition=false;
                 }
                 if (swerveDrive.getLinearInchesTravelled() < 1*DRIVE_DISTANCE) {
-                    swerveDrive.drive(-buttonVector.x, -.5*buttonVector.y, 0, .4);
+                    swerveDrive.drive(-buttonVector.x, -.5*buttonVector.y, 0, .2);
                 } else {
                     buttonWheel.setPosition(WHEEL_IN);
                     resetPosition = true;
@@ -443,10 +449,11 @@ public class Red extends Robot {
                 }
                 DISTANCE=40;
                 if(!getTargets(data).contains("Tools")){
-                    swerveDrive.drive(-.3,1,angleBetween/2,.5-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
+                    swerveDrive.drive(-.4,1,angleBetween/2,.5-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
                 }else{
                     beaconAnalysisResult=0;
                     robotState=RobotState.AlignWithBeacon;
+                    sweeper.setPower(0);
                 }
                 break;
 
@@ -536,22 +543,15 @@ public class Red extends Robot {
                     e.printStackTrace();
                 }
                 //split color onto blueMat Mat
-                Log.d("alive","2");
                 mAllocationIn.copyFrom(RGBABitmap);
-                Log.d("alive","3");
                 blur.setInput(mAllocationIn);
                 blur.setRadius(10);
-                Log.d("alive","4");
                 blur.forEach(getmAllocationOut);
-                Log.d("alive","5");
                 blue.forEach_split(getmAllocationOut,mAllocationIn);
-                Log.d("alive","6");
                 mAllocationIn.copyTo(RGBABitmap);
                 Mat blueMat=new Mat();
                 Utils.bitmapToMat(RGBABitmap, blueMat);
-                Log.d("alive","7");
                 red.forEach_split(getmAllocationOut,mAllocationIn);
-                Log.d("alive","8");
                 mAllocationIn.copyTo(RGBABitmap);
                 Mat redMat=new Mat();
                 Utils.bitmapToMat(RGBABitmap, redMat);
@@ -581,27 +581,28 @@ public class Red extends Robot {
 
                 //repeat for red mat
                 Imgproc.cvtColor(redMat,redMat,Imgproc.COLOR_RGBA2GRAY);
-                contours=new ArrayList<>();
-                hierarchy=new Mat();
+                contours=new ArrayList<>();//initialize OpenCV objects needed for processing
+                hierarchy=new Mat();//""
+                //find contours
                 Imgproc.findContours(redMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-                double redAverage=0;
+                double redAverage=0;//initialize average variables
                 double redArea=0;
                 index=0;
-                for(MatOfPoint points:contours){
-                    MatOfPoint2f points2f=new MatOfPoint2f();
-                    points.convertTo(points2f, CvType.CV_32FC2);
-                    Point center=Imgproc.minAreaRect(points2f).center;
-                    if(center.x<1100&&center.x>100) {
-                        double area = Imgproc.contourArea(points);
-                        if (area > 30000) {
-                            index += area;
-                            redAverage += center.x * area;
-                        }
-                    }
-                }
+                for(MatOfPoint points:contours){//iterate over contours
+                    MatOfPoint2f points2f=new MatOfPoint2f();//semantics
+                    points.convertTo(points2f, CvType.CV_32FC2);//semantics
+                    Point center=Imgproc.minAreaRect(points2f).center;//calculate the center of the contour
+                    if(center.x<1100&&center.x>100) {//if the contour is in the center
+                        double area = Imgproc.contourArea(points);//find contour area
+                        if (area > 30000) {//if the contour is large
+                            index += area;//increment the total area of contours
+                            redAverage += center.x * area;//add the x position in the image multiplied by area
+                        }//if
+                    }//if
+                }//for
                 redArea=index;
                 if(index==0)redAverage=0;
-                if(index>0)redAverage/=index;
+                if(index>0)redAverage/=index;//calculate the average center of red "mass" weighted by area
 
                 int r=0;
                 if(redAverage>0&&blueAverage>0){

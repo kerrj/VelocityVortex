@@ -158,10 +158,10 @@ public class SwerveDrive {
         Vector[] vects = new Vector[modules.length];
         Vector transVect = new Vector(translationX, translationY),
                 pivotVect = new Vector(pivotX, pivotY);
-
         if(transVect.getMagnitude()>1){
             transVect.normalize();
         }
+
         double maxDist = 0;
         for (int i = 0; i < modules.length; i++) {
             vects[i] = new Vector(modules[i].positionX, modules[i].positionY);
@@ -182,6 +182,7 @@ public class SwerveDrive {
             //if any exceed 100%, all must be scale down
             maxPower = Math.max(maxPower, vects[i].getMagnitude());
         }
+
         angles[0]=vects[0].getAngle()+Math.PI/2;
         angles[1]=vects[1].getAngle()-Math.PI/2;
         angles[2]=vects[2].getAngle()+Math.PI/2;
@@ -292,14 +293,15 @@ public class SwerveDrive {
                 for(int i=0;i<modules.length;i++){
                     SwerveModule module=modules[i];
                     module.update();
-                    double average=0;
-                    for(int j=0;j<positions.length;j++){
+                    double average=0;//initialize average
+                    for(int j=0;j<positions.length;j++){//iterate over all swerve modules
                         int position=motors[j].getCurrentPosition();
-                        average += Math.abs(positions[j] -position);
+                        average += Math.abs(positions[j] -position);//calculate the change in encoder position
+                        //since we last checked and add this to the average
                         positions[j] = position;
                     }
-                    average/=4;
-                    deltaCounts+=average;
+                    average/=4;//divide the average by 4 swerve modules
+                    deltaCounts+=average;//add the final change in position to the running total
                 }
             }else{
                 for(int j=0;j<positions.length;j++){

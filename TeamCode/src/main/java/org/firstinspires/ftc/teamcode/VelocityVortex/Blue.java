@@ -223,6 +223,11 @@ public class Blue extends Robot {
         }else{
             currentBeacon=legos;
         }
+        if(gyro.isCalibrating()){
+            swerveDrive.drive(1,0,0,0);
+            swerveDrive.update(true,15,false);
+            return;
+        }
 
         switch(robotState){
             case DriveForward:
@@ -305,7 +310,7 @@ public class Blue extends Robot {
                 double Y_ROTATION_TOLERANCE=3;//degrees
                 if(currentBeacon.isFound()) {
                     Vector direction = new Vector(currentBeacon.getDistance() - 250, currentBeacon.getHorizontalDistance());
-                    if (direction.getMagnitude() > 20||Math.abs(currentBeacon.getYRotation())>Math.toRadians(Y_ROTATION_TOLERANCE)) {//10mm tolerance
+                    if (direction.getMagnitude() > 20||Math.abs(currentBeacon.getYRotation())>Math.toRadians(Y_ROTATION_TOLERANCE)) {
                         swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation(), scale(direction.getMagnitude(),0,250,.02,.2));
                     } else {//robot is fully aligned
                         imageVector=new Vector(currentBeacon.getDistance(),currentBeacon.getHorizontalDistance());
@@ -363,10 +368,10 @@ public class Blue extends Robot {
                     } else if (finalAnalysisResult == -1){
                         buttonVector = new Vector(spongeVector.x, spongeVector.y + BUTTON_OFFSET_FROM_TARGET);
                     }
-                    DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude()+1);
+                    DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude());
                 }
                 if (swerveDrive.getLinearInchesTravelled() < DRIVE_DISTANCE) {
-                    swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .4);
+                    swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .3);
                 } else {
                     robotState = RobotState.BackUp;
                     pushTime=System.currentTimeMillis();
@@ -412,7 +417,7 @@ public class Blue extends Robot {
                     resetPosition=false;
                 }
                 if (swerveDrive.getLinearInchesTravelled() < 1*DRIVE_DISTANCE) {
-                    swerveDrive.drive(-buttonVector.x, -.5*buttonVector.y, 0, .4);
+                    swerveDrive.drive(-buttonVector.x, -.5*buttonVector.y, 0, .2);
                 } else {
                     buttonWheel.setPosition(WHEEL_IN);
                     resetPosition = true;
@@ -443,10 +448,11 @@ public class Blue extends Robot {
                 }
                 DISTANCE=40;
                 if(!getTargets(data).contains("Legos")){
-                    swerveDrive.drive(-.3,-1,angleBetween/2,.5-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
+                    swerveDrive.drive(-.4,-1,angleBetween/2,.5-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
                 }else{
                     beaconAnalysisResult=0;
                     robotState=RobotState.AlignWithBeacon;
+                    sweeper.setPower(0);
                 }
                 break;
 
