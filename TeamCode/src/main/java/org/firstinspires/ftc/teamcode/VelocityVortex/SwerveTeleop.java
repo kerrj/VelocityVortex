@@ -37,8 +37,6 @@ public class SwerveTeleop extends Robot {
         rfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         lastSet=System.currentTimeMillis();
         lastPush=System.currentTimeMillis();
-        buttonWheel.setPosition(WHEEL_OUT);
-
     }
 
     @Override

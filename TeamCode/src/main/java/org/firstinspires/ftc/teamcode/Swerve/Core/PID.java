@@ -84,8 +84,6 @@ public class PID {
         if(Math.abs(error)<Math.toRadians(1)&&acceleration<.1){
             lastpow=0;
         }
-        Log.d("TimeStep",Double.toString(dt));
-        Log.d("Accel",Double.toString(acceleration));
         return lastpow;
     }
 }
