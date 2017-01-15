@@ -186,7 +186,7 @@ public class Red extends Robot {
         try {
             rotateConstant=json.getDouble("RotateConstant");
         } catch (JSONException e) {
-            rotateConstant=.3;
+            rotateConstant=.4;
             e.printStackTrace();
         }
     }
@@ -235,7 +235,7 @@ public class Red extends Robot {
                     shootLeft.setPower(shootPower);
                     shootRight.setPower(shootPower);
                 }
-                if(swerveDrive.getLinearInchesTravelled()<10){
+                if(swerveDrive.getLinearInchesTravelled()<15){
                     swerveDrive.drive(-1,0,0,.2);
                 }else{
                     robotState=RobotState.Shoot;
@@ -285,7 +285,7 @@ public class Red extends Robot {
                     swerveDrive.resetPosition();
                     resetPosition=false;
                 }
-                double DISTANCE=50;
+                double DISTANCE=40;
                 double currentHeading=gyro.getHeading();
                 double desiredAngle=Math.toRadians(45);
                 Vector targetVector = new Vector(Math.cos(Math.PI/2), Math.sin(Math.PI/2));
@@ -294,7 +294,7 @@ public class Red extends Robot {
                 //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
                 double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
                 if(!getTargets(data).contains("Gears")){
-                    swerveDrive.drive(0,1,rotateConstant,.5-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.35));
+                    swerveDrive.drive(0,1,rotateConstant,.5-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
                 }else{
                     resetPosition=true;
                     robotState=RobotState.AlignWithBeacon;
@@ -361,7 +361,7 @@ public class Red extends Robot {
                 if(resetPosition){
                     resetPosition = false;
                     swerveDrive.resetPosition();
-                    spongeVector = new Vector(imageVector.x-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL, imageVector.y + CAMERA_OFFSET_FROM_PLOW);
+                    spongeVector = new Vector(imageVector.x-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL-10, imageVector.y + CAMERA_OFFSET_FROM_PLOW);
                     if (finalAnalysisResult == -1){
                         buttonVector = new Vector(spongeVector.x, spongeVector.y - BUTTON_OFFSET_FROM_TARGET);
                     } else if (finalAnalysisResult == 1){
@@ -370,7 +370,7 @@ public class Red extends Robot {
                     DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude())+1;
                 }
                 if (swerveDrive.getLinearInchesTravelled() < DRIVE_DISTANCE) {
-                    swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .2);
+                    swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .3);
                 } else {
                     robotState = RobotState.BackUp;
                     pushTime=System.currentTimeMillis();

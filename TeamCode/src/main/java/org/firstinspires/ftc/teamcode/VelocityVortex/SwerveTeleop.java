@@ -69,7 +69,7 @@ public class SwerveTeleop extends Robot {
         if(gamepad1.left_bumper){
             if (d.getMagnitude() > .02 || Math.abs(gamepad1.right_stick_x) > .02) {
                 direction = d;
-                swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, .3);
+                swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, .2);
                 if(Math.abs(gamepad1.right_stick_x)>.02&&d.getMagnitude()<.02){
                     wheelsRotated=true;
                 }else{
@@ -135,7 +135,7 @@ public class SwerveTeleop extends Robot {
 
 
         //fly wheel speed ========================================================================================================
-        if(System.currentTimeMillis()-lastSet>250){
+        if(System.currentTimeMillis()-lastSet>500){
 //            if(gamepad2.x){ //decrement power by pressing X
 //                power-=.05;
 //                if(power<.5){
@@ -162,16 +162,17 @@ public class SwerveTeleop extends Robot {
                 power=0;
             }
             //button pusher==========================================================================================================
-            if(gamepad2.left_bumper&&wheelIn){
-                buttonWheel.setPosition(WHEEL_OUT);
-                wheelIn=false;
-                lastSet=System.currentTimeMillis();
-            }
-            if(gamepad2.left_bumper&&!wheelIn){
-                buttonWheel.setPosition(WHEEL_IN);
-                wheelIn=true;
-                lastSet=System.currentTimeMillis();
-            }
+
+        }
+        if(gamepad2.left_bumper){
+            buttonWheel.setPosition(WHEEL_OUT);
+            wheelIn=false;
+            lastSet=System.currentTimeMillis();
+        }
+        if(gamepad2.dpad_up){
+            buttonWheel.setPosition(WHEEL_IN);
+            wheelIn=true;
+            lastSet=System.currentTimeMillis();
         }
         shootLeft.setPower(power);
         shootRight.setPower(power);

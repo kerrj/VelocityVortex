@@ -8,8 +8,9 @@ import android.renderscript.ScriptIntrinsicBlur;
 import android.renderscript.Type;
 import android.util.Log;
 
-import com.justin.opencvcamera.ScriptC_blue;
-import com.justin.opencvcamera.ScriptC_red;
+
+import com.qualcomm.ftcrobotcontroller.ScriptC_blue;
+import com.qualcomm.ftcrobotcontroller.ScriptC_red;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -53,10 +54,10 @@ public class Shoot extends Robot {
     private boolean resetPosition=true;
 
     private enum RobotState{//list states here
-        Shoot, RotateToFirstBeacon, DriveForward,DriveToFirstBeacon,AlignWithBeacon, AnalyzeBeacon, PressBeacon,DriveToSecondBeacon,Stop, VerifyBeacon,BackUp,DoubleCheckBeacon,ReAlignWithBeacon
+        Shoot, RotateToFirstBeacon, DriveForward,wait,DriveToFirstBeacon,AlignWithBeacon, AnalyzeBeacon, PressBeacon,DriveToSecondBeacon,Stop, VerifyBeacon,BackUp,DoubleCheckBeacon,ReAlignWithBeacon
     }
 
-    private RobotState robotState=RobotState.Shoot;//initialize start state here
+    private RobotState robotState=RobotState.DriveForward;//initialize start state here
 
     private int beaconsPressed=0;
 
@@ -100,8 +101,10 @@ public class Shoot extends Robot {
         beaconsPressed=0;
         beaconAnalysisResult=0;
         wait=true;
+        resetPosition=true;
         swerveDrive.resetPosition();
         shots=0;
+        bookKeepingTime=System.currentTimeMillis();
     }
 
 
@@ -109,15 +112,36 @@ public class Shoot extends Robot {
     public void loop() {
         super.loop();
         //first gra b an instance of FTCTarget for each target we care about: Wheels and Legos
+        if(Math.abs(System.currentTimeMillis()-bookKeepingTime)<10000){
+            swerveDrive.drive(1,0,0,0);
+            swerveDrive.update(wait,15,false);
+            return;
+        }
         switch(robotState){
+            case DriveForward:
+                if(resetPosition){
+                    swerveDrive.resetPosition();
+                    resetPosition=false;
+                    shootLeft.setPower(.65);
+                    shootRight.setPower(.65);
+                }
+                if(swerveDrive.getLinearInchesTravelled()<10){
+                    swerveDrive.drive(-1,0,0,.2);
+                }else{
+                    robotState=RobotState.Shoot;
+                    resetPosition=true;
+                }
+                break;
+
             case Shoot:
+                swerveDrive.drive(1,0,0,0);
                 if(resetPosition){
                     startTime=System.currentTimeMillis();
                     resetPosition=false;
                 }
-                shootRight.setPower(.65);
                 shootLeft.setPower(.65);
-                if(System.currentTimeMillis()-startTime>500){
+                shootRight.setPower(.65);
+                if(System.currentTimeMillis()-startTime>200){
                     if(resetServoTime){
                         servoTravelStart=System.currentTimeMillis();
                         resetServoTime=false;
@@ -129,17 +153,16 @@ public class Shoot extends Robot {
                             if(shots<2) {
                                 servoState = ShootServoState.MovingDown;
                             }else{
-                                robotState=RobotState.Stop;
                                 shootLeft.setPower(0);
                                 shootRight.setPower(0);
-                                resetPosition=true;
+                                robotState=RobotState.Stop;
                             }
                         }else{
                             shootServo.setPosition(SHOOTER_UP);
                         }
                     }else{
                         shootServo.setPosition(SHOOTER_DOWN);
-                        if(System.currentTimeMillis()-lastShot>500){
+                        if(System.currentTimeMillis()-lastShot>600){
                             servoState=ShootServoState.MovingUp;
                             servoTravelStart=System.currentTimeMillis();
                         }

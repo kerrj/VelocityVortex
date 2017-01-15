@@ -186,7 +186,7 @@ public class Blue extends Robot {
         try {
             rotateConstant=json.getDouble("RotateConstant");
         } catch (JSONException e) {
-            rotateConstant=.4;
+            rotateConstant=-.4;
             e.printStackTrace();
         }
     }
@@ -237,7 +237,7 @@ public class Blue extends Robot {
                     shootLeft.setPower(shootPower);
                     shootRight.setPower(shootPower);
                 }
-                if(swerveDrive.getLinearInchesTravelled()<10){
+                if(swerveDrive.getLinearInchesTravelled()<15){
                     swerveDrive.drive(-1,0,0,.2);
                 }else{
                     robotState=RobotState.Shoot;
@@ -288,7 +288,7 @@ public class Blue extends Robot {
                     swerveDrive.resetPosition();
                     resetPosition=false;
                 }
-                double DISTANCE=50;
+                double DISTANCE=40;
                 double currentHeading=gyro.getHeading();
                 double desiredAngle=Math.toRadians(45);
                 Vector targetVector = new Vector(Math.cos(3*Math.PI/2), Math.sin(3*Math.PI/2));
@@ -298,7 +298,7 @@ public class Blue extends Robot {
                 double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
                 telemetry.addData("angle",angleBetween);
                 if(!getTargets(data).contains("Wheels")){
-                    swerveDrive.drive(0,-1,rotateConstant,.5-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.35));
+                    swerveDrive.drive(0,-1,rotateConstant,.5-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
                 }else{
                     resetPosition=true;
                     robotState=RobotState.AlignWithBeacon;
@@ -367,7 +367,7 @@ public class Blue extends Robot {
                 if(resetPosition){
                     resetPosition = false;
                     swerveDrive.resetPosition();
-                    spongeVector = new Vector(imageVector.x-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL, imageVector.y + CAMERA_OFFSET_FROM_PLOW);
+                    spongeVector = new Vector(imageVector.x-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL-10, imageVector.y + CAMERA_OFFSET_FROM_PLOW);
                     if (finalAnalysisResult == 1){
                         buttonVector = new Vector(spongeVector.x, spongeVector.y - BUTTON_OFFSET_FROM_TARGET);
                     } else if (finalAnalysisResult == -1){
@@ -376,7 +376,7 @@ public class Blue extends Robot {
                     DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude())+1;
                 }
                 if (swerveDrive.getLinearInchesTravelled() < DRIVE_DISTANCE){
-                    swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .2);
+                    swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .3);
                 } else {
                     robotState = RobotState.BackUp;
                     pushTime=System.currentTimeMillis();
@@ -438,7 +438,7 @@ public class Blue extends Robot {
                 break;
 
             case DriveToSecondBeacon:
-                sweeper.setPower(SWEEPER_OUTAKE);
+                sweeper.setPower(SWEEPER_INTAKE);
                 currentHeading=gyro.getHeading();
                 targetVector = new Vector(Math.cos(3*Math.PI/2), Math.sin(3*Math.PI/2));
                 currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));
