@@ -20,6 +20,7 @@ public class SwerveTeleop extends Robot {
 
     Vector direction=new Vector(0,1);
     double power=0;
+    double offset=0;
     boolean wheelIn=true,wheelsRotated=false;
 
 
@@ -37,11 +38,15 @@ public class SwerveTeleop extends Robot {
         rfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         lastSet=System.currentTimeMillis();
         lastPush=System.currentTimeMillis();
+        gyro.calibrate();
     }
 
     @Override
     public void loop() {
         super.loop();
+        if(gyro.isCalibrating()){
+            return;
+        }
         telemetry.addData("left",capLeft.getPosition());
         telemetry.addData("right",capRight.getPosition());
         //drive ========================================================================================================
@@ -66,10 +71,16 @@ public class SwerveTeleop extends Robot {
             swerveDrive.setPivotPoint(0,0);
         }
 
+        if(gamepad1.a){
+            offset=gyro.getHeading();
+        }
+        double gyroAngle=Math.toRadians(gyro.getHeading())-offset;
+        double inputAngle=direction.getAngle();
         if(gamepad1.left_bumper){
             if (d.getMagnitude() > .02 || Math.abs(gamepad1.right_stick_x) > .02) {
                 direction = d;
-                swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, .2);
+//                swerveDrive.drive(Math.cos(gyroAngle-inputAngle)*direction.x, Math.sin(gyroAngle-inputAngle)*direction.y, gamepad1.right_stick_x/1.5, .2*direction.getMagnitude());
+                swerveDrive.drive(direction.x,direction.y,gamepad1.right_stick_x/1.5,.2);
                 if(Math.abs(gamepad1.right_stick_x)>.02&&d.getMagnitude()<.02){
                     wheelsRotated=true;
                 }else{
@@ -83,7 +94,8 @@ public class SwerveTeleop extends Robot {
         }else {
             if (d.getMagnitude() > .02 || Math.abs(gamepad1.right_stick_x) > .02) {
                 direction = d;
-                swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, .6);
+//                swerveDrive.drive(Math.cos(gyroAngle-inputAngle)*direction.x, Math.sin(gyroAngle-inputAngle)*direction.y, gamepad1.right_stick_x/1.5, .5*direction.getMagnitude());
+                swerveDrive.drive(direction.x,direction.y,gamepad1.right_stick_x/1.5,.5);
                 if(Math.abs(gamepad1.right_stick_x)>.02&&d.getMagnitude()<.02){
                     wheelsRotated=true;
                 }else{

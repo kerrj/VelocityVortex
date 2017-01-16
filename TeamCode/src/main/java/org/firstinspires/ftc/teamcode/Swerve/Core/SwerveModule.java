@@ -221,10 +221,8 @@ public class SwerveModule {
 //        }
 
         if(Math.abs(targetServoPower-lastServoPower)>.02||targetServoPower==.5) {
-            Log.d("servo","start=========");
             controller.setServoPosition(portNumber, targetServoPower);
             lastServoPower=targetServoPower;
-            Log.d("Servo","end=======");
         }
     }
     public void stop(){

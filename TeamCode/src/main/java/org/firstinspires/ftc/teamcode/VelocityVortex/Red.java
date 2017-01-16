@@ -56,7 +56,7 @@ public class Red extends Robot {
     private boolean resetPosition=true;
 
     private enum RobotState{//list states here
-        Shoot, RotateToFirstBeacon, DriveForward,AlignWithBeacon, AnalyzeBeacon, PressBeacon,DriveToSecondBeacon,Stop, BackUp
+        DriveToCapBall,RotateIntoCapBall,Shoot, RotateToFirstBeacon, DriveForward,AlignWithBeacon, AnalyzeBeacon, PressBeacon,DriveToSecondBeacon,Stop, BackUp
     }
 
     private RobotState robotState=RobotState.DriveForward;//initialize start state here
@@ -119,19 +119,6 @@ public class Red extends Robot {
         vuforia=new FTCVuforia(FtcRobotControllerActivity.getActivity());
         vuforia.initVuforia();
         vuforia.addTrackables("FTC_2016-17.xml");
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, FtcRobotControllerActivity.getActivity().getBaseContext(), new LoaderCallbackInterface() {
-            @Override
-            public void onManagerConnected(int status) {
-                if (status == LoaderCallbackInterface.SUCCESS) {
-                    Log.d("opencv","success");
-                }
-            }
-
-            @Override
-            public void onPackageInstall(int operation, InstallCallbackInterface callback) {
-
-            }
-        });
         mRS=RenderScript.create(FtcRobotControllerActivity.getActivity().getBaseContext());
         blur=ScriptIntrinsicBlur.create(mRS,Element.RGBA_8888(mRS));
         mAllocationIn = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), 1280, 720),
@@ -293,8 +280,8 @@ public class Red extends Robot {
                 //angleBetween is the angle from currentPosition to target position in radians
                 //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
                 double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
-                if(!getTargets(data).contains("Gears")){
-                    swerveDrive.drive(0,1,rotateConstant,.5-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.4));
+                if(Math.abs(angleBetween)>Math.toRadians(8)){
+                    swerveDrive.drive(0,1,rotateConstant,.35);
                 }else{
                     resetPosition=true;
                     robotState=RobotState.AlignWithBeacon;
@@ -306,13 +293,12 @@ public class Red extends Robot {
                 if(currentBeacon.isFound()) {
                     Vector direction = new Vector(currentBeacon.getDistance() - 250, currentBeacon.getHorizontalDistance());
                     if (direction.getMagnitude() > 15||Math.abs(currentBeacon.getYRotation())>Math.toRadians(Y_ROTATION_TOLERANCE)) {//10mm tolerance
-                        swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation(), scale(direction.getMagnitude(),0,250,.05,.15));
+                        swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation()*2, scale(direction.getMagnitude(),0,250,.05,.15));
                     } else {//robot is fully aligned
                         imageVector=new Vector(currentBeacon.getDistance(),currentBeacon.getHorizontalDistance());
                         swerveDrive.drive(direction.x,direction.y,0,0);
                         robotState = RobotState.AnalyzeBeacon;
                         beaconAnalysisResult = 0;
-                        wait = false;
                         double angle=Math.toDegrees(Math.asin(BUTTON_HEIGHT_ABOVE_CAMERA/(currentBeacon.getDistance()-BUTTON_OFFSET_FROM_WALL)));
                         double position=NECK_FLAT-degreesToServoPosition(angle);
                         if(position>1){
@@ -361,7 +347,7 @@ public class Red extends Robot {
                 if(resetPosition){
                     resetPosition = false;
                     swerveDrive.resetPosition();
-                    spongeVector = new Vector(imageVector.x-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL-10, imageVector.y + CAMERA_OFFSET_FROM_PLOW);
+                    spongeVector = new Vector(imageVector.x-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL-5, imageVector.y + CAMERA_OFFSET_FROM_PLOW);
                     if (finalAnalysisResult == -1){
                         buttonVector = new Vector(spongeVector.x, spongeVector.y - BUTTON_OFFSET_FROM_TARGET);
                     } else if (finalAnalysisResult == 1){
@@ -370,67 +356,19 @@ public class Red extends Robot {
                     DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude())+1;
                 }
                 if (swerveDrive.getLinearInchesTravelled() < DRIVE_DISTANCE) {
-                    swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .3);
+                    swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .2);
                 } else {
-                    robotState = RobotState.BackUp;
+                    beaconsPressed++;
+                    if(beaconsPressed==1){
+                        robotState = RobotState.DriveToSecondBeacon;
+                    }else{
+                        robotState=RobotState.DriveToCapBall;
+                    }
+                    buttonWheel.setPosition(WHEEL_IN);
+                    neck.setPosition(NECK_FLAT);
                     pushTime=System.currentTimeMillis();
                     resetPosition = true;
                 }
-                break;
-//            case PressBeacon:
-//                vuforia.cameraLight(true);
-//                neck.setPosition(NECK_FLAT);
-//                buttonWheel.setPosition(WHEEL_OUT);
-//                if(System.currentTimeMillis()-bookKeepingTime>300) {
-//                    if (resetPosition){
-//                        if(currentBeacon.isFound()) {
-//                            resetPosition = false;
-//                            swerveDrive.resetPosition();
-//                            spongeVector = new Vector(currentBeacon.getDistance()-SPONGE_OFFSET_FROM_CAMERA-BUTTON_OFFSET_FROM_WALL, currentBeacon.getHorizontalDistance() + CAMERA_OFFSET_FROM_PLOW);
-//                            if (finalAnalysisResult == -1) {
-//                                buttonVector = new Vector(spongeVector.x, spongeVector.y - BUTTON_OFFSET_FROM_TARGET);
-//                            } else if (finalAnalysisResult == 1) {
-//                                buttonVector = new Vector(spongeVector.x, spongeVector.y + BUTTON_OFFSET_FROM_TARGET);
-//                            }
-//                            DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude()+1);
-//                        }else{
-//                            swerveDrive.drive(1,0,0,0);
-//                            break;
-//                        }
-//                    }
-//                }else{
-//                    swerveDrive.drive(1,0,0,0);
-//                    break;
-//                }
-//                if (swerveDrive.getLinearInchesTravelled() < DRIVE_DISTANCE){
-//                    swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .4);
-//                } else {
-//                    robotState = RobotState.BackUp;
-//                    pushTime=System.currentTimeMillis();
-//                    resetPosition = true;
-//                }
-//                break;
-
-
-            case BackUp:
-                if(resetPosition){
-                    swerveDrive.resetPosition();
-                    resetPosition=false;
-                }
-                if (swerveDrive.getLinearInchesTravelled() < 1*DRIVE_DISTANCE) {
-                    swerveDrive.drive(-buttonVector.x, -.5*buttonVector.y, 0, .2);
-                } else {
-                    buttonWheel.setPosition(WHEEL_IN);
-                    resetPosition = true;
-                    beaconsPressed++;
-                    if(beaconsPressed==1){
-                        robotState=RobotState.DriveToSecondBeacon;
-                    }else{
-                        robotState=RobotState.Stop;
-                    }
-                    beaconAnalysisResult=0;
-                }
-
                 break;
 
             case DriveToSecondBeacon:
@@ -456,12 +394,44 @@ public class Red extends Robot {
                     sweeper.setPower(0);
                 }
                 break;
+            case DriveToCapBall:
+                if(resetPosition){
+                    resetPosition=false;
+                    swerveDrive.resetPosition();
+                }
+                currentHeading=gyro.getHeading();
+                targetVector = new Vector(Math.cos(Math.PI/2), Math.sin(Math.PI/2));
+                currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));
+                //angleBetween is the angle from currentPosition to target position in radians
+                //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
+                angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
 
+                DRIVE_DISTANCE=60;
+                if(swerveDrive.getLinearInchesTravelled()<DRIVE_DISTANCE){
+                    swerveDrive.drive(-1,-.7,angleBetween/2,.4);
+                }else{
+                    swerveDrive.drive(0,0,1,0);
+                    robotState=RobotState.RotateIntoCapBall;
+                    resetPosition=true;
+                }
+
+                break;
+
+            case RotateIntoCapBall:
+                if(resetPosition){
+                    resetPosition=false;
+                    swerveDrive.resetPosition();
+                }
+                if(swerveDrive.getLinearInchesTravelled()<8) {
+                    swerveDrive.drive(0, 0, 1, .3);
+                }else{
+                    robotState=RobotState.Stop;
+                }
             case Stop:
                 swerveDrive.drive(1,0,0,0);
                 break;
         }//switch
-        swerveDrive.update(wait,15,true);
+        swerveDrive.update(true,15,true);
         telemetry.addData("State",robotState);
         telemetry.addData("result",beaconAnalysisResult);
     }//loop
