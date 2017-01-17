@@ -385,13 +385,18 @@ public class Red extends Robot {
                     swerveDrive.resetPosition();
                     resetPosition=false;
                 }
-                DISTANCE=40;
-                if(!getTargets(data).contains("Tools")){
-                    swerveDrive.drive(-.4,1,angleBetween/2,.3-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.2));
-                }else{
-                    beaconAnalysisResult=0;
-                    robotState=RobotState.AlignWithBeacon;
-                    sweeper.setPower(0);
+                DISTANCE=45;
+                if(swerveDrive.getLinearInchesTravelled()<DISTANCE){
+                    swerveDrive.drive(-.4, 1, angleBetween / 2, .4);
+                }else {
+                    if (!getTargets(data).contains("Tools")) {
+                        swerveDrive.drive(-.4, 1, angleBetween / 2, .1);
+//                    swerveDrive.drive(-.4,1,angleBetween/2,.3-scale(swerveDrive.getLinearInchesTravelled(),0,DISTANCE,0,.2));
+                    } else {
+                        beaconAnalysisResult = 0;
+                        robotState = RobotState.AlignWithBeacon;
+                        sweeper.setPower(0);
+                    }
                 }
                 break;
             case DriveToCapBall:

@@ -91,6 +91,9 @@ import com.qualcomm.robotcore.wifi.WifiDirectAssistant;
 
 import org.firstinspires.ftc.robotcore.internal.AppUtil;
 import org.firstinspires.inspection.RcInspectionActivity;
+import org.opencv.android.InstallCallbackInterface;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -307,6 +310,18 @@ public class FtcRobotControllerActivity extends Activity {
     super.onResume();
     RobotLog.vv(TAG, "onResume()");
     readNetworkType(NETWORK_TYPE_FILENAME);
+    OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, FtcRobotControllerActivity.getActivity().getBaseContext(), new LoaderCallbackInterface() {
+      @Override
+      public void onManagerConnected(int status) {
+        if (status == LoaderCallbackInterface.SUCCESS) {
+          Log.d("opencv","success");
+        }
+      }
+
+      @Override
+      public void onPackageInstall(int operation, InstallCallbackInterface callback) {
+      }
+    });
   }
 
   @Override
