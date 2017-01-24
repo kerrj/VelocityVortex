@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.CameraStuff;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.Log;
 import com.vuforia.CameraDevice;
@@ -19,6 +20,7 @@ import com.vuforia.TrackerManager;
 import com.vuforia.Vuforia;
 import com.vuforia.VuforiaBase;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.SynchronousQueue;
@@ -36,10 +38,15 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
     private boolean mCameraRunning = false;
     private double lastupdate=0;
     private Image lastImage;
+    private ByteBuffer buf;
+    private Bitmap bitmap=Bitmap.createBitmap(1280, 720, Bitmap.Config.RGB_565);
 
-    public Image getLastFrame(){
-        return lastImage;
+    public Bitmap getLastBitmap(){
+        synchronized (dataLock){
+            return bitmap;
+        }
     }
+
 
     private HashMap<String, double[]> vuforiaData = new HashMap<String, double[]>();
     private ArrayList<String> fileNames = new ArrayList<String>();
@@ -323,7 +330,7 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
             return false;
             }//if
         
-        if (!CameraDevice.getInstance().selectVideoMode(CameraDevice.MODE.MODE_DEFAULT)) {
+        if (!CameraDevice.getInstance().selectVideoMode(CameraDevice.MODE.MODE_OPTIMIZE_QUALITY)) {
             return false;
             }//if
         
@@ -379,6 +386,8 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
                 }
             }
             lastImage=RGBImage;
+            buf=lastImage.getPixels();
+            bitmap.copyPixelsFromBuffer(buf);
             int numResults = s.getNumTrackableResults();
             vuforiaData.clear();
             

@@ -45,6 +45,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.renderscript.RenderScript;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -142,6 +143,11 @@ public class FtcRobotControllerActivity extends Activity {
   protected Queue<UsbDevice> receivedUsbAttachmentNotifications;
 
   private static FtcRobotControllerActivity activity;
+  private static RenderScript mRS;
+
+  public static RenderScript getRenderScript(){
+    return mRS;
+  }
 
   protected class RobotRestarter implements Restarter {
 
@@ -310,7 +316,8 @@ public class FtcRobotControllerActivity extends Activity {
     super.onResume();
     RobotLog.vv(TAG, "onResume()");
     readNetworkType(NETWORK_TYPE_FILENAME);
-    OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, FtcRobotControllerActivity.getActivity().getBaseContext(), new LoaderCallbackInterface() {
+    mRS=RenderScript.create(getBaseContext(), RenderScript.ContextType.DEBUG);
+    OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, getBaseContext(), new LoaderCallbackInterface() {
       @Override
       public void onManagerConnected(int status) {
         if (status == LoaderCallbackInterface.SUCCESS) {
@@ -331,6 +338,7 @@ public class FtcRobotControllerActivity extends Activity {
     if (programmingModeController.isActive()) {
       programmingModeController.stopProgrammingMode();
     }
+    mRS.destroy();
   }
 
   @Override

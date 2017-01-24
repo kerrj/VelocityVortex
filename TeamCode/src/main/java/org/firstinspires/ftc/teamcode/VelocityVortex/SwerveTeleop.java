@@ -86,8 +86,8 @@ public class SwerveTeleop extends Robot {
         if(gamepad1.left_bumper){
             if (d.getMagnitude() > .02 || Math.abs(gamepad1.right_stick_x) > .02) {
                 direction = d;
-                swerveDrive.drive(Math.cos(angleBetween+inputAngle)*direction.getMagnitude(), Math.sin(angleBetween-inputAngle)*direction.getMagnitude(), gamepad1.right_stick_x/1.5, .2);
-//                swerveDrive.drive(direction.x,direction.y,gamepad1.right_stick_x/1.5,.2);
+//                swerveDrive.drive(Math.cos(angleBetween+inputAngle)*direction.getMagnitude(), Math.sin(angleBetween-inputAngle)*direction.getMagnitude(), gamepad1.right_stick_x/1.5, .2);
+                swerveDrive.drive(direction.x,direction.y,gamepad1.right_stick_x/1.5,.2);
                 if(Math.abs(gamepad1.right_stick_x)>.02&&d.getMagnitude()<.02){
                     wheelsRotated=true;
                 }else{
@@ -96,13 +96,14 @@ public class SwerveTeleop extends Robot {
             } else if(wheelsRotated) {
                 swerveDrive.drive(0,0,1,0);
             } else {
+//                swerveDrive.drive(Math.cos(angleBetween+inputAngle)*direction.getMagnitude(), Math.sin(angleBetween-inputAngle)*direction.getMagnitude(), gamepad1.right_stick_x/1.5, 0);
                 swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, 0);
             }
         }else {
             if (d.getMagnitude() > .02 || Math.abs(gamepad1.right_stick_x) > .02) {
                 direction = d;
-                swerveDrive.drive(Math.cos(angleBetween-inputAngle)*direction.getMagnitude(), Math.sin(angleBetween-inputAngle)*direction.getMagnitude(), gamepad1.right_stick_x/1.5, .5);
-//                swerveDrive.drive(direction.x,direction.y,gamepad1.right_stick_x/1.5,.5);
+//                swerveDrive.drive(Math.cos(angleBetween-inputAngle)*direction.getMagnitude(), Math.sin(angleBetween-inputAngle)*direction.getMagnitude(), gamepad1.right_stick_x/1.5, .5);
+                swerveDrive.drive(direction.x,direction.y,gamepad1.right_stick_x/1.5,.5);
                 if(Math.abs(gamepad1.right_stick_x)>.02&&d.getMagnitude()<.02){
                     wheelsRotated=true;
                 }else{
@@ -111,6 +112,7 @@ public class SwerveTeleop extends Robot {
             } else if(wheelsRotated){
                 swerveDrive.drive(0,0,1,0);
             }else {
+//                swerveDrive.drive(Math.cos(angleBetween+inputAngle)*direction.getMagnitude(), Math.sin(angleBetween-inputAngle)*direction.getMagnitude(), gamepad1.right_stick_x/1.5, 0);
                 swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, 0);
             }
         }
