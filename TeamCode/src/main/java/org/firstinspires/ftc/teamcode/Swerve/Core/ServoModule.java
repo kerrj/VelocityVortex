@@ -56,7 +56,8 @@ public class ServoModule {
         Vector currentVector = new Vector(Math.cos(steerEncoder.getAngle()), Math.sin(steerEncoder.getAngle()));
         //angleBetween is the angle from currentPosition to target position in radians
         //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
-        double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
+        double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x,
+                currentVector.x * targetVector.x + currentVector.y * targetVector.y);
         return angleBetween;
     }
 
