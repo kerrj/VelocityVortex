@@ -46,7 +46,7 @@ import java.util.HashMap;
  * Created by Justin on 10/7/2016.
  */
 @Autonomous
-public class Blue extends Robot {
+public class BlueSecondFirstPark extends Robot {
 
     //---------------------------------------------------------------------------------------
     //the first beacon has the WHEELS image target, and the second has the LEGOS image target
@@ -56,7 +56,7 @@ public class Blue extends Robot {
     private boolean resetPosition=true;
 
     private enum RobotState{//list states here
-        Shoot, RotateIntoCapBall,RotateToFirstBeacon, DriveForward,AlignWithBeacon, AnalyzeBeacon, PressBeacon,DriveToSecondBeacon,Stop, BackUp,DriveToCapBall
+        Shoot, RotateIntoCapBall,RotateToFirstBeacon, DriveToFirstBeacon,DriveForward,AlignWithBeacon, AnalyzeBeacon, PressBeacon,DriveToSecondBeacon,Stop, BackUp,DriveToCapBall
     }
 
     private RobotState robotState=RobotState.DriveForward;//initialize start state here
@@ -97,7 +97,7 @@ public class Blue extends Robot {
     private AnalyzeThread analyzeThread;
     private Object threadLock=new Object();
     private Vector imageVector;
-    private boolean initialized=false;
+    private boolean initialized=true;
     private Mat redMat,blueMat,original,hierarchy;
 
 
@@ -106,8 +106,14 @@ public class Blue extends Robot {
     @Override
     public void init() {
         super.init();
-        InitThread t=new InitThread();
-        t.start();
+//        InitThread t=new InitThread();
+//        t.start();
+        mRS=FtcRobotControllerActivity.getRenderScript();
+        blue=FtcRobotControllerActivity.getBlue();
+        red=FtcRobotControllerActivity.getRed();
+        blur=FtcRobotControllerActivity.getBlur();
+        mAllocationIn=FtcRobotControllerActivity.getmAllocationIn();
+        getmAllocationOut=FtcRobotControllerActivity.getGetmAllocationOut();
         blueMat=new Mat();
         redMat=new Mat();
         hierarchy=new Mat();
@@ -128,14 +134,6 @@ public class Blue extends Robot {
         vuforia=new FTCVuforia(FtcRobotControllerActivity.getActivity());
         vuforia.initVuforia();
         vuforia.addTrackables("FTC_2016-17.xml");
-//        mRS=RenderScript.create(FtcRobotControllerActivity.getActivity().getBaseContext());
-//        blur=ScriptIntrinsicBlur.create(mRS,Element.RGBA_8888(mRS));
-//        mAllocationIn = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), 1280, 720),
-//                                               Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
-//        getmAllocationOut = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), 1280, 720),
-//                                                   Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
-//        red=new ScriptC_red(mRS);
-//        blue=new ScriptC_blue(mRS);
         swerveDrive.resetPosition();
         shots=0;
 
@@ -219,9 +217,9 @@ public class Blue extends Robot {
         }
         FTCTarget currentBeacon;
         if(beaconsPressed==0){
-            currentBeacon=wheels;
-        }else{
             currentBeacon=legos;
+        }else{
+            currentBeacon=wheels;
         }
         if(gyro.isCalibrating()){
             swerveDrive.drive(1,0,0,0);
@@ -246,8 +244,8 @@ public class Blue extends Robot {
                 break;
             case Shoot:
                 swerveDrive.drive(0,-1,rotateConstant,0);
-//                swerveDrive.setPivotPoint(-7,7);
-//                swerveDrive.drive(0,0,1,0);
+                //                swerveDrive.setPivotPoint(-7,7);
+                //                swerveDrive.drive(0,0,1,0);
                 if(resetPosition){
                     startTime=System.currentTimeMillis();
                     resetPosition=false;
@@ -300,10 +298,29 @@ public class Blue extends Robot {
                     swerveDrive.drive(0,-1,rotateConstant,.35);
                 }else{
                     resetPosition=true;
-                    robotState=RobotState.AlignWithBeacon;
+                    robotState=RobotState.DriveToFirstBeacon;
                 }
                 break;
 
+            case DriveToFirstBeacon:
+                if (resetPosition) {
+                    resetPosition=false;
+                    swerveDrive.resetPosition();
+                }
+                currentHeading=gyro.getHeading();
+                targetVector = new Vector(Math.cos(3*Math.PI/2), Math.sin(3*Math.PI/2));
+                currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));
+                //angleBetween is the angle from currentPosition to target position in radians
+                //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
+                angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
+
+                if(swerveDrive.getLinearInchesTravelled()<20){
+                    swerveDrive.drive(0,-1,angleBetween/2,.4);
+                }else{
+                    robotState=RobotState.AlignWithBeacon;
+                    resetPosition=true;
+                }
+                break;
 
             case AlignWithBeacon:
                 double Y_ROTATION_TOLERANCE=3;//degrees
@@ -342,7 +359,7 @@ public class Blue extends Robot {
                 }
                 if(result==0){//inconclusive
                     swerveDrive.drive(1,0,0,0);
-                    if(System.currentTimeMillis()-bookKeepingTime>10){
+                    if(System.currentTimeMillis()-bookKeepingTime>100){
                         bookKeepingTime=System.currentTimeMillis();
                         analyzeThread.analyze();
                     }
@@ -407,16 +424,11 @@ public class Blue extends Robot {
                 }
                 DISTANCE=45;
                 if(swerveDrive.getLinearInchesTravelled()<DISTANCE){
-                    swerveDrive.drive(-.4, -1, angleBetween / 2, .4);
+                    swerveDrive.drive(-.4, 1, angleBetween / 2, .4);
                 }else {
-                    if (!getTargets(data).contains("Legos")) {
-                        swerveDrive.drive(-.4, -1, angleBetween / 2, .1);
-//                        swerveDrive.drive(-.4, -1, angleBetween / 2, .3 - scale(swerveDrive.getLinearInchesTravelled(), 0, DISTANCE, 0, .2));
-                    } else {
-                        beaconAnalysisResult = 0;
-                        robotState = RobotState.AlignWithBeacon;
-                        sweeper.setPower(0);
-                    }
+                    beaconAnalysisResult = 0;
+                    robotState = RobotState.AlignWithBeacon;
+                    sweeper.setPower(0);
                 }
                 break;
 
@@ -432,11 +444,11 @@ public class Blue extends Robot {
                 //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
                 angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
 
-                DRIVE_DISTANCE=60;
+                DRIVE_DISTANCE=40;
                 if(swerveDrive.getLinearInchesTravelled()<DRIVE_DISTANCE){
-                    swerveDrive.drive(-1,.7,angleBetween/2,.4);
+                    swerveDrive.drive(-1,0,angleBetween/2,.4);
                 }else{
-                    robotState=RobotState.RotateIntoCapBall;
+                    robotState=RobotState.Stop;
                     resetPosition=true;
                 }
 
@@ -517,20 +529,7 @@ public class Blue extends Robot {
         return scaled;
     }
 
-    public class InitThread extends Thread{
-        public void run(){
-            mRS=FtcRobotControllerActivity.getRenderScript();
-            blur=ScriptIntrinsicBlur.create(mRS,Element.RGBA_8888(mRS));
-            mAllocationIn = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), 1280, 720),
-                                                   Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
-            getmAllocationOut = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), 1280, 720),
-                                                       Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
-            red=new ScriptC_red(mRS);
-            blue=new ScriptC_blue(mRS);
-            initialized=true;
-            Log.d("renderscript","finished");
-        }
-    }
+
     public class AnalyzeThread extends Thread{
         private boolean running=true,analyze=false;
 
@@ -543,125 +542,119 @@ public class Blue extends Robot {
         public void run(){
             while(running) {
                 if(analyze){
-                    if(true){
-                        synchronized (threadLock) {
-                            beaconAnalysisResult = 999;
-                        }
-                        RGB565Bitmap=vuforia.getLastBitmap();
-                        //convert to rgba from rgb565
-                        Utils.bitmapToMat(RGB565Bitmap, original);
-                        Imgproc.cvtColor(original,original,Imgproc.COLOR_BGR2BGRA);
-                        Utils.matToBitmap(original, RGBABitmap);
-                        //                Log.d("Alive","1");
-                        //                try {
-                        //                    File directory = FtcRobotControllerActivity.getActivity().getBaseContext().getExternalFilesDir(null);
-                        //                    File image = new File(directory, Long.toString(System.currentTimeMillis()) + ".jpeg");
-                        //                    image.createNewFile();
-                        //                    FileOutputStream fos = new FileOutputStream(image);
-                        //                    RGBABitmap.compress(Bitmap.CompressFormat.JPEG, 50,fos) ;
-                        //                } catch (FileNotFoundException e) {
-                        //                    e.printStackTrace();
-                        //                } catch (IOException e) {
-                        //                    e.printStackTrace();
-                        //                }
-                        //split color onto blueMat Mat
-                        mAllocationIn.copyFrom(RGBABitmap);
-                        blur.setInput(mAllocationIn);
-                        blur.setRadius(1);
-                        blur.forEach(getmAllocationOut);
-                        blue.forEach_split(getmAllocationOut,mAllocationIn);
-                        mAllocationIn.copyTo(RGBABitmap);
-                        //                try {
-                        //                    File directory = FtcRobotControllerActivity.getActivity().getBaseContext().getExternalFilesDir(null);
-                        //                    File image = new File(directory, Long.toString(System.currentTimeMillis()) + ".jpeg");
-                        //                    image.createNewFile();
-                        //                    FileOutputStream fos = new FileOutputStream(image);
-                        //                    RGBABitmap.compress(Bitmap.CompressFormat.JPEG, 50,fos) ;
-                        //                } catch (FileNotFoundException e) {
-                        //                    e.printStackTrace();
-                        //                } catch (IOException e) {
-                        //                    e.printStackTrace();
-                        //                }
-                        Utils.bitmapToMat(RGBABitmap, blueMat);
-                        red.forEach_split(getmAllocationOut,mAllocationIn);
-                        mAllocationIn.copyTo(RGBABitmap);
-                        //                try {
-                        //                    File directory = FtcRobotControllerActivity.getActivity().getBaseContext().getExternalFilesDir(null);
-                        //                    File image = new File(directory, Long.toString(System.currentTimeMillis()) + ".jpeg");
-                        //                    image.createNewFile();
-                        //                    FileOutputStream fos = new FileOutputStream(image);
-                        //                    RGBABitmap.compress(Bitmap.CompressFormat.JPEG, 50,fos) ;
-                        //                } catch (FileNotFoundException e) {
-                        //                    e.printStackTrace();
-                        //                } catch (IOException e) {
-                        //                    e.printStackTrace();
-                        //                }
-                        Utils.bitmapToMat(RGBABitmap, redMat);
-                        //convert blueMat to grayscale for contours
-                        Imgproc.cvtColor(blueMat,blueMat,Imgproc.COLOR_RGBA2GRAY);
-                        ArrayList<MatOfPoint> contours=new ArrayList<>();
-                        Imgproc.findContours(blueMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-                        double blueAverage=0;
-                        double blueArea=0;
-                        int index=0;
-                        for(MatOfPoint p:contours){
-                            MatOfPoint2f points2f=new MatOfPoint2f();
-                            p.convertTo(points2f, CvType.CV_32FC2);
-                            Point center=Imgproc.minAreaRect(points2f).center;
-                            if(center.x>20&&center.x<1180){
-                                double area=Imgproc.contourArea(p);
-                                if(area>5000) {
-                                    index+=area;
-                                    blueAverage+=center.x*area;
-                                }
+                    synchronized (threadLock) {
+                        beaconAnalysisResult = 999;
+                    }
+                    RGB565Bitmap=vuforia.getLastBitmap();
+                    //convert to rgba from rgb565
+                    Utils.bitmapToMat(RGB565Bitmap, original);
+                    Imgproc.cvtColor(original,original,Imgproc.COLOR_BGR2BGRA);
+                    Utils.matToBitmap(original, RGBABitmap);
+                    //                Log.d("Alive","1");
+                    //                try {
+                    //                    File directory = FtcRobotControllerActivity.getActivity().getBaseContext().getExternalFilesDir(null);
+                    //                    File image = new File(directory, Long.toString(System.currentTimeMillis()) + ".jpeg");
+                    //                    image.createNewFile();
+                    //                    FileOutputStream fos = new FileOutputStream(image);
+                    //                    RGBABitmap.compress(Bitmap.CompressFormat.JPEG, 50,fos) ;
+                    //                } catch (FileNotFoundException e) {
+                    //                    e.printStackTrace();
+                    //                } catch (IOException e) {
+                    //                    e.printStackTrace();
+                    //                }
+                    //split color onto blueMat Mat
+                    mAllocationIn.copyFrom(RGBABitmap);
+                    blur.setInput(mAllocationIn);
+                    blur.setRadius(1);
+                    blur.forEach(getmAllocationOut);
+                    blue.forEach_split(getmAllocationOut,mAllocationIn);
+                    mAllocationIn.copyTo(RGBABitmap);
+                    //                try {
+                    //                    File directory = FtcRobotControllerActivity.getActivity().getBaseContext().getExternalFilesDir(null);
+                    //                    File image = new File(directory, Long.toString(System.currentTimeMillis()) + ".jpeg");
+                    //                    image.createNewFile();
+                    //                    FileOutputStream fos = new FileOutputStream(image);
+                    //                    RGBABitmap.compress(Bitmap.CompressFormat.JPEG, 50,fos) ;
+                    //                } catch (FileNotFoundException e) {
+                    //                    e.printStackTrace();
+                    //                } catch (IOException e) {
+                    //                    e.printStackTrace();
+                    //                }
+                    Utils.bitmapToMat(RGBABitmap, blueMat);
+                    red.forEach_split(getmAllocationOut,mAllocationIn);
+                    mAllocationIn.copyTo(RGBABitmap);
+                    //                try {
+                    //                    File directory = FtcRobotControllerActivity.getActivity().getBaseContext().getExternalFilesDir(null);
+                    //                    File image = new File(directory, Long.toString(System.currentTimeMillis()) + ".jpeg");
+                    //                    image.createNewFile();
+                    //                    FileOutputStream fos = new FileOutputStream(image);
+                    //                    RGBABitmap.compress(Bitmap.CompressFormat.JPEG, 50,fos) ;
+                    //                } catch (FileNotFoundException e) {
+                    //                    e.printStackTrace();
+                    //                } catch (IOException e) {
+                    //                    e.printStackTrace();
+                    //                }
+                    Utils.bitmapToMat(RGBABitmap, redMat);
+                    //convert blueMat to grayscale for contours
+                    Imgproc.cvtColor(blueMat,blueMat,Imgproc.COLOR_RGBA2GRAY);
+                    ArrayList<MatOfPoint> contours=new ArrayList<>();
+                    Imgproc.findContours(blueMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+                    double blueAverage=0;
+                    double blueArea=0;
+                    int index=0;
+                    for(MatOfPoint p:contours){
+                        MatOfPoint2f points2f=new MatOfPoint2f();
+                        p.convertTo(points2f, CvType.CV_32FC2);
+                        Point center=Imgproc.minAreaRect(points2f).center;
+                        if(center.x>20&&center.x<1180){
+                            double area=Imgproc.contourArea(p);
+                            if(area>5000) {
+                                index+=area;
+                                blueAverage+=center.x*area;
                             }
                         }
-                        blueArea=index;
-                        if(index==0)blueAverage=0;
-                        if(index>0)blueAverage/=index;
+                    }
+                    blueArea=index;
+                    if(index==0)blueAverage=0;
+                    if(index>0)blueAverage/=index;
 
-                        //repeat for red mat
-                        Imgproc.cvtColor(redMat,redMat,Imgproc.COLOR_RGBA2GRAY);
-                        contours=new ArrayList<>();//initialize OpenCV objects needed for processing
-                        //find contours
-                        Imgproc.findContours(redMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-                        double redAverage=0;//initialize average variables
-                        double redArea=0;
-                        index=0;
-                        for(MatOfPoint points:contours){//iterate over contours
-                            MatOfPoint2f points2f=new MatOfPoint2f();//semantics
-                            points.convertTo(points2f, CvType.CV_32FC2);//semantics
-                            Point center=Imgproc.minAreaRect(points2f).center;//calculate the center of the contour
-                            if(center.x<1180&&center.x>20) {//if the contour is in the center
-                                double area = Imgproc.contourArea(points);//find contour area
-                                if (area > 5000) {//if the contour is large
-                                    index += area;//increment the total area of contours
-                                    redAverage += center.x * area;//add the x position in the image multiplied by area
-                                }//if
+                    //repeat for red mat
+                    Imgproc.cvtColor(redMat,redMat,Imgproc.COLOR_RGBA2GRAY);
+                    contours=new ArrayList<>();//initialize OpenCV objects needed for processing
+                    //find contours
+                    Imgproc.findContours(redMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+                    double redAverage=0;//initialize average variables
+                    double redArea=0;
+                    index=0;
+                    for(MatOfPoint points:contours){//iterate over contours
+                        MatOfPoint2f points2f=new MatOfPoint2f();//semantics
+                        points.convertTo(points2f, CvType.CV_32FC2);//semantics
+                        Point center=Imgproc.minAreaRect(points2f).center;//calculate the center of the contour
+                        if(center.x<1180&&center.x>20) {//if the contour is in the center
+                            double area = Imgproc.contourArea(points);//find contour area
+                            if (area > 5000) {//if the contour is large
+                                index += area;//increment the total area of contours
+                                redAverage += center.x * area;//add the x position in the image multiplied by area
                             }//if
-                        }//for
-                        redArea=index;
-                        if(index==0)redAverage=0;
-                        if(index>0)redAverage/=index;//calculate the average center of red "mass" weighted by area
+                        }//if
+                    }//for
+                    redArea=index;
+                    if(index==0)redAverage=0;
+                    if(index>0)redAverage/=index;//calculate the average center of red "mass" weighted by area
 
-                        int r=0;
-                        if(redAverage>0&&blueAverage>0){
-                            if(redAverage>blueAverage) r=1;
-                            if(redAverage<blueAverage) r=-1;
-                        }else if(redAverage>0&&blueAverage==0&&redArea>100000){
-                            r=3;
-                        }else if(blueAverage>0&&redAverage==0&&blueArea>100000){
-                            r=2;
-                        }
-                        Log.d("Result","=====================================================");
-                        Log.d("Result",Integer.toString(r));
-                        synchronized (threadLock) {
-                            beaconAnalysisResult = r;
-                        }
-                    }else{
-                        synchronized (threadLock) {
-                            beaconAnalysisResult = 0;
-                        }
+                    int r=0;
+                    if(redAverage>0&&blueAverage>0){
+                        if(redAverage>blueAverage) r=1;
+                        if(redAverage<blueAverage) r=-1;
+                    }else if(redAverage>0&&blueAverage==0&&redArea>100000){
+                        r=3;
+                    }else if(blueAverage>0&&redAverage==0&&blueArea>100000){
+                        r=2;
+                    }
+                    Log.d("Result","=====================================================");
+                    Log.d("Result",Integer.toString(r));
+                    synchronized (threadLock) {
+                        beaconAnalysisResult = r;
                     }
                     analyze=false;
                 }else{

@@ -45,7 +45,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
 import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicBlur;
+import android.renderscript.Type;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -78,6 +82,8 @@ import com.qualcomm.ftccommon.configuration.FtcLoadFileActivity;
 import com.qualcomm.ftccommon.configuration.RobotConfigFile;
 import com.qualcomm.ftccommon.configuration.RobotConfigFileManager;
 import com.qualcomm.ftcrobotcontroller.R;
+import com.qualcomm.ftcrobotcontroller.ScriptC_blue;
+import com.qualcomm.ftcrobotcontroller.ScriptC_red;
 import com.qualcomm.hardware.HardwareFactory;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegister;
 import com.qualcomm.robotcore.hardware.configuration.Utility;
@@ -144,6 +150,33 @@ public class FtcRobotControllerActivity extends Activity {
 
   private static FtcRobotControllerActivity activity;
   private static RenderScript mRS;
+  private static ScriptC_blue blue;
+  private static ScriptC_red red;
+  private static ScriptIntrinsicBlur blur;
+
+  public static ScriptC_red getRed() {
+    return red;
+  }
+
+  public static ScriptIntrinsicBlur getBlur() {
+    return blur;
+  }
+
+  public static Allocation getmAllocationIn() {
+    return mAllocationIn;
+  }
+
+  public static Allocation getGetmAllocationOut() {
+    return getmAllocationOut;
+  }
+
+  private static Allocation mAllocationIn,getmAllocationOut;
+
+
+  public static ScriptC_blue getBlue(){
+    return blue;
+  }
+
 
   public static RenderScript getRenderScript(){
     return mRS;
@@ -316,7 +349,16 @@ public class FtcRobotControllerActivity extends Activity {
     super.onResume();
     RobotLog.vv(TAG, "onResume()");
     readNetworkType(NETWORK_TYPE_FILENAME);
-    mRS=RenderScript.create(getBaseContext(), RenderScript.ContextType.DEBUG);
+    mRS=RenderScript.create(getBaseContext());
+    blur= ScriptIntrinsicBlur.create(mRS, Element.RGBA_8888(mRS));
+    red=new ScriptC_red(mRS);
+    blue=new ScriptC_blue(mRS);
+    mAllocationIn = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), 1280, 720),
+                                           Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
+    getmAllocationOut = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), 1280, 720),
+                                               Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
+
+
     OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, getBaseContext(), new LoaderCallbackInterface() {
       @Override
       public void onManagerConnected(int status) {

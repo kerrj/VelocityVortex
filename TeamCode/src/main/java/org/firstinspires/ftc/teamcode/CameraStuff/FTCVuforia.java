@@ -385,7 +385,9 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
                     break;
                 }
             }
-            lastImage=RGBImage;
+            if(RGBImage!=null) {
+                lastImage = RGBImage;
+            }
             buf=lastImage.getPixels();
             bitmap.copyPixelsFromBuffer(buf);
             int numResults = s.getNumTrackableResults();

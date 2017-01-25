@@ -10,7 +10,9 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
  */
 @TeleOp
 public class DifferentialDrive extends OpMode {
+
     DcMotor left,right;
+
     @Override
     public void init() {
         left=hardwareMap.dcMotor.get("left");
