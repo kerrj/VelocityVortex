@@ -9,14 +9,18 @@ import com.vuforia.DataSet;
 import com.vuforia.Frame;
 import com.vuforia.HINT;
 import com.vuforia.Image;
+import com.vuforia.Matrix34F;
 import com.vuforia.ObjectTracker;
 import com.vuforia.PIXEL_FORMAT;
 import com.vuforia.STORAGE_TYPE;
 import com.vuforia.State;
+import com.vuforia.Tool;
 import com.vuforia.Trackable;
 import com.vuforia.TrackableResult;
 import com.vuforia.Tracker;
 import com.vuforia.TrackerManager;
+import com.vuforia.Vec2F;
+import com.vuforia.Vec3F;
 import com.vuforia.Vuforia;
 import com.vuforia.VuforiaBase;
 
@@ -40,6 +44,7 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
     private Image lastImage;
     private ByteBuffer buf;
     private Bitmap bitmap=Bitmap.createBitmap(1280, 720, Bitmap.Config.RGB_565);
+    float targetWidth=254.000000f, targetHeight=184.154922f;
 
     public Bitmap getLastBitmap(){
         synchronized (dataLock){
@@ -402,17 +407,23 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
                     // Convert values into useful data
                     //Angles are in radians distances are relative to the calibration image
                     //Also a timestamp is added
-                    float[] data = result.getPose().getData();
+                    Matrix34F matrix=result.getPose();
+                    float[] data = matrix.getData();
+                    Vec2F middle= Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(0, 0, 54));
+                    Vec2F left=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(-targetWidth/2+30,200f,54));
+                    Vec2F right=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(targetWidth/2-30,200f,54));
+                    Vec2F bottom=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(0,-targetHeight/2+200f,54));
+                    Vec2F top=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(0,targetHeight/2+150f,54));
                     float[][] rotation = {{data[0], data[1], data[2]},
-                    {data[4], data[5], data[6]},
-                    {data[8], data[9], data[10]}};
-                    
+                            {data[4], data[5], data[6]},
+                            {data[8], data[9], data[10]}};
+
                     double thetaX = Math.atan2(rotation[2][1], rotation[2][2]);
                     double thetaY = Math.atan2(-rotation[2][0], Math.sqrt(rotation[2][1] * rotation[2][1] + rotation[2][2] * rotation[2][2]));
                     double thetaZ = Math.atan2(rotation[1][0], rotation[0][0]);
-                    
-                    double[] tempVuforiaData = new double[7];
-                    
+
+                    double[] tempVuforiaData = new double[7+10];
+
                     tempVuforiaData[0] = thetaX;
                     tempVuforiaData[1] = thetaY;
                     tempVuforiaData[2] = thetaZ;
@@ -420,7 +431,24 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
                     tempVuforiaData[4] = data[7];
                     tempVuforiaData[5] = data[11];
                     tempVuforiaData[6] = System.currentTimeMillis();
-                    
+
+                    tempVuforiaData[7]=middle.getData()[0];
+                    tempVuforiaData[8]=middle.getData()[1];
+
+                    tempVuforiaData[9]=left.getData()[0];
+                    tempVuforiaData[10]=left.getData()[1];
+
+                    tempVuforiaData[11]=right.getData()[0];
+                    tempVuforiaData[12]=right.getData()[1];
+
+                    tempVuforiaData[13]=bottom.getData()[0];
+                    tempVuforiaData[14]=bottom.getData()[1];
+
+                    tempVuforiaData[15]=top.getData()[0];
+                    tempVuforiaData[16]=top.getData()[1];
+
+
+
                     vuforiaData.put(result.getTrackable().getName(), tempVuforiaData);
                     }//if
                 }//for

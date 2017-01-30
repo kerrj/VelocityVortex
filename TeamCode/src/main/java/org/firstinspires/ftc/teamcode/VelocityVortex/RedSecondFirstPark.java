@@ -49,7 +49,6 @@ public class RedSecondFirstPark extends Robot {
     //---------------------------------------------------------------------------------------
 
 
-    private boolean resetPosition=true;
 
     private enum RobotState{//list states here
         DriveToCapBall,RotateIntoCapBall,Shoot,DriveToFirstBeacon, RotateToFirstBeacon, DriveForward,AlignWithBeacon, AnalyzeBeacon, PressBeacon,DriveToSecondBeacon,Stop, BackUp
@@ -303,8 +302,8 @@ public class RedSecondFirstPark extends Robot {
                 //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
                 angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
 
-                if(swerveDrive.getLinearInchesTravelled()<20){
-                    swerveDrive.drive(0,1,angleBetween/2,.4);
+                if(swerveDrive.getLinearInchesTravelled()<40){
+                    swerveDrive.drive(.1,1,angleBetween/2,.3);
                 }else{
                     robotState=RobotState.AlignWithBeacon;
                     resetPosition=true;
@@ -402,9 +401,9 @@ public class RedSecondFirstPark extends Robot {
                 angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
                 vuforia.cameraLight(true);
                 neck.setPosition(NECK_FLAT);
-                if(resetPosition){
+                if(resetPosition) {
                     swerveDrive.resetPosition();
-                    resetPosition=false;
+                    resetPosition = false;
                 }
                 DISTANCE=45;
                 if(swerveDrive.getLinearInchesTravelled()<DISTANCE){

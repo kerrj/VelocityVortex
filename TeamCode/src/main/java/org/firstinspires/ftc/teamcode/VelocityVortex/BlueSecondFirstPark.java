@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.VelocityVortex;
 
 import android.graphics.Bitmap;
+import android.graphics.Paint;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -53,10 +54,9 @@ public class BlueSecondFirstPark extends Robot {
     //---------------------------------------------------------------------------------------
 
 
-    private boolean resetPosition=true;
 
     private enum RobotState{//list states here
-        Shoot, RotateIntoCapBall,RotateToFirstBeacon, DriveToFirstBeacon,DriveForward,AlignWithBeacon, AnalyzeBeacon, PressBeacon,DriveToSecondBeacon,Stop, BackUp,DriveToCapBall
+        Shoot, RotateIntoCapBall,RotateToFirstBeacon, RotateToSeeBeacon,DriveToFirstBeacon,DriveForward,AlignWithBeacon, AnalyzeBeacon, PressBeacon,DriveToSecondBeacon,Stop, BackUp,DriveToCapBall
     }
 
     private RobotState robotState=RobotState.DriveForward;//initialize start state here
@@ -314,11 +314,24 @@ public class BlueSecondFirstPark extends Robot {
                 //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
                 angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
 
-                if(swerveDrive.getLinearInchesTravelled()<20){
-                    swerveDrive.drive(0,-1,angleBetween/2,.4);
+                if(swerveDrive.getLinearInchesTravelled()<30){
+                    swerveDrive.drive(0,-1,angleBetween/2,.3);
                 }else{
-                    robotState=RobotState.AlignWithBeacon;
+                    robotState=RobotState.RotateToSeeBeacon;
                     resetPosition=true;
+                }
+                break;
+
+            case RotateToSeeBeacon:
+                if(resetPosition){
+                    resetPosition=false;
+                    swerveDrive.resetPosition();
+                }
+                if(swerveDrive.getLinearInchesTravelled()<3){
+                    swerveDrive.drive(0,0,-1,.2);
+                }else{
+                    resetPosition=true;
+                    robotState= RobotState.AlignWithBeacon;
                 }
                 break;
 
@@ -394,7 +407,8 @@ public class BlueSecondFirstPark extends Robot {
                 } else {
                     beaconsPressed++;
                     if(beaconsPressed==1){
-                        robotState = RobotState.DriveToSecondBeacon;
+                        robotState=RobotState.Stop;
+//                        robotState = RobotState.DriveToSecondBeacon;
                     }else{
                         robotState=RobotState.DriveToCapBall;
                     }

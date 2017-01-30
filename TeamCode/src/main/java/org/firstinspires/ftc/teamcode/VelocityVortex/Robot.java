@@ -14,12 +14,16 @@ import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.teamcode.CameraStuff.EyeOfSauron;
+import org.firstinspires.ftc.teamcode.CameraStuff.FTCTarget;
 import org.firstinspires.ftc.teamcode.CameraStuff.FTCVuforia;
+import org.firstinspires.ftc.teamcode.CameraStuff.HistogramAnalysisThread;
 import org.firstinspires.ftc.teamcode.Logging.DataLogger;
 import org.firstinspires.ftc.teamcode.Swerve.Core.AbsoluteEncoder;
 import org.firstinspires.ftc.teamcode.Swerve.Core.Constants;
 import org.firstinspires.ftc.teamcode.Swerve.Core.FTCSwerve;
+import org.firstinspires.ftc.teamcode.Swerve.Core.Vector;
 
 /**
  * Created by Justin on 10/15/2016.
@@ -27,19 +31,13 @@ import org.firstinspires.ftc.teamcode.Swerve.Core.FTCSwerve;
 public class Robot extends OpMode {
     public static final double WHEEL_IN=.95;
     public static final double WHEEL_OUT=.3;
-    public static final double NECK_FLAT=.5;
+    public static final double NECK_FLAT=.45;
     public static final double CAP_RIGHT_IN=.7;
-//    public static final double CAP_RIGHT_IN=.5;
     public static final double CAP_LEFT_IN=.7;
-//    public static final double CAP_LEFT_IN=.12;
     public static final double CAP_RIGHT_OUT=.4;
-//    public static final double CAP_RIGHT_OUT=0;
     public static final double CAP_LEFT_OUT=1;
-//    public static final double CAP_LEFT_OUT=.75;
     public static final double CAP_RIGHT_HOLD=.6;
-//    public static final double CAP_RIGHT_HOLD=.4;
     public static final double CAP_LEFT_HOLD=.9;
-//    public static final double CAP_LEFT_HOLD=.3;
     public static final int SLIDE_DOWN=0;
     public static final int SLIDE_UP=20200;
     public static final double SHOOTER_DOWN=.6;
@@ -47,6 +45,12 @@ public class Robot extends OpMode {
     public static final double SWEEPER_INTAKE=1;
     public static final double SWEEPER_OUTAKE=-1;
     public static final double SWEEPER_STOP=0;
+    public final double CAMERA_OFFSET_FROM_PLOW=42;
+    public final double SPONGE_OFFSET_FROM_CAMERA=70;
+    public final double BUTTON_DISTANCE_FROM_WALL=55;
+    public final double BUTTON_OFFSET_FROM_CENTER=65;
+    public final double PUSHING_SPEED=.25;
+
 
     public DcMotor lfm,lbm,rfm,rbm,slideMotor,shootLeft,shootRight,sweeper;
     public Servo lf,lb,rf,rb;
@@ -55,13 +59,17 @@ public class Robot extends OpMode {
     public FTCSwerve swerveDrive;
     public AbsoluteEncoder lfe,rfe,rbe,lbe;
 //    public DataLogger dataLogger;
-    public FTCVuforia vuforia;
 //    public ModernRoboticsI2cRangeSensor leftRangeMeter,rightRangeMeter;
 
     public int slideStartPosition;//if start position is not 0
 
     public double lastLoop;
     public GyroSensor gyro;
+    public boolean resetPosition=true;
+
+
+    public HistogramAnalysisThread thread;
+    public FTCVuforia vuforia;
 
 
     @Override
@@ -110,15 +118,6 @@ public class Robot extends OpMode {
         rbe=new AbsoluteEncoder(Constants.BR_OFFSET, rba);
         lbe=new AbsoluteEncoder(Constants.BL_OFFSET, lba);
         swerveDrive=new FTCSwerve(lfa,rfa,lba,rba,lfm,rfm,lbm,rbm,lf,rf,lb,rb,14,14);
-//        dataLogger.mapHardware(this);
-//        I2cDeviceSynch i=hardwareMap.i2cDeviceSynch.get("leftRanger");
-//        leftRangeMeter=new ModernRoboticsI2cRangeSensor(i);
-//        I2cDeviceSynch i2=hardwareMap.i2cDeviceSynch.get("rightRanger");
-//        rightRangeMeter=new ModernRoboticsI2cRangeSensor(i2);
-//        I2cAddr left=I2cAddr.create8bit(0x10);
-//        leftRangeMeter.setI2cAddress(left);
-//        I2cAddr right=I2cAddr.create8bit(0x28);
-//        rightRangeMeter.setI2cAddress(right);
         lastLoop=System.nanoTime();
     }
 
@@ -138,4 +137,218 @@ public class Robot extends OpMode {
         capRight.setPosition(CAP_RIGHT_HOLD);
         capLeft.setPosition(CAP_LEFT_HOLD);
     }
+
+
+
+
+
+
+    //===================================
+    //methods for autonomous opmodes
+    //===================================
+
+    public void initAutonomous(){
+        gyro.calibrate();
+        vuforia=new FTCVuforia(FtcRobotControllerActivity.getActivity());
+        vuforia.addTrackables("FTC_2016-17.xml");
+        vuforia.initVuforia();
+        thread=new HistogramAnalysisThread(vuforia);
+        thread.stopAnalyzing();
+        thread.start();
+    }
+
+    //return true if driving is finished
+    public boolean driveWithEncoders(double translationX,double translationY, double rotation, double power, double inches){
+        if(resetPosition){
+            resetPosition=false;
+            startHeading=gyro.getHeading();
+            swerveDrive.resetPosition();
+        }
+        int currentHeading=gyro.getHeading();
+        Vector targetVector = new Vector(Math.cos(Math.toRadians(startHeading)), Math.sin(Math.toRadians(startHeading)));
+        Vector currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));
+        //angleBetween is the angle from currentPosition to target position in radians
+        //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
+        double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
+        if(swerveDrive.getLinearInchesTravelled()<inches){
+            if(rotation!=0) {
+                swerveDrive.drive(translationX, translationY, rotation, power);
+            }else{
+                swerveDrive.drive(translationX,translationY,angleBetween/2,power);
+            }
+            return false;
+        }else{
+            resetPosition=true;
+            swerveDrive.drive(translationX,translationY,rotation,0);
+            return true;
+        }
+    }
+
+    private enum PressingState{AlignWithBeacon,PressButton}
+    private PressingState state=PressingState.AlignWithBeacon;
+    public enum Side{BLUE,RED}
+    private Vector buttonVector=new Vector(1,0);
+    private boolean targetFound=false;
+
+    public boolean alignWithAndPushCurrentBeacon(FTCTarget currentBeacon, HistogramAnalysisThread.BeaconResult beaconResult,Side side){
+        if(resetPosition){
+            resetPosition=false;
+            state=PressingState.AlignWithBeacon;
+        }
+        double buttonOffsetFromCenter;
+        if(side==Side.BLUE){
+            buttonOffsetFromCenter=BUTTON_OFFSET_FROM_CENTER;
+        }else{
+            buttonOffsetFromCenter=-BUTTON_OFFSET_FROM_CENTER;
+        }
+        switch(state){
+            case AlignWithBeacon:
+                buttonWheel.setPosition(WHEEL_OUT);
+                if(currentBeacon.isFound()){
+                    thread.startAnalyzing();
+                    Vector direction;
+                    if(beaconResult== HistogramAnalysisThread.BeaconResult.INCONCLUSIVE){
+                        direction = new Vector(currentBeacon.getDistance() -BUTTON_DISTANCE_FROM_WALL-SPONGE_OFFSET_FROM_CAMERA,
+                                               currentBeacon.getHorizontalDistance());
+                    }else if(beaconResult== HistogramAnalysisThread.BeaconResult.RED_LEFT){
+                        direction = new Vector(currentBeacon.getDistance()-BUTTON_DISTANCE_FROM_WALL-SPONGE_OFFSET_FROM_CAMERA,
+                                               currentBeacon.getHorizontalDistance()+buttonOffsetFromCenter+CAMERA_OFFSET_FROM_PLOW);
+                    }else{
+                        direction = new Vector(currentBeacon.getDistance()-BUTTON_DISTANCE_FROM_WALL-SPONGE_OFFSET_FROM_CAMERA,
+                                               currentBeacon.getHorizontalDistance()-buttonOffsetFromCenter+CAMERA_OFFSET_FROM_PLOW);
+                    }
+                    buttonVector=direction;
+                    swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation(),PUSHING_SPEED);
+
+                    if(direction.getMagnitude()<200){
+                        targetFound=true;
+                    }
+                    if(direction.getMagnitude()<100){
+                        state=PressingState.PressButton;
+                        resetPosition=true;
+                    }
+                    return false;
+                }else if(targetFound){
+                    state=PressingState.PressButton;
+                    thread.stopAnalyzing();
+                    thread.resetResult();
+                    return false;
+                } else{
+                    swerveDrive.drive(buttonVector.x,buttonVector.y,0,0);
+                    return false;
+                }
+
+
+            case PressButton:
+                if(driveWithEncoders(buttonVector.x,buttonVector.y,0,PUSHING_SPEED,mmToInch(buttonVector.getMagnitude()))) {
+                    resetPosition=true;
+                    return true;
+                }else{
+                    return false;
+                }
+        }
+        return false;
+    }
+
+    public enum Direction{CLOCKWISE,COUNTERCLOCKWISE}
+    private int startHeading;
+    private int targetHeading;
+
+    public boolean turnAroundPivotPoint(double x,double y,double power,int degrees,Direction direction,int threshold){
+        if(resetPosition){
+            resetPosition=false;
+            swerveDrive.setPivotPoint(x,y);
+            startHeading=gyro.getHeading();
+            if(direction==Direction.COUNTERCLOCKWISE) {
+                targetHeading = wrapGyroHeading(startHeading -degrees);
+            }else{
+                targetHeading=wrapGyroHeading(startHeading+degrees);
+            }
+        }
+        int currentHeading=gyro.getHeading();
+        Vector targetVector = new Vector(Math.cos(Math.toRadians(targetHeading)), Math.sin(Math.toRadians(targetHeading)));
+        Vector currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));
+        //angleBetween is the angle from currentPosition to target position in radians
+        //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
+        double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
+        if(angleBetween>0){
+            power=Math.abs(power);
+        }else if(angleBetween<0){
+            power=-Math.abs(power);
+        }
+        if(Math.abs(angleBetween)>threshold){
+            swerveDrive.drive(0,0,1,power);
+            return false;
+        }else{
+            swerveDrive.drive(0,0,1,0);
+            swerveDrive.setPivotPoint(0,0);
+            resetPosition=true;
+            return true;
+        }
+    }
+
+    private long servoTravelStart,startTime,lastShot;
+    private boolean resetServoTime=true;
+    private enum ShootServoState{MovingUp,MovingDown}
+    private ShootServoState servoState;
+    private int shots;
+    public boolean shoot(int targetShots,double power){
+        if(resetPosition){
+            startTime=System.currentTimeMillis();
+            resetPosition=false;
+            shots=0;
+        }
+        shootLeft.setPower(power);
+        shootRight.setPower(power);
+        if(System.currentTimeMillis()-startTime>200){
+            if(resetServoTime){
+                servoTravelStart=System.currentTimeMillis();
+                resetServoTime=false;
+            }
+            if(servoState==ShootServoState.MovingUp){
+                if(System.currentTimeMillis()-servoTravelStart>300){
+                    shots++;
+                    lastShot=System.currentTimeMillis();
+                    if(shots<targetShots) {
+                        servoState = ShootServoState.MovingDown;
+                        return false;
+                    }else{
+                        shootLeft.setPower(0);
+                        shootRight.setPower(0);
+                        resetPosition=true;
+                        return true;
+                    }
+                }else{
+                    shootServo.setPosition(SHOOTER_UP);
+                    return false;
+                }
+            }else{
+                shootServo.setPosition(SHOOTER_DOWN);
+                if(System.currentTimeMillis()-lastShot>600){
+                    servoState=ShootServoState.MovingUp;
+                    servoTravelStart=System.currentTimeMillis();
+                }
+                return false;
+            }
+        }else{
+            return false;
+        }
+    }
+
+    public double mmToInch(double mm){
+        return mm*.0393701;
+    }
+
+    public int wrapGyroHeading(int heading){
+        if(heading>359){
+            heading-=360;
+            return wrapGyroHeading(heading);
+        }else if(heading<0){
+            heading+=360;
+            return wrapGyroHeading(heading);
+        }else{
+            return heading;
+        }
+    }
+
 }

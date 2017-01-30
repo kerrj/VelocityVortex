@@ -53,7 +53,6 @@ public class BlueFirstSecondCapPark extends Robot {
     //---------------------------------------------------------------------------------------
 
 
-    private boolean resetPosition=true;
 
     private enum RobotState{//list states here
         Shoot, RotateIntoCapBall,RotateToFirstBeacon, DriveForward,AlignWithBeacon, AnalyzeBeacon, PressBeacon,DriveToSecondBeacon,Stop, BackUp,DriveToCapBall
@@ -293,7 +292,7 @@ public class BlueFirstSecondCapPark extends Robot {
                 //angleBetween is the angle from currentPosition to target position in radians
                 //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
                 double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
-                if(Math.abs(angleBetween)>Math.toRadians(8)){
+                if(Math.abs(angleBetween)>Math.toRadians(4)){
                     swerveDrive.drive(0,-1,rotateConstant,.35);
                 }else{
                     resetPosition=true;
@@ -367,7 +366,7 @@ public class BlueFirstSecondCapPark extends Robot {
                     } else if (finalAnalysisResult == -1){
                         buttonVector = new Vector(spongeVector.x, spongeVector.y + BUTTON_OFFSET_FROM_TARGET);
                     }
-                    DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude())+1;
+                    DRIVE_DISTANCE = mmToInch(buttonVector.getMagnitude())+2;
                 }
                 if (swerveDrive.getLinearInchesTravelled() < DRIVE_DISTANCE){
                     swerveDrive.drive(buttonVector.x, buttonVector.y, 0, .2);

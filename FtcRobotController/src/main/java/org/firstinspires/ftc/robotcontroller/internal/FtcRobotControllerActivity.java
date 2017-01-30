@@ -48,7 +48,9 @@ import android.preference.PreferenceManager;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
+import android.renderscript.Script;
 import android.renderscript.ScriptIntrinsicBlur;
+import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
 import android.util.Log;
 import android.view.Menu;
@@ -111,6 +113,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class FtcRobotControllerActivity extends Activity {
 
+
+
   public static final String TAG = "RCActivity";
 
   private static final int REQUEST_CONFIG_WIFI_CHANNEL = 1;
@@ -170,7 +174,38 @@ public class FtcRobotControllerActivity extends Activity {
     return getmAllocationOut;
   }
 
-  private static Allocation mAllocationIn,getmAllocationOut;
+  private static Allocation mAllocationIn;
+  private static Allocation getmAllocationOut;
+
+  public static Allocation getLeftHistogramAllocation() {
+    return leftHistogramAllocation;
+  }
+
+  public static Allocation getRightHistogramAllocation() {
+    return rightHistogramAllocation;
+  }
+
+  private static Allocation leftHistogramAllocation;
+  private static Allocation rightHistogramAllocation;
+
+  public static ScriptIntrinsicHistogram getLeftHistogram() {
+    return leftHistogram;
+  }
+
+  public static ScriptIntrinsicHistogram getRightHistogram() {
+    return rightHistogram;
+  }
+
+  public static Script.LaunchOptions getLeftOptions() {
+    return leftOptions;
+  }
+
+  public static Script.LaunchOptions getRightOptions() {
+    return rightOptions;
+  }
+
+  private static ScriptIntrinsicHistogram leftHistogram,rightHistogram;
+  private static Script.LaunchOptions leftOptions,rightOptions;
 
 
   public static ScriptC_blue getBlue(){
@@ -357,7 +392,16 @@ public class FtcRobotControllerActivity extends Activity {
                                            Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
     getmAllocationOut = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), 1280, 720),
                                                Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
+    leftHistogramAllocation=Allocation.createSized(mRS,Element.U32_3(mRS),256,Allocation.USAGE_SCRIPT);
+    rightHistogramAllocation=Allocation.createSized(mRS,Element.U32_3(mRS),256, Allocation.USAGE_SCRIPT);
 
+    leftHistogram=ScriptIntrinsicHistogram.create(mRS,Element.RGBA_8888(mRS));
+    leftHistogram.setOutput(leftHistogramAllocation);
+    leftOptions=new Script.LaunchOptions();
+
+    rightHistogram=ScriptIntrinsicHistogram.create(mRS,Element.RGBA_8888(mRS));
+    rightHistogram.setOutput(rightHistogramAllocation);
+    rightOptions=new Script.LaunchOptions();
 
     OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, getBaseContext(), new LoaderCallbackInterface() {
       @Override

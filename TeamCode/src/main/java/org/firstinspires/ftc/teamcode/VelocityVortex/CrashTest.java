@@ -11,6 +11,7 @@ import android.util.Log;
 import com.qualcomm.ftcrobotcontroller.ScriptC_blue;
 import com.qualcomm.ftcrobotcontroller.ScriptC_red;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.robot.RobotState;
 
@@ -35,6 +36,7 @@ import java.util.ArrayList;
  * Created by Justin on 1/23/2017.
  */
 @Autonomous
+@Disabled
 public class CrashTest extends OpMode {
     private boolean initialized =true;
     private ByteBuffer buf;
