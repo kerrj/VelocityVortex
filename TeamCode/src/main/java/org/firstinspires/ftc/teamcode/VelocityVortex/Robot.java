@@ -174,7 +174,7 @@ public class Robot extends OpMode {
             if(rotation!=0) {
                 swerveDrive.drive(translationX, translationY, rotation, power);
             }else{
-                swerveDrive.drive(translationX,translationY,angleBetween/2,power);
+                swerveDrive.drive(translationX,translationY,angleBetween/1.5,power);
             }
             return false;
         }else{
@@ -194,6 +194,8 @@ public class Robot extends OpMode {
         if(resetPosition){
             resetPosition=false;
             state=PressingState.AlignWithBeacon;
+            thread.startAnalyzing();
+            targetFound=false;
         }
         double buttonOffsetFromCenter;
         if(side==Side.BLUE){
@@ -205,7 +207,6 @@ public class Robot extends OpMode {
             case AlignWithBeacon:
                 buttonWheel.setPosition(WHEEL_OUT);
                 if(currentBeacon.isFound()){
-                    thread.startAnalyzing();
                     Vector direction;
                     if(beaconResult== HistogramAnalysisThread.BeaconResult.INCONCLUSIVE){
                         direction = new Vector(currentBeacon.getDistance() -BUTTON_DISTANCE_FROM_WALL-SPONGE_OFFSET_FROM_CAMERA,
@@ -225,7 +226,6 @@ public class Robot extends OpMode {
                     }
                     if(direction.getMagnitude()<100){
                         state=PressingState.PressButton;
-                        resetPosition=true;
                     }
                     return false;
                 }else if(targetFound){
@@ -240,7 +240,7 @@ public class Robot extends OpMode {
 
 
             case PressButton:
-                if(driveWithEncoders(buttonVector.x,buttonVector.y,0,PUSHING_SPEED,mmToInch(buttonVector.getMagnitude()))) {
+                if(driveWithEncoders(buttonVector.x,buttonVector.y,0,PUSHING_SPEED,mmToInch(buttonVector.getMagnitude())+1)) {
                     resetPosition=true;
                     return true;
                 }else{
@@ -276,7 +276,7 @@ public class Robot extends OpMode {
         }else if(angleBetween<0){
             power=-Math.abs(power);
         }
-        if(Math.abs(angleBetween)>threshold){
+        if(Math.abs(angleBetween)>Math.toRadians(threshold)){
             swerveDrive.drive(0,0,1,power);
             return false;
         }else{

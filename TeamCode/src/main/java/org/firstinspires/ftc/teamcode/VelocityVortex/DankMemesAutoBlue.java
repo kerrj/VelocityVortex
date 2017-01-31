@@ -19,10 +19,11 @@ package org.firstinspires.ftc.teamcode.VelocityVortex;
 @Autonomous
 public class DankMemesAutoBlue extends Robot {
     HistogramAnalysisThread.BeaconResult beaconResult;
-    enum RobotState{DriveForward,Shoot,RotateToFirstBeacon,LineUpAndPressBeacon,Stop}
-    RobotState state=RobotState.LineUpAndPressBeacon;
+    enum RobotState{DriveForward,Shoot,RotateToFirstBeacon,DriveToSecondBeacon,PressFirstBeacon,PressSecondBeacon,Stop}
+    RobotState state=RobotState.DriveForward;
     private int beaconsPressed=0;
-    private double rotateRadius=18;
+    private double rotateRadius=30;
+    boolean waitForServos=true;
 
 
     @Override
@@ -32,14 +33,15 @@ public class DankMemesAutoBlue extends Robot {
     }
 
     public void init_loop(){
-        swerveDrive.drive(1,0,0,0);
+        swerveDrive.refreshValues();
+        swerveDrive.drive(.4,-1,0,0);
         swerveDrive.update(true,15,true);
     }
     @Override
     public void loop() {
         super.loop();
         if(gyro.isCalibrating()){
-            swerveDrive.drive(1,0,0,0);
+            swerveDrive.drive(-1,0,0,0);
             swerveDrive.update(true,15,false);
             return;
         }
@@ -67,37 +69,82 @@ public class DankMemesAutoBlue extends Robot {
 
         switch(state){
             case DriveForward:
-                if(driveWithEncoders(1,0,0,.2,15)){
-                    state=RobotState.Shoot;
-                    swerveDrive.setPivotPoint(rotateRadius,0);
-                    swerveDrive.drive(0,0,.4,0);
-                    swerveDrive.setPivotPoint(0,0);
+                waitForServos=false;
+                if(driveWithEncoders(.4,-1,0,.5,45)){
+                    state=RobotState.PressFirstBeacon;
+                    resetPosition=true;
+                    waitForServos=true;
                 }
                 break;
-            case Shoot:
-                if(shoot(2,.65)){
-                    state=RobotState.RotateToFirstBeacon;
-                }
-                break;
-            case RotateToFirstBeacon:
-                if(turnAroundPivotPoint(rotateRadius,0,.4,90,Direction.COUNTERCLOCKWISE,4)){
-                    state=RobotState.LineUpAndPressBeacon;
-                }
-                break;
-            case LineUpAndPressBeacon:
+
+            case PressFirstBeacon:
                 if(alignWithAndPushCurrentBeacon(currentBeacon,beaconResult,Side.BLUE)){
+                    resetPosition=true;
+                    state=RobotState.DriveToSecondBeacon;
+                    beaconsPressed++;
+                }
+                break;
+
+            case DriveToSecondBeacon:
+                waitForServos=false;
+                if(driveWithEncoders(-.4,-1,0,.4,40)){
+                    state=RobotState.PressSecondBeacon;
+                    resetPosition=true;
+                    waitForServos=true;
+                }
+                break;
+
+            case PressSecondBeacon:
+                if(alignWithAndPushCurrentBeacon(currentBeacon,beaconResult,Side.BLUE)){
+                    resetPosition=true;
                     state=RobotState.Stop;
                 }
-                break;
-            case Stop:
-                swerveDrive.drive(0,0,1,0);
-                break;
+//            case DriveForward:
+//                if(driveWithEncoders(-1,0,0,.3,15)){
+//                    state=RobotState.Shoot;
+//                    swerveDrive.setPivotPoint(-rotateRadius,0);
+//                    swerveDrive.drive(0,0,.4,0);
+//                    swerveDrive.setPivotPoint(0,0);
+//                }
+//                break;
+//
+//            case Shoot:
+//                if(shoot(2,.65)){
+//                    state=RobotState.RotateToFirstBeacon;
+//                }
+//                break;
+//
+//            case RotateToFirstBeacon:
+//                waitForServos=false;
+//                if(turnAroundPivotPoint(-rotateRadius,0,.4,90,Direction.COUNTERCLOCKWISE,8)){
+//                    state=RobotState.DriveToSecondBeacon;
+//                }
+//                break;
+//
+//            case DriveToSecondBeacon:
+//                if(driveWithEncoders(.2,-1,-.2,.4,20)){
+//                    state=RobotState.PressSecondBeacon;
+//                    waitForServos=true;
+//                }
+//                break;
+//
+//            case PressSecondBeacon:
+//                if(alignWithAndPushCurrentBeacon(currentBeacon,beaconResult,Side.BLUE)){
+//                    state=RobotState.Stop;
+//                    beaconsPressed++;
+//                }
+//                break;
+//
+//            case Stop:
+//                swerveDrive.drive(0,0,1,0);
+//                break;
         }
 
 
         telemetry.addData("BeaconResult",beaconResult);
         telemetry.addData("Confidence",thread.getConfidence());
-        swerveDrive.update(true,15,true);
+        telemetry.addData("State",state);
+        swerveDrive.update(waitForServos,15,true);
     }
 
     public void stop(){

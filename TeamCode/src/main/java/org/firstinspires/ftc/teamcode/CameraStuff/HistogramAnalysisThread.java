@@ -88,154 +88,155 @@ public class HistogramAnalysisThread extends Thread {
         }
     }
     public void run(){
-        while(running){
-            if(!analyze){
-                continue;
-            }
-            HashMap<String, double[]> data = vuforia.getVuforiaData();
-            int top,left, bottom,right,middle;
-            if(data.containsKey("Wheels")) {
-                top = (int) data.get("Wheels")[16];
-                bottom = (int) Math.max(0,data.get("Wheels")[14]);
-                left = (int) data.get("Wheels")[9];
-                right = (int) data.get("Wheels")[11];
-                middle = (int) data.get("Wheels")[7];
-            }else        if(data.containsKey("Tools")) {
-                top = (int) data.get("Tools")[16];
-                bottom = (int) Math.max(0,data.get("Tools")[14]);
-                left = (int) data.get("Tools")[9];
-                right = (int) data.get("Tools")[11];
-                middle = (int) data.get("Tools")[7];
-            }else        if(data.containsKey("Gears")) {
-                top = (int) data.get("Gears")[16];
-                bottom = (int) Math.max(0,data.get("Gears")[14]);
-                left = (int) data.get("Gears")[9];
-                right = (int) data.get("Gears")[11];
-                middle = (int) data.get("Gears")[7];
-            }else        if(data.containsKey("Legos")) {
-                top = (int) data.get("Legos")[16];
-                bottom = (int) Math.max(0,data.get("Legos")[14]);
-                left = (int) data.get("Legos")[9];
-                right = (int) data.get("Legos")[11];
-                middle = (int) data.get("Legos")[7];
-            }else{
-                continue;
-            }
+        while(running) {
+            if (!analyze) {
 
-            RGB565Bitmap = vuforia.getLastBitmap();
-            Mat original = new Mat();
-            Utils.bitmapToMat(RGB565Bitmap, original);
-            Imgproc.cvtColor(original, original, Imgproc.COLOR_BGR2BGRA);
-            Utils.matToBitmap(original, RGBABitmap);
-            mAllocationIn.copyFrom(RGBABitmap);
-
-            left=clipX(left);
-            right=clipX(right);
-            top=clipY(top);
-            bottom=clipY(bottom);
-            middle=clipX(middle);
-            if(bottom==top&&top==719){
-                top--;
-            }else if(bottom==top&&top==1){
-                bottom++;
-            }
-
-            try {
-                leftOptions.setX(left, middle);
-                leftOptions.setY(top, bottom);
-                leftHistogram.forEach(mAllocationIn, leftOptions);
-
-                rightOptions.setX(middle, right);
-                rightOptions.setY(top, bottom);
-                rightHistogram.forEach(mAllocationIn, rightOptions);
-            }catch(RSIllegalArgumentException e){
-                e.printStackTrace();
-                continue;
-            }
-
-            int[] leftData=new int[leftHistogramAllocation.getBytesSize()/4];
-            int[] leftR=new int[256];
-            int[] leftG=new int[256];
-            int[] leftB=new int[256];
-
-            int[] rightData=new int[rightHistogramAllocation.getBytesSize()/4];
-            int[] rightR=new int[256];
-            int[] rightG=new int[256];
-            int[] rightB=new int[256];
-
-            leftHistogramAllocation.copyTo(leftData);
-            rightHistogramAllocation.copyTo(rightData);
-
-            //==================================================================================================================
-            //RED AND BLUE CHANNELS ARE SWITCHED SO WE SET THEM INTENTIONALLY TO THE WRONG CHANNEL
-            //==================================================================================================================
-            decodeHistogram(leftData,leftB,leftG,leftR);
-            decodeHistogram(rightData,rightB,rightG,rightR);
-            //==================================================================================================================
-            //RED AND BLUE CHANNELS ARE SWITCHED SO WE SET THEM INTENTIONALLY TO THE WRONG CHANNEL
-            //==================================================================================================================
-
-            int histogramThreshold=200;
-            int total=0;
-            int index=0;
-            int leftRTotal=0,leftBTotal=0,rightRTotal=0,rightBTotal=0;
-            for(int i:leftR){
-                if(index>histogramThreshold){
-                    total+=i;
+            } else {
+                HashMap<String, double[]> data = vuforia.getVuforiaData();
+                int top, left, bottom, right, middle;
+                if (data.containsKey("Wheels")) {
+                    top = (int) data.get("Wheels")[16];
+                    bottom = (int) Math.max(0, data.get("Wheels")[14]);
+                    left = (int) data.get("Wheels")[9];
+                    right = (int) data.get("Wheels")[11];
+                    middle = (int) data.get("Wheels")[7];
+                } else if (data.containsKey("Tools")) {
+                    top = (int) data.get("Tools")[16];
+                    bottom = (int) Math.max(0, data.get("Tools")[14]);
+                    left = (int) data.get("Tools")[9];
+                    right = (int) data.get("Tools")[11];
+                    middle = (int) data.get("Tools")[7];
+                } else if (data.containsKey("Gears")) {
+                    top = (int) data.get("Gears")[16];
+                    bottom = (int) Math.max(0, data.get("Gears")[14]);
+                    left = (int) data.get("Gears")[9];
+                    right = (int) data.get("Gears")[11];
+                    middle = (int) data.get("Gears")[7];
+                } else if (data.containsKey("Legos")) {
+                    top = (int) data.get("Legos")[16];
+                    bottom = (int) Math.max(0, data.get("Legos")[14]);
+                    left = (int) data.get("Legos")[9];
+                    right = (int) data.get("Legos")[11];
+                    middle = (int) data.get("Legos")[7];
+                } else {
+                    continue;
                 }
-                index ++;
-            }
-            leftRTotal=total;
 
-            index=0;
-            total=0;
-            for(int i:leftB){
-                if(index>histogramThreshold){
-                    total+=i;
+                RGB565Bitmap = vuforia.getLastBitmap();
+                Mat original = new Mat();
+                Utils.bitmapToMat(RGB565Bitmap, original);
+                Imgproc.cvtColor(original, original, Imgproc.COLOR_BGR2BGRA);
+                Utils.matToBitmap(original, RGBABitmap);
+                mAllocationIn.copyFrom(RGBABitmap);
+
+                left = clipX(left);
+                right = clipX(right);
+                top = clipY(top);
+                bottom = clipY(bottom);
+                middle = clipX(middle);
+                if (bottom == top && top == 719) {
+                    top--;
+                } else if (bottom == top && top == 1) {
+                    bottom++;
                 }
-                index ++;
-            }
-            leftBTotal=total;
 
+                try {
+                    leftOptions.setX(left, middle);
+                    leftOptions.setY(top, bottom);
+                    leftHistogram.forEach(mAllocationIn, leftOptions);
 
-            index=0;
-            total=0;
-            for(int i:rightR){
-                if(index>histogramThreshold){
-                    total+=i;
+                    rightOptions.setX(middle, right);
+                    rightOptions.setY(top, bottom);
+                    rightHistogram.forEach(mAllocationIn, rightOptions);
+                } catch (RSIllegalArgumentException e) {
+                    e.printStackTrace();
+                    continue;
                 }
-                index ++;
-            }
-            rightRTotal=total;
 
-            index=0;
-            total=0;
-            for(int i:rightB){
-                if(index>histogramThreshold){
-                    total+=i;
+                int[] leftData = new int[leftHistogramAllocation.getBytesSize() / 4];
+                int[] leftR = new int[256];
+                int[] leftG = new int[256];
+                int[] leftB = new int[256];
+
+                int[] rightData = new int[rightHistogramAllocation.getBytesSize() / 4];
+                int[] rightR = new int[256];
+                int[] rightG = new int[256];
+                int[] rightB = new int[256];
+
+                leftHistogramAllocation.copyTo(leftData);
+                rightHistogramAllocation.copyTo(rightData);
+
+                //==================================================================================================================
+                //RED AND BLUE CHANNELS ARE SWITCHED SO WE SET THEM INTENTIONALLY TO THE WRONG CHANNEL
+                //==================================================================================================================
+                decodeHistogram(leftData, leftB, leftG, leftR);
+                decodeHistogram(rightData, rightB, rightG, rightR);
+                //==================================================================================================================
+                //RED AND BLUE CHANNELS ARE SWITCHED SO WE SET THEM INTENTIONALLY TO THE WRONG CHANNEL
+                //==================================================================================================================
+
+                int histogramThreshold = 200;
+                int total = 0;
+                int index = 0;
+                int leftRTotal = 0, leftBTotal = 0, rightRTotal = 0, rightBTotal = 0;
+                for (int i : leftR) {
+                    if (index > histogramThreshold) {
+                        total += i;
+                    }
+                    index++;
                 }
-                index ++;
-            }
-            rightBTotal=total;
+                leftRTotal = total;
 
-//            Log.d("LeftR",Integer.toString(leftRTotal));
-//            Log.d("LeftB",Integer.toString(leftBTotal));
-//            Log.d("RightR",Integer.toString(rightRTotal));
-//            Log.d("RightB",Integer.toString(rightBTotal));
+                index = 0;
+                total = 0;
+                for (int i : leftB) {
+                    if (index > histogramThreshold) {
+                        total += i;
+                    }
+                    index++;
+                }
+                leftBTotal = total;
 
-            //positive is on the left
-            int redDifference=leftRTotal-rightRTotal      +leftRTotal-leftBTotal;
-            int blueDifference=leftBTotal-rightBTotal     +leftBTotal-leftRTotal;
-            //positive is red on the left
-            int perceptronOutput=redDifference-blueDifference;
 
-//            Log.d("RedDifference",Integer.toString(redDifference));
-//            Log.d("BlueDifference",Integer.toString(blueDifference));
-//            Log.d("PerceptronValue",Integer.toString(perceptronOutput));
+                index = 0;
+                total = 0;
+                for (int i : rightR) {
+                    if (index > histogramThreshold) {
+                        total += i;
+                    }
+                    index++;
+                }
+                rightRTotal = total;
 
-            accumulationValue+=perceptronOutput;
-            if(Math.abs(accumulationValue)>20000){
-                stopAnalyzing();
+                index = 0;
+                total = 0;
+                for (int i : rightB) {
+                    if (index > histogramThreshold) {
+                        total += i;
+                    }
+                    index++;
+                }
+                rightBTotal = total;
+
+                //            Log.d("LeftR",Integer.toString(leftRTotal));
+                //            Log.d("LeftB",Integer.toString(leftBTotal));
+                //            Log.d("RightR",Integer.toString(rightRTotal));
+                //            Log.d("RightB",Integer.toString(rightBTotal));
+
+                //positive is on the left
+                int redDifference = leftRTotal - rightRTotal + leftRTotal - leftBTotal;
+                int blueDifference = leftBTotal - rightBTotal + leftBTotal - leftRTotal;
+                //positive is red on the left
+                int perceptronOutput = redDifference - blueDifference;
+
+                //            Log.d("RedDifference",Integer.toString(redDifference));
+                //            Log.d("BlueDifference",Integer.toString(blueDifference));
+                //            Log.d("PerceptronValue",Integer.toString(perceptronOutput));
+
+                accumulationValue += perceptronOutput;
+                if (Math.abs(accumulationValue) > 10000) {
+                    stopAnalyzing();
+                }
             }
         }
     }
