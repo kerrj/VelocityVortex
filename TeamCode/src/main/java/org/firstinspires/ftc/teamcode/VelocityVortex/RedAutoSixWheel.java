@@ -1,21 +1,15 @@
 package org.firstinspires.ftc.teamcode.VelocityVortex;
 
-import android.text.style.WrapTogetherSpan;
-import android.util.Log;
-
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
-import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -36,7 +30,7 @@ public class RedAutoSixWheel extends OpMode {
     Servo buttonServo;
     GyroSensor gyro;
     ModernRoboticsI2cRangeSensor frontRanger;
-    ModernRoboticsI2cRangeSensor backRanger;
+    ModernRoboticsI2cRangeSensor rangeMeter;
     DcMotor right;
     DcMotor left;
     State robotState;
@@ -70,12 +64,37 @@ public class RedAutoSixWheel extends OpMode {
         gyro.calibrate();
         I2cDeviceSynch i=hardwareMap.i2cDeviceSynch.get("frontRanger");
         frontRanger=new ModernRoboticsI2cRangeSensor(i);
-        I2cDeviceSynch i2=hardwareMap.i2cDeviceSynch.get("backRanger");
-        backRanger=new ModernRoboticsI2cRangeSensor(i2);
+
+
+
+
+
+
+
+
+
+
+
+        I2cDeviceSynch deviceSynch=hardwareMap.i2cDeviceSynch.get("range");
+        ModernRoboticsI2cRangeSensor rangeSensor =new ModernRoboticsI2cRangeSensor(deviceSynch);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         I2cAddr front=I2cAddr.create8bit(0x10);
         frontRanger.setI2cAddress(front);
         I2cAddr back=I2cAddr.create8bit(0x28);
-        backRanger.setI2cAddress(back);
+        rangeMeter.setI2cAddress(back);
         I2cAddr f=I2cAddr.create8bit(0x42);
         I2cAddr b=I2cAddr.create8bit(0x6c); // must use create8bit to work
         beaconSensor.setI2cAddress(b);
@@ -155,7 +174,7 @@ public class RedAutoSixWheel extends OpMode {
                 break;
 
             case AlignWithWall://move close enough to the wall
-                if(frontRanger.getDistance(DistanceUnit.INCH)>5||backRanger.getDistance(DistanceUnit.INCH)>5){
+                if(frontRanger.getDistance(DistanceUnit.INCH)>5|| rangeMeter.getDistance(DistanceUnit.INCH)>5){
                     //do nothing
                 }else{
                     robotState=State.DriveToBeacon;
@@ -170,7 +189,7 @@ public class RedAutoSixWheel extends OpMode {
                     double MOTOR_POWER=.5;
                     double POWER_DELTA=.4;
                     double frontDistance=frontRanger.getDistance(DistanceUnit.INCH);
-                    double backDistance=backRanger.getDistance(DistanceUnit.INCH);
+                    double backDistance= rangeMeter.getDistance(DistanceUnit.INCH);
                     double distanceDifference=frontDistance-backDistance;
                     if(distanceDifference>.5){//turn to the right
                         right.setPower(-.3);
@@ -271,6 +290,6 @@ public class RedAutoSixWheel extends OpMode {
         telemetry.addData("left encoder",left.getCurrentPosition());
         telemetry.addData("right encoder",right.getCurrentPosition());
         telemetry.addData("frontDistance",frontRanger.getDistance(DistanceUnit.INCH));
-        telemetry.addData("backDistance",backRanger.getDistance(DistanceUnit.INCH));
+        telemetry.addData("backDistance", rangeMeter.getDistance(DistanceUnit.INCH));
     }
 }

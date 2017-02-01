@@ -1,17 +1,8 @@
 package org.firstinspires.ftc.teamcode.VelocityVortex;
 
         import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-        import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-        import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
-        import org.firstinspires.ftc.teamcode.CameraStuff.FTCTarget;
-        import org.firstinspires.ftc.teamcode.CameraStuff.FTCVuforia;
         import org.firstinspires.ftc.teamcode.CameraStuff.HistogramAnalysisThread;
-        import org.firstinspires.ftc.teamcode.Swerve.Core.Vector;
-
-        import java.sql.ResultSet;
-        import java.util.Currency;
-        import java.util.HashMap;
 
 /**
  * Created by Justin on 1/27/2017.
@@ -19,9 +10,8 @@ package org.firstinspires.ftc.teamcode.VelocityVortex;
 @Autonomous
 public class DankMemesAutoBlue extends Robot {
     HistogramAnalysisThread.BeaconResult beaconResult;
-    enum RobotState{DriveForward,Shoot,RotateToFirstBeacon,DriveToSecondBeacon,PressFirstBeacon,PressSecondBeacon,Stop}
+    enum RobotState{DriveForward,Shoot,RotateToFirstBeacon,DriveToSecondBeacon,PressFirstBeacon,PressSecondBeacon,DriveToDefend,Defend,Stop}
     RobotState state=RobotState.DriveForward;
-    private int beaconsPressed=0;
     private double rotateRadius=30;
     boolean waitForServos=true;
 
@@ -33,118 +23,73 @@ public class DankMemesAutoBlue extends Robot {
     }
 
     public void init_loop(){
-        swerveDrive.refreshValues();
-        swerveDrive.drive(.4,-1,0,0);
-        swerveDrive.update(true,15,true);
+        if(!gyro.isCalibrating()) {
+            swerveDrive.refreshValues();
+            swerveDrive.drive(.4, -1, 0, 0);
+            swerveDrive.update(true, 15, true);
+        }
     }
     @Override
     public void loop() {
         super.loop();
         if(gyro.isCalibrating()){
-            swerveDrive.drive(-1,0,0,0);
-            swerveDrive.update(true,15,false);
             return;
         }
         beaconResult=thread.getBeaconResult();
-        HashMap<String, double[]> data = vuforia.getVuforiaData();
-        FTCTarget wheels = new FTCTarget();
-        FTCTarget legos=new FTCTarget();
-        try {
-            if (data.containsKey("Wheels")) {
-                wheels = new FTCTarget(data, "Wheels");
-            }
-            if(data.containsKey("Legos")){
-                legos=new FTCTarget(data,"Legos");
-            }
-        }catch(NullPointerException e){
-            e.printStackTrace();
-        }
-        FTCTarget currentBeacon=new FTCTarget();
-        if(beaconsPressed==0) {
-            currentBeacon = wheels;
-        }else if(beaconsPressed==1){
-            currentBeacon=legos;
-        }
-
 
         switch(state){
             case DriveForward:
                 waitForServos=false;
-                if(driveWithEncoders(.4,-1,0,.5,45)){
+                shootRight.setPower(.65);
+                shootLeft.setPower(.65);
+                if(swerveDrive.getLinearInchesTravelled()>20){
+                    shootServo.setPosition(SHOOTER_UP);
+                }
+                if(driveWithEncoders(.3,-1,0,.5,40)){
                     state=RobotState.PressFirstBeacon;
-                    resetPosition=true;
                     waitForServos=true;
+                    shootServo.setPosition(SHOOTER_DOWN);
                 }
                 break;
 
             case PressFirstBeacon:
-                if(alignWithAndPushCurrentBeacon(currentBeacon,beaconResult,Side.BLUE)){
-                    resetPosition=true;
+                if(alignWithAndPushBeacon("Wheels", beaconResult, Side.BLUE,.2)){
                     state=RobotState.DriveToSecondBeacon;
-                    beaconsPressed++;
                 }
                 break;
 
             case DriveToSecondBeacon:
-                waitForServos=false;
-                if(driveWithEncoders(-.4,-1,0,.4,40)){
+                waitForServos=true;
+                if(driveWithEncoders(-.4,-1,-.1,.4,30)){
                     state=RobotState.PressSecondBeacon;
-                    resetPosition=true;
                     waitForServos=true;
                 }
                 break;
 
             case PressSecondBeacon:
-                if(alignWithAndPushCurrentBeacon(currentBeacon,beaconResult,Side.BLUE)){
-                    resetPosition=true;
-                    state=RobotState.Stop;
+                if(alignWithAndPushBeacon("Legos", beaconResult, Side.BLUE,.2)){
+                    state=RobotState.DriveToDefend;
+                    buttonWheel.setPosition(WHEEL_IN);
                 }
-//            case DriveForward:
-//                if(driveWithEncoders(-1,0,0,.3,15)){
-//                    state=RobotState.Shoot;
-//                    swerveDrive.setPivotPoint(-rotateRadius,0);
-//                    swerveDrive.drive(0,0,.4,0);
-//                    swerveDrive.setPivotPoint(0,0);
-//                }
-//                break;
-//
-//            case Shoot:
-//                if(shoot(2,.65)){
-//                    state=RobotState.RotateToFirstBeacon;
-//                }
-//                break;
-//
-//            case RotateToFirstBeacon:
-//                waitForServos=false;
-//                if(turnAroundPivotPoint(-rotateRadius,0,.4,90,Direction.COUNTERCLOCKWISE,8)){
-//                    state=RobotState.DriveToSecondBeacon;
-//                }
-//                break;
-//
-//            case DriveToSecondBeacon:
-//                if(driveWithEncoders(.2,-1,-.2,.4,20)){
-//                    state=RobotState.PressSecondBeacon;
-//                    waitForServos=true;
-//                }
-//                break;
-//
-//            case PressSecondBeacon:
-//                if(alignWithAndPushCurrentBeacon(currentBeacon,beaconResult,Side.BLUE)){
-//                    state=RobotState.Stop;
-//                    beaconsPressed++;
-//                }
-//                break;
-//
-//            case Stop:
-//                swerveDrive.drive(0,0,1,0);
-//                break;
+                break;
+            case DriveToDefend:
+                waitForServos=false;
+                if(driveWithEncoders(-1,-.6,0,.3,30)){
+                    state=RobotState.Stop;
+                    waitForServos=true;
+                }
+                break;
+
+            case Stop:
+                swerveDrive.drive(0,0,1,0);
+                break;
         }
 
 
         telemetry.addData("BeaconResult",beaconResult);
         telemetry.addData("Confidence",thread.getConfidence());
         telemetry.addData("State",state);
-        swerveDrive.update(waitForServos,15,true);
+        swerveDrive.update(waitForServos,30,true);
     }
 
     public void stop(){

@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.teamcode.CameraStuff.EyeOfSauron;
@@ -24,6 +25,8 @@ import org.firstinspires.ftc.teamcode.Swerve.Core.AbsoluteEncoder;
 import org.firstinspires.ftc.teamcode.Swerve.Core.Constants;
 import org.firstinspires.ftc.teamcode.Swerve.Core.FTCSwerve;
 import org.firstinspires.ftc.teamcode.Swerve.Core.Vector;
+
+import java.util.HashMap;
 
 /**
  * Created by Justin on 10/15/2016.
@@ -148,7 +151,6 @@ public class Robot extends OpMode {
     //===================================
 
     public void initAutonomous(){
-        gyro.calibrate();
         vuforia=new FTCVuforia(FtcRobotControllerActivity.getActivity());
         vuforia.addTrackables("FTC_2016-17.xml");
         vuforia.initVuforia();
@@ -157,10 +159,11 @@ public class Robot extends OpMode {
         thread.start();
     }
 
+    private boolean resetDrivePosition=true;
     //return true if driving is finished
     public boolean driveWithEncoders(double translationX,double translationY, double rotation, double power, double inches){
-        if(resetPosition){
-            resetPosition=false;
+        if(resetDrivePosition){
+            resetDrivePosition=false;
             startHeading=gyro.getHeading();
             swerveDrive.resetPosition();
         }
@@ -174,11 +177,11 @@ public class Robot extends OpMode {
             if(rotation!=0) {
                 swerveDrive.drive(translationX, translationY, rotation, power);
             }else{
-                swerveDrive.drive(translationX,translationY,angleBetween/1.5,power);
+                swerveDrive.drive(translationX,translationY,angleBetween/2,power);
             }
             return false;
         }else{
-            resetPosition=true;
+            resetDrivePosition=true;
             swerveDrive.drive(translationX,translationY,rotation,0);
             return true;
         }
@@ -190,13 +193,24 @@ public class Robot extends OpMode {
     private Vector buttonVector=new Vector(1,0);
     private boolean targetFound=false;
 
-    public boolean alignWithAndPushCurrentBeacon(FTCTarget currentBeacon, HistogramAnalysisThread.BeaconResult beaconResult,Side side){
+    public boolean alignWithAndPushBeacon(String targetName, HistogramAnalysisThread.BeaconResult beaconResult, Side side,double power){
         if(resetPosition){
             resetPosition=false;
             state=PressingState.AlignWithBeacon;
             thread.startAnalyzing();
             targetFound=false;
+            swerveDrive.resetPosition();
         }
+        HashMap<String, double[]> data = vuforia.getVuforiaData();
+        FTCTarget currentBeacon=new FTCTarget();
+        try{
+            if(data.containsKey(targetName)){
+                currentBeacon=new FTCTarget(data,targetName);
+            }
+        }catch(NullPointerException e){
+            e.printStackTrace();
+        }
+
         double buttonOffsetFromCenter;
         if(side==Side.BLUE){
             buttonOffsetFromCenter=BUTTON_OFFSET_FROM_CENTER;
@@ -218,20 +232,23 @@ public class Robot extends OpMode {
                         direction = new Vector(currentBeacon.getDistance()-BUTTON_DISTANCE_FROM_WALL-SPONGE_OFFSET_FROM_CAMERA,
                                                currentBeacon.getHorizontalDistance()-buttonOffsetFromCenter+CAMERA_OFFSET_FROM_PLOW);
                     }
+                    direction=rotateVector(direction,currentBeacon.getYRotation());
                     buttonVector=direction;
-                    swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation(),PUSHING_SPEED);
+                    swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation(),power);
 
-                    if(direction.getMagnitude()<200){
+                    if(direction.getMagnitude()<400){
                         targetFound=true;
                     }
                     if(direction.getMagnitude()<100){
                         state=PressingState.PressButton;
+                        resetDrivePosition=true;
                     }
                     return false;
                 }else if(targetFound){
                     state=PressingState.PressButton;
                     thread.stopAnalyzing();
                     thread.resetResult();
+                    resetDrivePosition=true;
                     return false;
                 } else{
                     swerveDrive.drive(buttonVector.x,buttonVector.y,0,0);
@@ -240,7 +257,7 @@ public class Robot extends OpMode {
 
 
             case PressButton:
-                if(driveWithEncoders(buttonVector.x,buttonVector.y,0,PUSHING_SPEED,mmToInch(buttonVector.getMagnitude())+1)) {
+                if(driveWithEncoders(buttonVector.x,buttonVector.y,0,power,mmToInch(buttonVector.getMagnitude())+2)) {
                     resetPosition=true;
                     return true;
                 }else{
@@ -248,6 +265,35 @@ public class Robot extends OpMode {
                 }
         }
         return false;
+    }
+
+    public boolean defendBeacon(String targetName){
+        if(resetPosition){
+            resetPosition=false;
+            buttonWheel.setPosition(WHEEL_IN);
+        }
+        HashMap<String, double[]> data = vuforia.getVuforiaData();
+        FTCTarget currentBeacon=new FTCTarget();
+        try{
+            if(data.containsKey(targetName)){
+                currentBeacon=new FTCTarget(data,targetName);
+            }
+        }catch(NullPointerException e){
+            e.printStackTrace();
+        }
+        if(currentBeacon.isFound()) {
+            Vector direction = new Vector(currentBeacon.getDistance() - 250, currentBeacon.getHorizontalDistance());
+            if (direction.getMagnitude() > 15||Math.abs(currentBeacon.getYRotation())>Math.toRadians(3)) {
+                swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation()*2, Range.scale(direction.getMagnitude(),0,250,.05,.15));
+                return false;
+            }else{
+                resetPosition=true;
+                return true;
+            }
+        }else{
+            swerveDrive.drive(0,0,1,0);
+            return false;
+        }
     }
 
     public enum Direction{CLOCKWISE,COUNTERCLOCKWISE}
@@ -351,4 +397,13 @@ public class Robot extends OpMode {
         }
     }
 
+
+//    rotation matrix is:
+//    cost   -sint
+//    sint    cost
+    public Vector rotateVector(Vector input,double radians){
+        double x=input.x*Math.cos(radians)-input.y*Math.sin(radians);
+        double y=input.x*Math.sin(radians)+input.y*Math.cos(radians);
+        return new Vector(x,y);
+    }
 }
