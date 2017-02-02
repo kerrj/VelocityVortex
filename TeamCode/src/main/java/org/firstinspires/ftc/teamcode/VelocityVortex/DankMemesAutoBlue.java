@@ -40,8 +40,8 @@ public class DankMemesAutoBlue extends Robot {
         switch(state){
             case DriveForward:
                 waitForServos=false;
-                shootRight.setPower(.65);
-                shootLeft.setPower(.65);
+                shootRight.setPower(.7);
+                shootLeft.setPower(.7);
                 if(swerveDrive.getLinearInchesTravelled()>20){
                     shootServo.setPosition(SHOOTER_UP);
                 }
@@ -53,6 +53,8 @@ public class DankMemesAutoBlue extends Robot {
                 break;
 
             case PressFirstBeacon:
+                shootLeft.setPower(0);
+                shootRight.setPower(0);
                 if(alignWithAndPushBeacon("Wheels", beaconResult, Side.BLUE,.2)){
                     state=RobotState.DriveToSecondBeacon;
                 }

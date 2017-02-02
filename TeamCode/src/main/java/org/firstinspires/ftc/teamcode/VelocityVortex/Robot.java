@@ -257,7 +257,7 @@ public class Robot extends OpMode {
 
 
             case PressButton:
-                if(driveWithEncoders(buttonVector.x,buttonVector.y,0,power,mmToInch(buttonVector.getMagnitude())+2)) {
+                if(driveWithEncoders(buttonVector.x,buttonVector.y,0,power,mmToInch(buttonVector.getMagnitude()))) {
                     resetPosition=true;
                     return true;
                 }else{
