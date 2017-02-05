@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.VelocityVortex;
 
-import android.util.Log;
 import android.view.GestureDetector;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
@@ -49,11 +48,11 @@ public class Robot extends OpMode {
     public static final double SWEEPER_INTAKE=1;
     public static final double SWEEPER_OUTAKE=-1;
     public static final double SWEEPER_STOP=0;
-
     public final double CAMERA_OFFSET_FROM_PLOW=42;
     public final double SPONGE_OFFSET_FROM_CAMERA=70;
     public final double BUTTON_DISTANCE_FROM_WALL=55;
     public final double BUTTON_OFFSET_FROM_CENTER=65;
+    public final double PUSHING_SPEED=.25;
 
 
     public DcMotor lfm,lbm,rfm,rbm,slideMotor,shootLeft,shootRight,sweeper;
@@ -258,7 +257,7 @@ public class Robot extends OpMode {
 
 
             case PressButton:
-                if(driveWithEncoders(buttonVector.x,buttonVector.y,0,power,mmToInch(buttonVector.getMagnitude())+1)) {
+                if(driveWithEncoders(buttonVector.x,buttonVector.y,0,power,mmToInch(buttonVector.getMagnitude()))) {
                     resetPosition=true;
                     return true;
                 }else{

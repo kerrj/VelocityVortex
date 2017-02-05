@@ -13,8 +13,7 @@ public class DankMemesAutoBlue extends Robot {
     enum RobotState{DriveForward,Shoot,RotateToFirstBeacon,DriveToSecondBeacon,PressFirstBeacon,PressSecondBeacon,DriveToDefend,Defend,Stop}
     RobotState state=RobotState.DriveForward;
     private double rotateRadius=30;
-    boolean waitForServos=true,loopStart=true;
-    long startTime;
+    boolean waitForServos=true;
 
 
     @Override
@@ -32,10 +31,6 @@ public class DankMemesAutoBlue extends Robot {
     }
     @Override
     public void loop() {
-        if(true){
-            loopStart=false;
-            startTime=System.currentTimeMillis();
-        }
         super.loop();
         if(gyro.isCalibrating()){
             return;
@@ -53,14 +48,14 @@ public class DankMemesAutoBlue extends Robot {
                 if(driveWithEncoders(.3,-1,0,.5,40)){
                     state=RobotState.PressFirstBeacon;
                     waitForServos=true;
-                    shootRight.setPower(0);
-                    shootLeft.setPower(0);
                     shootServo.setPosition(SHOOTER_DOWN);
                 }
                 break;
 
             case PressFirstBeacon:
-                if(alignWithAndPushBeacon("Wheels", beaconResult, Side.BLUE,.25)){
+                shootLeft.setPower(0);
+                shootRight.setPower(0);
+                if(alignWithAndPushBeacon("Wheels", beaconResult, Side.BLUE,.2)){
                     state=RobotState.DriveToSecondBeacon;
                 }
                 break;
@@ -80,10 +75,6 @@ public class DankMemesAutoBlue extends Robot {
                 }
                 break;
             case DriveToDefend:
-                if(System.currentTimeMillis()-startTime<10000){
-                    swerveDrive.drive(-1,-.6,0,0);
-                    break;
-                }
                 waitForServos=false;
                 if(driveWithEncoders(-1,-.6,0,.3,30)){
                     state=RobotState.Stop;
@@ -95,6 +86,7 @@ public class DankMemesAutoBlue extends Robot {
                 swerveDrive.drive(0,0,1,0);
                 break;
         }
+
 
         telemetry.addData("BeaconResult",beaconResult);
         telemetry.addData("Confidence",thread.getConfidence());
