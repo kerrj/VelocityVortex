@@ -187,6 +187,9 @@ public class BlueFirstSecondCapPark extends Robot {
     }
 
     public void init_loop(){
+        if(gyro.isCalibrating()){
+            return;
+        }
         swerveDrive.refreshValues();
         swerveDrive.drive(-1,0,0,0);
         swerveDrive.update(true,15,false);
@@ -281,21 +284,24 @@ public class BlueFirstSecondCapPark extends Robot {
                 break;
 
             case RotateToFirstBeacon:
-                if(resetPosition){
-                    swerveDrive.resetPosition();
-                    resetPosition=false;
-                }
+//                if(resetPosition){
+//                    swerveDrive.resetPosition();
+//                    resetPosition=false;
+//                }
                 double DISTANCE=40;
                 double currentHeading=gyro.getHeading();
                 Vector targetVector = new Vector(Math.cos(3*Math.PI/2), Math.sin(3*Math.PI/2));
                 Vector currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));
-                //angleBetween is the angle from currentPosition to target position in radians
-                //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
+//                //angleBetween is the angle from currentPosition to target position in radians
+//                //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
                 double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
-                if(Math.abs(angleBetween)>Math.toRadians(4)){
-                    swerveDrive.drive(0,-1,rotateConstant,.35);
-                }else{
-                    resetPosition=true;
+//                if(Math.abs(angleBetween)>Math.toRadians(4)){
+//                    swerveDrive.drive(0,-1,rotateConstant,.35);
+//                }else{
+//                    resetPosition=true;
+//                    robotState=RobotState.AlignWithBeacon;
+//                }
+                if(turnAroundPivotPoint(-25,0,.4,90,Direction.COUNTERCLOCKWISE,4)){
                     robotState=RobotState.AlignWithBeacon;
                 }
                 break;

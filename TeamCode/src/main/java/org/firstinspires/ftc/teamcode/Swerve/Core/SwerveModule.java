@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.teamcode.Swerve.Core.AbsoluteEncoder;
@@ -37,7 +38,7 @@ public class SwerveModule {
     private double targetAngle = 0;//initialize these as 0
     private double targetServoPower=.5;
     private DcMotorSimple.Direction targetServoDirection= DcMotorSimple.Direction.FORWARD;
-    private double motorPower = 0;
+    private double motorPower = 0,lastMotorPower=0;
     public  PID pid;
     public enum ModuleDirection{counterclockwise,clockwise}
 
@@ -198,7 +199,11 @@ public class SwerveModule {
     }
 
     public void  update() {
-        driveMotor.setPower(motorPower);//set the motor power
+        if(Math.abs(motorPower-lastMotorPower)>.05||motorPower==0){
+            driveMotor.setPower(motorPower);//set the motor power
+            lastMotorPower=motorPower;
+        }
+
         Vector targetVector = new Vector(Math.cos(targetAngle), Math.sin(targetAngle));
         Vector currentVector = new Vector(Math.cos(currentAngle), Math.sin(currentAngle));
         //angleBetween is the angle from currentPosition to target position in radians
@@ -220,10 +225,24 @@ public class SwerveModule {
 //            }
 //        }
 
-        if(Math.abs(targetServoPower-lastServoPower)>.02||targetServoPower==.5) {
-            controller.setServoPosition(portNumber, targetServoPower);
-            lastServoPower=targetServoPower;
+
+        if(targetServoPower>=.4&&targetServoPower<=.6){
+            if(Math.abs(targetServoPower-lastServoPower)>.05||targetServoPower==.5) {
+                controller.setServoPosition(portNumber, targetServoPower);
+                lastServoPower=targetServoPower;
+            }
+        }else if(targetServoPower>=.3&&targetServoPower<.4||targetServoPower>.6&&targetServoPower<=.7){
+            if(Math.abs(targetServoPower-lastServoPower)>.05||targetServoPower==.5) {
+                controller.setServoPosition(portNumber, targetServoPower);
+                lastServoPower=targetServoPower;
+            }
+        }else{
+            if(Math.abs(targetServoPower-lastServoPower)>.2||targetServoPower==.5) {
+                controller.setServoPosition(portNumber, targetServoPower);
+                lastServoPower=targetServoPower;
+            }
         }
+
     }
     public void stop(){
         motorPower=0;

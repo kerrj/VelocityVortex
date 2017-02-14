@@ -62,11 +62,11 @@ public class PID {
         dt=(System.nanoTime()/1E6)-time;//change in time
         time=System.nanoTime()/1E6;//reset "last" time
 
-        acceleration/=(1+(dt/50));//decay more when more time has passed
-        acceleration=acceleration+motorPower-lastMotorPower;
-        lastMotorPower=motorPower;
+//        acceleration/=(1+(dt/50));//decay more when more time has passed
+//        acceleration=acceleration+motorPower-lastMotorPower;
+//        lastMotorPower=motorPower;
 
-        if(Math.abs(error)<Math.toRadians(15)){
+        if(Math.abs(error)<Math.toRadians(30)){
             integral+=(error*dt/1000.0);
             if(integral>1){
                 integral=1;

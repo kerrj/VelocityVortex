@@ -23,23 +23,6 @@ public class ServoModule {
     private long lastTime;
 
 
-    private double setPIDPower(){
-        double dt=(System.currentTimeMillis()-lastTime)/1000;
-        lastTime=System.currentTimeMillis();
-        double error=getDelta();
-
-        integral+=error*dt;
-        double derivative=(error-previousError)/dt;
-        previousError=error;
-
-        double output=.5+   PROPORTION*(error+(integral/INTEGRAL_TIME)+(DERIVATIVE_TIME*derivative));
-        if(output>1){
-            output=1;
-        }else if(output<0){
-            output=0;
-        }
-        return output;
-    }
 
     /**
      * @param steerServo   servo controller for steer motor
@@ -99,4 +82,6 @@ public class ServoModule {
         }
         //set power if close enough
     }
+
+
 }

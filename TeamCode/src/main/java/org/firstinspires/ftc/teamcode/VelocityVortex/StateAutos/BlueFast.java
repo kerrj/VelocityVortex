@@ -1,19 +1,21 @@
-package org.firstinspires.ftc.teamcode.VelocityVortex;
+package org.firstinspires.ftc.teamcode.VelocityVortex.StateAutos;
 
         import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
         import org.firstinspires.ftc.teamcode.CameraStuff.HistogramAnalysisThread;
+        import org.firstinspires.ftc.teamcode.VelocityVortex.Robot;
 
 /**
  * Created by Justin on 1/27/2017.
  */
 @Autonomous
-public class DankMemesAutoBlue extends Robot {
+public class BlueFast extends Robot {
     HistogramAnalysisThread.BeaconResult beaconResult;
     enum RobotState{DriveForward,Shoot,RotateToFirstBeacon,DriveToSecondBeacon,PressFirstBeacon,PressSecondBeacon,DriveToDefend,Defend,Stop}
     RobotState state=RobotState.DriveForward;
-    private double rotateRadius=30;
-    boolean waitForServos=true;
+    private double extraDistance=0;
+    boolean waitForServos=true,internalResetPosition=true;
+    long bookKeepingTime;
 
 
     @Override
@@ -26,7 +28,7 @@ public class DankMemesAutoBlue extends Robot {
         if(!gyro.isCalibrating()) {
             swerveDrive.refreshValues();
             swerveDrive.drive(.4, -1, 0, 0);
-            swerveDrive.update(true, 15, true);
+            swerveDrive.update(true, 15, false);
         }
     }
     @Override
@@ -40,35 +42,52 @@ public class DankMemesAutoBlue extends Robot {
         switch(state){
             case DriveForward:
                 waitForServos=false;
-                shootRight.setPower(.7);
-                shootLeft.setPower(.7);
-                if(swerveDrive.getLinearInchesTravelled()>20){
+                shootRight.setPower(AUTONOMOUS_SHOOTING_POWER);
+                shootLeft.setPower(AUTONOMOUS_SHOOTING_POWER);
+                if(swerveDrive.getLinearInchesTravelled()>AUTONOMOUS_SHOOT_DRIVE_DISTANCE){
                     shootServo.setPosition(SHOOTER_UP);
+                    if(internalResetPosition){
+                        bookKeepingTime=System.currentTimeMillis();
+                        internalResetPosition=false;
+                    }
+                    if(System.currentTimeMillis()-bookKeepingTime>SHOOTER_MOVE_TIME){
+                        shootServo.setPosition(SHOOTER_DOWN);
+                    }
+                    if(System.currentTimeMillis()-bookKeepingTime>SHOOTER_MOVE_TIME+SHOOTER_DELAY_TIME){
+                        shootServo.setPosition(SHOOTER_UP);
+                    }
                 }
-                if(driveWithEncoders(.3,-1,0,.5,40)){
+                if(driveWithEncoders(.4,-1,0,.4,35)){
                     state=RobotState.PressFirstBeacon;
                     waitForServos=true;
-                    shootServo.setPosition(SHOOTER_DOWN);
                 }
                 break;
 
             case PressFirstBeacon:
-                shootLeft.setPower(0);
-                shootRight.setPower(0);
-                if(alignWithAndPushBeacon("Wheels", beaconResult, Side.BLUE,.2)){
+                if(System.currentTimeMillis()-bookKeepingTime>SHOOTER_DELAY_TIME+SHOOTER_MOVE_TIME){
+                    shootServo.setPosition(SHOOTER_UP);
+                }
+                if(beaconResult== HistogramAnalysisThread.BeaconResult.RED_LEFT){
+                    extraDistance=5;
+                }
+                if(alignWithAndPushBeacon("Wheels", beaconResult, Side.BLUE,.25)){
                     state=RobotState.DriveToSecondBeacon;
+                    buttonWheel.setPosition(WHEEL_IN);
+                    shootLeft.setPower(0);
+                    shootRight.setPower(0);
                 }
                 break;
 
             case DriveToSecondBeacon:
                 waitForServos=true;
-                if(driveWithEncoders(-.4,-1,-.1,.4,30)){
+                if(driveWithEncoders(-.4,-1,-.1,.4,25+extraDistance)){
                     state=RobotState.PressSecondBeacon;
                     waitForServos=true;
                 }
                 break;
 
             case PressSecondBeacon:
+                buttonWheel.setPosition(WHEEL_OUT);
                 if(alignWithAndPushBeacon("Legos", beaconResult, Side.BLUE,.2)){
                     state=RobotState.DriveToDefend;
                     buttonWheel.setPosition(WHEEL_IN);
@@ -76,14 +95,14 @@ public class DankMemesAutoBlue extends Robot {
                 break;
             case DriveToDefend:
                 waitForServos=false;
-                if(driveWithEncoders(-1,-.6,0,.3,30)){
+                if(driveWithEncoders(-1,-.2,0,.3,50)){
                     state=RobotState.Stop;
                     waitForServos=true;
                 }
                 break;
 
             case Stop:
-                swerveDrive.drive(0,0,1,0);
+                swerveDrive.drive(0,0,-1,.1);
                 break;
         }
 
@@ -91,7 +110,7 @@ public class DankMemesAutoBlue extends Robot {
         telemetry.addData("BeaconResult",beaconResult);
         telemetry.addData("Confidence",thread.getConfidence());
         telemetry.addData("State",state);
-        swerveDrive.update(waitForServos,30,true);
+        swerveDrive.update(waitForServos,30,false);
     }
 
     public void stop(){

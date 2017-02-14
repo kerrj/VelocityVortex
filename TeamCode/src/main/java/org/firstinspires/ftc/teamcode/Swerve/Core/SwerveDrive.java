@@ -327,8 +327,8 @@ public class SwerveDrive {
 
     private void  accelerate(int i){
         double delta=targetPowers[i]-powers[i];
-        double dt=System.nanoTime()/1E6-lastAcceleration[i];
-        lastAcceleration[i]=System.nanoTime()/1E6;
+        double dt=System.nanoTime()/1.0E6-lastAcceleration[i];
+        lastAcceleration[i]=System.nanoTime()/1.0E6;
 
         if(Math.abs(delta)<.05){
             powers[i]=targetPowers[i];

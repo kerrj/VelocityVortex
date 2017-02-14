@@ -27,6 +27,7 @@ import org.firstinspires.ftc.teamcode.Swerve.Core.FTCSwerve;
 import org.firstinspires.ftc.teamcode.Swerve.Core.Vector;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 
 /**
  * Created by Justin on 10/15/2016.
@@ -48,11 +49,16 @@ public class Robot extends OpMode {
     public static final double SWEEPER_INTAKE=1;
     public static final double SWEEPER_OUTAKE=-1;
     public static final double SWEEPER_STOP=0;
-    public final double CAMERA_OFFSET_FROM_PLOW=42;
+
+    public final double CAMERA_OFFSET_FROM_PLOW=44;//44
     public final double SPONGE_OFFSET_FROM_CAMERA=70;
-    public final double BUTTON_DISTANCE_FROM_WALL=55;
-    public final double BUTTON_OFFSET_FROM_CENTER=65;
-    public final double PUSHING_SPEED=.25;
+    public final double BUTTON_DISTANCE_FROM_WALL=60;
+    public final double BUTTON_OFFSET_FROM_CENTER=67,
+            AUTONOMOUS_SHOOTING_POWER=.65,
+            AUTONOMOUS_SHOOT_DRIVE_DISTANCE=20,
+            SHOOTER_MOVE_TIME=300,
+            SHOOTER_DELAY_TIME=500;
+
 
 
     public DcMotor lfm,lbm,rfm,rbm,slideMotor,shootLeft,shootRight,sweeper;
@@ -67,6 +73,7 @@ public class Robot extends OpMode {
     public int slideStartPosition;//if start position is not 0
 
     public double lastLoop;
+    public LinkedList<Double> loops=new LinkedList<>();
     public GyroSensor gyro;
     public boolean resetPosition=true;
 
@@ -127,9 +134,18 @@ public class Robot extends OpMode {
     @Override
     public void loop(){
         swerveDrive.refreshValues();
-        telemetry.addData("LoopTime",System.nanoTime()/1E6-lastLoop);
-        lastLoop=System.nanoTime()/1E6;
-
+        if(loops.size()>5){
+            loops.removeFirst();
+            loops.add(System.nanoTime()/1.0E6-lastLoop);
+        }else{
+            loops.add(System.nanoTime()/1.0E6-lastLoop);
+        }
+        double loopTime=0;
+        for(Double d:loops){
+            loopTime+=d;
+        }
+        telemetry.addData("LoopTime",Double.toString(loopTime/(double)loops.size()));
+        lastLoop=System.nanoTime()/1.0E6;
     }
     @Override
     public  void stop(){
@@ -144,13 +160,19 @@ public class Robot extends OpMode {
 
 
 
-
-
     //===================================
     //methods for autonomous opmodes
     //===================================
 
     public void initAutonomous(){
+        lfm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rfm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lbm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rbm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lbm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rbm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         vuforia=new FTCVuforia(FtcRobotControllerActivity.getActivity());
         vuforia.addTrackables("FTC_2016-17.xml");
         vuforia.initVuforia();
@@ -187,7 +209,7 @@ public class Robot extends OpMode {
         }
     }
 
-    private enum PressingState{AlignWithBeacon,PressButton}
+    private enum PressingState{AlignWithBeacon,PressButton,BackUp}
     private PressingState state=PressingState.AlignWithBeacon;
     public enum Side{BLUE,RED}
     private Vector buttonVector=new Vector(1,0);
@@ -232,14 +254,14 @@ public class Robot extends OpMode {
                         direction = new Vector(currentBeacon.getDistance()-BUTTON_DISTANCE_FROM_WALL-SPONGE_OFFSET_FROM_CAMERA,
                                                currentBeacon.getHorizontalDistance()-buttonOffsetFromCenter+CAMERA_OFFSET_FROM_PLOW);
                     }
-                    direction=rotateVector(direction,currentBeacon.getYRotation());
+//                    direction=rotateVector(direction,currentBeacon.getYRotation()); probably wrong
                     buttonVector=direction;
-                    swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation(),power);
+                    swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation()/2,power);
 
-                    if(direction.getMagnitude()<400){
+                    if(direction.getMagnitude()<200){
                         targetFound=true;
                     }
-                    if(direction.getMagnitude()<100){
+                    if(direction.getMagnitude()<50){
                         state=PressingState.PressButton;
                         resetDrivePosition=true;
                     }
@@ -257,11 +279,16 @@ public class Robot extends OpMode {
 
 
             case PressButton:
-                if(driveWithEncoders(buttonVector.x,buttonVector.y,0,power,mmToInch(buttonVector.getMagnitude()))) {
-                    resetPosition=true;
-                    return true;
+                if(driveWithEncoders(buttonVector.x,buttonVector.y,0,power,mmToInch(buttonVector.getMagnitude())+1)) {
+                    state=PressingState.BackUp;
+                    return false;
                 }else{
                     return false;
+                }
+            case BackUp:
+                if(driveWithEncoders(-buttonVector.x,-buttonVector.y,0,power,mmToInch(3))){
+                    resetPosition=true;
+                    return true;
                 }
         }
         return false;
