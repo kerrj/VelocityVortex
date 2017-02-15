@@ -57,7 +57,7 @@ public class BlueFast extends Robot {
                         shootServo.setPosition(SHOOTER_UP);
                     }
                 }
-                if(driveWithEncoders(.4,-1,0,.4,35)){
+                if(driveWithEncoders(.4,-1,0,.4,40)){
                     state=RobotState.PressFirstBeacon;
                     waitForServos=true;
                 }
@@ -70,7 +70,7 @@ public class BlueFast extends Robot {
                 if(beaconResult== HistogramAnalysisThread.BeaconResult.RED_LEFT){
                     extraDistance=5;
                 }
-                if(alignWithAndPushBeacon("Wheels", beaconResult, Side.BLUE,.25)){
+                if(alignWithAndPushBeacon("Wheels", beaconResult, Side.BLUE,.25,1)){
                     state=RobotState.DriveToSecondBeacon;
                     buttonWheel.setPosition(WHEEL_IN);
                     shootLeft.setPower(0);
@@ -88,7 +88,7 @@ public class BlueFast extends Robot {
 
             case PressSecondBeacon:
                 buttonWheel.setPosition(WHEEL_OUT);
-                if(alignWithAndPushBeacon("Legos", beaconResult, Side.BLUE,.2)){
+                if(alignWithAndPushBeacon("Legos", beaconResult, Side.BLUE,.2,2)){
                     state=RobotState.DriveToDefend;
                     buttonWheel.setPosition(WHEEL_IN);
                 }
@@ -110,7 +110,7 @@ public class BlueFast extends Robot {
         telemetry.addData("BeaconResult",beaconResult);
         telemetry.addData("Confidence",thread.getConfidence());
         telemetry.addData("State",state);
-        swerveDrive.update(waitForServos,30,false);
+        swerveDrive.update(waitForServos,20,true);
     }
 
     public void stop(){

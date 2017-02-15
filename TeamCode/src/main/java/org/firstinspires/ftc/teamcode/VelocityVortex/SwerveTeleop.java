@@ -51,16 +51,16 @@ public class SwerveTeleop extends Robot {
 //        thread=new HistogramAnalysisThread(vuforia);
 //        thread.stopAnalyzing();
 //        thread.start();
-        gyro.calibrate();
+//        gyro.calibrate();
     }
 
 
     @Override
     public void loop() {
         super.loop();
-        if(gyro.isCalibrating()){
-            return;
-        }
+//        if(gyro.isCalibrating()){
+//            return;
+//        }
         switch(state){
             case Normal:
 //                HashMap<String,double[]> data=vuforia.getVuforiaData();
@@ -149,7 +149,7 @@ public class SwerveTeleop extends Robot {
 
 
                 //shooter servo===========================================================================================
-                if(gamepad1.right_bumper){
+                if(gamepad2.right_bumper){
                     shootServo.setPosition(SHOOTER_UP);
                     lastPush=System.currentTimeMillis();
                 }else{
@@ -207,6 +207,9 @@ public class SwerveTeleop extends Robot {
                     }else if(gamepad2.b){
                         power=0;
                     }
+                    if(gamepad2.x){
+                        power=-.5;
+                    }
                     //button pusher==========================================================================================================
 
                 }
@@ -251,14 +254,14 @@ public class SwerveTeleop extends Robot {
                 telemetry.addData("ShooterPower",power);
                 break;
 
-            case PressingButton:
-                if(alignWithAndPushBeacon(lastFound, HistogramAnalysisThread.BeaconResult.RED_RIGHT, Side.BLUE, .25)){
-                    state=TeleOpState.Normal;
-                }
-                if(gamepad1.b){
-                    state=TeleOpState.Normal;
-                }
-                break;
+//            case PressingButton:
+//                if(alignWithAndPushBeacon(lastFound, HistogramAnalysisThread.BeaconResult.RED_RIGHT, Side.BLUE, .25)){
+//                    state=TeleOpState.Normal;
+//                }
+//                if(gamepad1.b){
+//                    state=TeleOpState.Normal;
+//                }
+//                break;
         }
 
     }

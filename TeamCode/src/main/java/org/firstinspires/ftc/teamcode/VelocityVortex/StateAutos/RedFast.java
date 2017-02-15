@@ -57,7 +57,7 @@ public class RedFast extends Robot {
                         shootServo.setPosition(SHOOTER_UP);
                     }
                 }
-                if(driveWithEncoders(.4,1,0,.4,35)){
+                if(driveWithEncoders(.4,1,0,.4,40)){
                     state=RobotState.PressFirstBeacon;
                     waitForServos=true;
                     shootServo.setPosition(SHOOTER_UP);
@@ -71,7 +71,7 @@ public class RedFast extends Robot {
                 if(beaconResult== HistogramAnalysisThread.BeaconResult.RED_LEFT){
                     extraDistance=5;
                 }
-                if(alignWithAndPushBeacon("Tools", beaconResult, Side.RED,.25)){
+                if(alignWithAndPushBeacon("Tools", beaconResult, Side.RED,.25,1)){
                     state=RobotState.DriveToSecondBeacon;
                     buttonWheel.setPosition(WHEEL_IN);
                     shootLeft.setPower(0);
@@ -89,7 +89,7 @@ public class RedFast extends Robot {
 
             case PressSecondBeacon:
                 buttonWheel.setPosition(WHEEL_OUT);
-                if(alignWithAndPushBeacon("Gears", beaconResult, Side.RED,.2)){
+                if(alignWithAndPushBeacon("Gears", beaconResult, Side.RED,.2,2)){
                     state=RobotState.DriveToDefend;
                     buttonWheel.setPosition(WHEEL_IN);
                 }
@@ -111,7 +111,7 @@ public class RedFast extends Robot {
         telemetry.addData("BeaconResult",beaconResult);
         telemetry.addData("Confidence",thread.getConfidence());
         telemetry.addData("State",state);
-        swerveDrive.update(waitForServos,30,false);
+        swerveDrive.update(waitForServos,20,true);
     }
 
     public void stop(){

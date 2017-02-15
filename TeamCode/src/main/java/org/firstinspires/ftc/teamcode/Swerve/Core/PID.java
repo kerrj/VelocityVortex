@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Swerve.Core;
 
 import android.util.Log;
 
+import com.qualcomm.robotcore.hardware.AccelerationSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.VelocityVortex.Robot;
@@ -25,7 +26,7 @@ public class PID {
     double previousError=0;
     double dt;
     int[] positionHistory=new int[3];
-    long[] positionTimes=new long[3];
+    double[] positionTimes=new double[3];
     double acceleration=0;
     double lastMotorPower=0;
 
@@ -34,7 +35,7 @@ public class PID {
 
     public PID(double P, double I, double D,DcMotor motor,double a){
         positionHistory=new int[]{motor.getCurrentPosition(),motor.getCurrentPosition(),motor.getCurrentPosition()};
-        positionTimes=new long[]{System.currentTimeMillis(),System.currentTimeMillis()+1,System.currentTimeMillis()+2};
+        positionTimes=new double[]{System.nanoTime()/1.0E6,System.nanoTime()/1.0E6+1,System.nanoTime()/1.0E6+2};
         driveMotor=motor;
         P_Gain = P;
         I_Gain = I;
@@ -43,22 +44,26 @@ public class PID {
         time=System.nanoTime()/1E6;
     }
     public double setPIDpower(double error,double motorPower){
-        //update history of motor position and time taken
-//        for(int i=0;i<2;i++){
-//            positionHistory[i]=positionHistory[i+1];
-//            positionTimes[i]=positionTimes[i+1];
-//        }
-//        positionHistory[2]=driveMotor.getCurrentPosition();
-//        positionTimes[2]=System.currentTimeMillis();
-//
-//        //calculate dposition/dt
-//        double[] v=new double[]{(positionHistory[1]-positionHistory[0])/(positionTimes[1]-positionTimes[0]),
-//                (positionHistory[2]-positionHistory[1])/(positionTimes[2]-positionTimes[1])};
-//        //calculate "intermediate" time for upcoming acceleration calculation
-//        double[] intermediateTimes=new double[]{(positionTimes[0]+positionTimes[1])/2,(positionTimes[1]+positionTimes[2])/2};
-//        //calculate dv/dt
-//        acceleration=(v[1]-v[0])/(intermediateTimes[1]-intermediateTimes[0]);//acceleration!
+//        update history of motor position and time taken
+        for(int i=0;i<2;i++){
+            positionHistory[i]=positionHistory[i+1];
+            positionTimes[i]=positionTimes[i+1];
+        }
+        positionHistory[2]=driveMotor.getCurrentPosition();
+        positionTimes[2]=System.nanoTime()/1E6;
 
+        //calculate dposition/dt
+        try {
+            double[] v = new double[]{(positionHistory[1] - positionHistory[0]) / (positionTimes[1] - positionTimes[0]),
+                    (positionHistory[2] - positionHistory[1]) / (positionTimes[2] - positionTimes[1])};
+            //calculate "intermediate" time for upcoming acceleration calculation
+            double[] intermediateTimes = new double[]{(positionTimes[0] + positionTimes[1]) / 2, (positionTimes[1] + positionTimes[2]) / 2};
+            //calculate dv/dt
+            acceleration = (v[1] - v[0]) / (intermediateTimes[1] - intermediateTimes[0]);//acceleration!
+        }catch(ArithmeticException e){
+            e.printStackTrace();
+            acceleration=0;
+        }
         dt=(System.nanoTime()/1E6)-time;//change in time
         time=System.nanoTime()/1E6;//reset "last" time
 

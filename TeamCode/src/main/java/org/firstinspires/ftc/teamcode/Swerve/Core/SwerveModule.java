@@ -225,23 +225,27 @@ public class SwerveModule {
 //            }
 //        }
 
-
-        if(targetServoPower>=.4&&targetServoPower<=.6){
-            if(Math.abs(targetServoPower-lastServoPower)>.05||targetServoPower==.5) {
-                controller.setServoPosition(portNumber, targetServoPower);
-                lastServoPower=targetServoPower;
-            }
-        }else if(targetServoPower>=.3&&targetServoPower<.4||targetServoPower>.6&&targetServoPower<=.7){
-            if(Math.abs(targetServoPower-lastServoPower)>.05||targetServoPower==.5) {
-                controller.setServoPosition(portNumber, targetServoPower);
-                lastServoPower=targetServoPower;
-            }
-        }else{
-            if(Math.abs(targetServoPower-lastServoPower)>.2||targetServoPower==.5) {
-                controller.setServoPosition(portNumber, targetServoPower);
-                lastServoPower=targetServoPower;
-            }
+        if(Math.abs(targetServoPower-lastServoPower)>.05||targetServoPower==.5){
+            controller.setServoPosition(portNumber, targetServoPower);
+            lastServoPower=targetServoPower;
         }
+
+//        if(targetServoPower>=.4&&targetServoPower<=.6){
+//            if(Math.abs(targetServoPower-lastServoPower)>.025||targetServoPower==.5){
+//                controller.setServoPosition(portNumber, targetServoPower);
+//                lastServoPower=targetServoPower;
+//            }
+//        }else if(targetServoPower>=.3&&targetServoPower<.4||targetServoPower>.6&&targetServoPower<=.7){
+//            if(Math.abs(targetServoPower-lastServoPower)>.05||targetServoPower==.5){
+//                controller.setServoPosition(portNumber, targetServoPower);
+//                lastServoPower=targetServoPower;
+//            }
+//        }else{
+//            if(Math.abs(targetServoPower-lastServoPower)>.2||targetServoPower==.5) {
+//                controller.setServoPosition(portNumber, targetServoPower);
+//                lastServoPower=targetServoPower;
+//            }
+//        }
 
     }
     public void stop(){

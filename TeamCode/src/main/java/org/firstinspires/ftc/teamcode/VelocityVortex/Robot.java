@@ -54,10 +54,10 @@ public class Robot extends OpMode {
     public final double SPONGE_OFFSET_FROM_CAMERA=70;
     public final double BUTTON_DISTANCE_FROM_WALL=60;
     public final double BUTTON_OFFSET_FROM_CENTER=67,
-            AUTONOMOUS_SHOOTING_POWER=.65,
+            AUTONOMOUS_SHOOTING_POWER=.67,
             AUTONOMOUS_SHOOT_DRIVE_DISTANCE=20,
             SHOOTER_MOVE_TIME=300,
-            SHOOTER_DELAY_TIME=500;
+            SHOOTER_DELAY_TIME=700;
 
 
 
@@ -208,6 +208,30 @@ public class Robot extends OpMode {
             return true;
         }
     }
+    public boolean driveWithHeading(double translationX,double translationY, double rotation, double power, double inches,double heading){
+        if(resetDrivePosition){
+            resetDrivePosition=false;
+            swerveDrive.resetPosition();
+        }
+        int currentHeading=gyro.getHeading();
+        Vector targetVector = new Vector(Math.cos(Math.toRadians(heading)), Math.sin(Math.toRadians(heading)));
+        Vector currentVector = new Vector(Math.cos(Math.toRadians(currentHeading)), Math.sin(Math.toRadians(currentHeading)));
+        //angleBetween is the angle from currentPosition to target position in radians
+        //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
+        double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
+        if(swerveDrive.getLinearInchesTravelled()<inches){
+            if(rotation!=0) {
+                swerveDrive.drive(translationX, translationY, rotation, power);
+            }else{
+                swerveDrive.drive(translationX,translationY,angleBetween/2,power);
+            }
+            return false;
+        }else{
+            resetDrivePosition=true;
+            swerveDrive.drive(translationX,translationY,rotation,0);
+            return true;
+        }
+    }
 
     private enum PressingState{AlignWithBeacon,PressButton,BackUp}
     private PressingState state=PressingState.AlignWithBeacon;
@@ -215,7 +239,7 @@ public class Robot extends OpMode {
     private Vector buttonVector=new Vector(1,0);
     private boolean targetFound=false;
 
-    public boolean alignWithAndPushBeacon(String targetName, HistogramAnalysisThread.BeaconResult beaconResult, Side side,double power){
+    public boolean alignWithAndPushBeacon(String targetName, HistogramAnalysisThread.BeaconResult beaconResult, Side side,double power,double rotationDivisionConstant){
         if(resetPosition){
             resetPosition=false;
             state=PressingState.AlignWithBeacon;
@@ -256,7 +280,7 @@ public class Robot extends OpMode {
                     }
 //                    direction=rotateVector(direction,currentBeacon.getYRotation()); probably wrong
                     buttonVector=direction;
-                    swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation()/2,power);
+                    swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation()/rotationDivisionConstant,power);
 
                     if(direction.getMagnitude()<200){
                         targetFound=true;
@@ -279,14 +303,14 @@ public class Robot extends OpMode {
 
 
             case PressButton:
-                if(driveWithEncoders(buttonVector.x,buttonVector.y,0,power,mmToInch(buttonVector.getMagnitude())+1)) {
+                if(driveWithEncoders(buttonVector.x,buttonVector.y,0,power,mmToInch(buttonVector.getMagnitude())+1)){
                     state=PressingState.BackUp;
                     return false;
                 }else{
                     return false;
                 }
             case BackUp:
-                if(driveWithEncoders(-buttonVector.x,-buttonVector.y,0,power,mmToInch(3))){
+                if(driveWithEncoders(-1,0,0,power,2)){
                     resetPosition=true;
                     return true;
                 }
@@ -294,7 +318,7 @@ public class Robot extends OpMode {
         return false;
     }
 
-    public boolean defendBeacon(String targetName){
+    public boolean alignToShoot(String targetName){
         if(resetPosition){
             resetPosition=false;
             buttonWheel.setPosition(WHEEL_IN);
@@ -309,8 +333,8 @@ public class Robot extends OpMode {
             e.printStackTrace();
         }
         if(currentBeacon.isFound()) {
-            Vector direction = new Vector(currentBeacon.getDistance() - 250, currentBeacon.getHorizontalDistance());
-            if (direction.getMagnitude() > 15||Math.abs(currentBeacon.getYRotation())>Math.toRadians(3)) {
+            Vector direction = new Vector(currentBeacon.getDistance() - 400, currentBeacon.getHorizontalDistance());
+            if (direction.getMagnitude() > 50||Math.abs(currentBeacon.getYRotation())>Math.toRadians(3)) {
                 swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation()*2, Range.scale(direction.getMagnitude(),0,250,.05,.15));
                 return false;
             }else{
