@@ -9,12 +9,12 @@ import org.firstinspires.ftc.teamcode.VelocityVortex.Robot;
  * Created by Justin on 1/27/2017.
  */
 @Autonomous
-public class RedSlow extends Robot {
+public class BlueDefend extends Robot {
     HistogramAnalysisThread.BeaconResult beaconResult;
-    enum RobotState{DriveForward,Shoot,RotateToFirstBeacon,DriveToSecondBeacon,PressFirstBeacon,PressSecondBeacon,
-        DriveToDefend,Defend,DriveToCapBall,Stop,AlignToShoot}
+    enum RobotState{DriveForward,Shoot,RotateToFirstBeacon,DriveToSecondBeacon,PressFirstBeacon,
+        PressSecondBeacon,DriveToDefend,DriveToCapBall,Defend,Stop,AlignToShoot}
     RobotState state=RobotState.DriveForward;
-    boolean waitForServos=true,internalResetPosition=true;
+    boolean waitForServos=true, internalResetPosition=true;
     double extraDistance=0,startGyroHeading,deviationHeading;
 
 
@@ -34,6 +34,7 @@ public class RedSlow extends Robot {
     @Override
     public void loop() {
         super.loop();
+
         if(gyro.isCalibrating()){
             return;
         }
@@ -44,69 +45,54 @@ public class RedSlow extends Robot {
         beaconResult=thread.getBeaconResult();
 
         switch(state){
+            //old version
             case DriveForward:
-                shootRight.setPower(.65);
-                shootLeft.setPower(.65);
-                if(driveWithEncoders(-1,0,0,.2,15)){
+                shootRight.setPower(.67);
+                shootLeft.setPower(.67);
+                if(driveWithEncodersAndGyro(-1, 0, 0, .2, 15)){
                     state=RobotState.Shoot;
                     deviationHeading=gyro.getHeading()-startGyroHeading;
                 }
                 break;
             case Shoot:
-                if(shoot(2,.65)){
+                if(shoot(2,.67)){
                     state=RobotState.RotateToFirstBeacon;
                 }
                 break;
+
             case RotateToFirstBeacon:
-                if(turnAroundPivotPoint(-20,0,.4,90+(int)deviationHeading,Direction.CLOCKWISE,4)){
+                if(turnAroundPivotPoint(-20, 0, .4,Direction.COUNTERCLOCKWISE, 90+(int)deviationHeading, 4)){
                     state=RobotState.PressFirstBeacon;
                 }
-//            case DriveForward:
-//                if(driveWithEncoders(.4,1,0,.3,35)){
-//                    state=RobotState.AlignToShoot;
-//                    waitForServos=true;
-//                }
-//                break;
-//            case AlignToShoot:
-//                shootLeft.setPower(.65);
-//                shootRight.setPower(.65);
-//                if(alignToShoot("Tools")){
-//                    state=RobotState.Shoot;
-//                    swerveDrive.drive(1,0,0,0);
-//                }
-//                break;
-//            case Shoot:
-//                if(shoot(2,.65)){
-//                    state=RobotState.PressFirstBeacon;
-//                }
-//                break;
+                break;
 
             case PressFirstBeacon:
                 if(beaconResult== HistogramAnalysisThread.BeaconResult.RED_LEFT){
                     extraDistance=5;
                 }
-                if(alignWithAndPushBeacon("Tools", beaconResult, Side.RED,.25,1)){
+                if(alignWithAndPushBeacon("Wheels", beaconResult, Side.BLUE,.25,1)){
                     state=RobotState.DriveToSecondBeacon;
                     buttonWheel.setPosition(WHEEL_IN);
                 }
                 break;
 
             case DriveToSecondBeacon:
-                if(driveWithHeading(-.6,1,0,.4,35+extraDistance,startGyroHeading-90)){
+                if(driveWithHeading(-.6,-1,0,.4,35+extraDistance,startGyroHeading-90)){
                     state=RobotState.PressSecondBeacon;
                 }
                 break;
 
             case PressSecondBeacon:
                 buttonWheel.setPosition(WHEEL_OUT);
-                if(alignWithAndPushBeacon("Gears", beaconResult, Side.RED,.25,1)){
-                    state=RobotState.DriveToCapBall;
+                if(alignWithAndPushBeacon("Legos", beaconResult, Side.BLUE,.25,1)){
+                    state=RobotState.DriveToDefend;
                     buttonWheel.setPosition(WHEEL_IN);
                 }
                 break;
-            case DriveToCapBall:
-                if(driveWithHeading(-1,-1,0,.4,50,startGyroHeading-90)){
+            case DriveToDefend:
+                if(driveWithHeading(-1, -.2, 0, .3, 50,startGyroHeading-90)){
                     state=RobotState.Stop;
+                    waitForServos=true;
                 }
                 break;
 

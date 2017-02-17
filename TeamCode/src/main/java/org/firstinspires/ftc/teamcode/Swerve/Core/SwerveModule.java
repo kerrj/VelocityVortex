@@ -199,7 +199,7 @@ public class SwerveModule {
     }
 
     public void  update() {
-        if(Math.abs(motorPower-lastMotorPower)>.05||motorPower==0){
+        if(Math.abs(motorPower-lastMotorPower)>.01||motorPower==0){
             driveMotor.setPower(motorPower);//set the motor power
             lastMotorPower=motorPower;
         }
@@ -225,7 +225,7 @@ public class SwerveModule {
 //            }
 //        }
 
-        if(Math.abs(targetServoPower-lastServoPower)>.05||targetServoPower==.5){
+        if(Math.abs(targetServoPower-lastServoPower)>.025||targetServoPower==.5){
             controller.setServoPosition(portNumber, targetServoPower);
             lastServoPower=targetServoPower;
         }

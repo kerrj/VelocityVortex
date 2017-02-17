@@ -1,26 +1,20 @@
 package org.firstinspires.ftc.teamcode.VelocityVortex;
 
-import android.view.GestureDetector;
+import android.sax.TextElementListener;
+import android.util.Log;
 
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.GyroSensor;
-import com.qualcomm.robotcore.hardware.I2cAddr;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
-import org.firstinspires.ftc.teamcode.CameraStuff.EyeOfSauron;
 import org.firstinspires.ftc.teamcode.CameraStuff.FTCTarget;
 import org.firstinspires.ftc.teamcode.CameraStuff.FTCVuforia;
 import org.firstinspires.ftc.teamcode.CameraStuff.HistogramAnalysisThread;
-import org.firstinspires.ftc.teamcode.Logging.DataLogger;
 import org.firstinspires.ftc.teamcode.Swerve.Core.AbsoluteEncoder;
 import org.firstinspires.ftc.teamcode.Swerve.Core.Constants;
 import org.firstinspires.ftc.teamcode.Swerve.Core.FTCSwerve;
@@ -183,7 +177,7 @@ public class Robot extends OpMode {
 
     private boolean resetDrivePosition=true;
     //return true if driving is finished
-    public boolean driveWithEncoders(double translationX,double translationY, double rotation, double power, double inches){
+    public boolean driveWithEncodersAndGyro(double translationX, double translationY, double rotation, double power, double inches){
         if(resetDrivePosition){
             resetDrivePosition=false;
             startHeading=gyro.getHeading();
@@ -201,6 +195,20 @@ public class Robot extends OpMode {
             }else{
                 swerveDrive.drive(translationX,translationY,angleBetween/2,power);
             }
+            return false;
+        }else{
+            resetDrivePosition=true;
+            swerveDrive.drive(translationX,translationY,rotation,0);
+            return true;
+        }
+    }
+    public boolean driveWithEncoders(double translationX,double translationY,double rotation,double power,double inches){
+        if(resetDrivePosition){
+            resetDrivePosition=false;
+            swerveDrive.resetPosition();
+        }
+        if(swerveDrive.getLinearInchesTravelled()<inches){
+            swerveDrive.drive(translationX, translationY, rotation, power);
             return false;
         }else{
             resetDrivePosition=true;
@@ -303,14 +311,14 @@ public class Robot extends OpMode {
 
 
             case PressButton:
-                if(driveWithEncoders(buttonVector.x,buttonVector.y,0,power,mmToInch(buttonVector.getMagnitude())+1)){
+                if(driveWithEncoders(buttonVector.x, buttonVector.y, 0, power, mmToInch(buttonVector.getMagnitude())+1)){
                     state=PressingState.BackUp;
                     return false;
                 }else{
                     return false;
                 }
             case BackUp:
-                if(driveWithEncoders(-1,0,0,power,2)){
+                if(driveWithEncoders(-1, 0, 0, power, 2)){
                     resetPosition=true;
                     return true;
                 }
@@ -351,7 +359,7 @@ public class Robot extends OpMode {
     private int startHeading;
     private int targetHeading;
 
-    public boolean turnAroundPivotPoint(double x,double y,double power,int degrees,Direction direction,int threshold){
+    public boolean turnAroundPivotPoint(double x, double y, double power,Direction direction, int degrees, int threshold){
         if(resetPosition){
             resetPosition=false;
             swerveDrive.setPivotPoint(x,y);
@@ -368,13 +376,14 @@ public class Robot extends OpMode {
         //angleBetween is the angle from currentPosition to target position in radians
         //it has a range of -pi to pi, with negative values being clockwise and positive counterclockwise of the current angle
         double angleBetween = Math.atan2(currentVector.x * targetVector.y - currentVector.y * targetVector.x, currentVector.x * targetVector.x + currentVector.y * targetVector.y);
+        double multiplier=1;
         if(angleBetween>0){
-            power=Math.abs(power);
+            multiplier=1;
         }else if(angleBetween<0){
-            power=-Math.abs(power);
+            multiplier= -1;
         }
         if(Math.abs(angleBetween)>Math.toRadians(threshold)){
-            swerveDrive.drive(0,0,1,power);
+            swerveDrive.drive(0,0,multiplier,power);
             return false;
         }else{
             swerveDrive.drive(0,0,1,0);

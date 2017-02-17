@@ -57,7 +57,7 @@ public class RedFast extends Robot {
                         shootServo.setPosition(SHOOTER_UP);
                     }
                 }
-                if(driveWithEncoders(.4,1,0,.4,40)){
+                if(driveWithEncodersAndGyro(.4, 1, 0, .4, 40)){
                     state=RobotState.PressFirstBeacon;
                     waitForServos=true;
                     shootServo.setPosition(SHOOTER_UP);
@@ -81,7 +81,7 @@ public class RedFast extends Robot {
 
             case DriveToSecondBeacon:
                 waitForServos=true;
-                if(driveWithEncoders(-.4,1,.1,.4,25+extraDistance)){
+                if(driveWithEncodersAndGyro(-.4, 1, .1, .4, 25+extraDistance)){
                     state=RobotState.PressSecondBeacon;
                     waitForServos=true;
                 }
@@ -96,7 +96,7 @@ public class RedFast extends Robot {
                 break;
             case DriveToDefend:
                 waitForServos=false;
-                if(driveWithEncoders(-1,.2,0,.3,50)){
+                if(driveWithEncodersAndGyro(-1, .2, 0, .3, 50)){
                     state=RobotState.Stop;
                     waitForServos=true;
                 }

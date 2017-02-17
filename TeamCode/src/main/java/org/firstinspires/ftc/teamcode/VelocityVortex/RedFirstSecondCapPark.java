@@ -2,17 +2,14 @@ package org.firstinspires.ftc.teamcode.VelocityVortex;
 
 import android.graphics.Bitmap;
 import android.renderscript.Allocation;
-import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
-import android.renderscript.Type;
 import android.util.Log;
 
 import com.qualcomm.ftcrobotcontroller.ScriptC_blue;
 import com.qualcomm.ftcrobotcontroller.ScriptC_red;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.vuforia.Image;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.teamcode.CameraStuff.FTCCamera;
@@ -34,7 +31,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -304,7 +300,7 @@ public class RedFirstSecondCapPark extends Robot {
 //                    resetPosition=true;
 //                    robotState=RobotState.AlignWithBeacon;
 //                }
-                if(turnAroundPivotPoint(-25,0,.4,90,Direction.CLOCKWISE,4)){
+                if(turnAroundPivotPoint(-25, 0, .4,Direction.CLOCKWISE, 90, 4)){
                     robotState=RobotState.AlignWithBeacon;
                 }
                 break;
