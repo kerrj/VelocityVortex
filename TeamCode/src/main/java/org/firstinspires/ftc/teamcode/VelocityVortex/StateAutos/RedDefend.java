@@ -54,8 +54,11 @@ public class RedDefend extends Robot {
                 }
                 break;
             case Shoot:
+                swerveDrive.setPivotPoint(-20,0);
+                swerveDrive.drive(0,0,1,0);
                 if(shoot(2,.67)){
                     state=RobotState.RotateToFirstBeacon;
+                    swerveDrive.setPivotPoint(0,0);
                 }
                 break;
 
@@ -76,7 +79,7 @@ public class RedDefend extends Robot {
                 break;
 
             case DriveToSecondBeacon:
-                if(driveWithHeading(-.6,1,0,.4,35+extraDistance,startGyroHeading+90)){
+                if(driveWithHeading(-.6,1,0,.5,35+extraDistance,startGyroHeading+90)){
                     state=RobotState.PressSecondBeacon;
                 }
                 break;

@@ -128,7 +128,7 @@ public class SwerveTeleop extends Robot {
                     if (d.getMagnitude() > .02 || Math.abs(gamepad1.right_stick_x) > .02) {
                         direction = d;
                         //                swerveDrive.drive(Math.cos(angleBetween-inputAngle)*direction.getMagnitude(), Math.sin(angleBetween-inputAngle)*direction.getMagnitude(), gamepad1.right_stick_x/1.5, .5);
-                        swerveDrive.drive(direction.x,direction.y,gamepad1.right_stick_x/1.5,.65);
+                        swerveDrive.drive(direction.x,direction.y,gamepad1.right_stick_x/1.5,.6);
                         if(Math.abs(gamepad1.right_stick_x)>.02&&d.getMagnitude()<.02){
                             wheelsRotated=true;
                         }else{
