@@ -46,8 +46,8 @@ public class RedNormal extends Robot {
 
         switch(state){
             case DriveForward:
-                shootRight.setPower(.67);
-                shootLeft.setPower(.67);
+                shootRight.setPower(.6);
+                shootLeft.setPower(.6);
                 if(driveWithEncodersAndGyro(-1, 0, 0, .2, 15)){
                     state=RobotState.Shoot;
                     deviationHeading=gyro.getHeading()-startGyroHeading;
@@ -56,7 +56,7 @@ public class RedNormal extends Robot {
             case Shoot:
                 swerveDrive.setPivotPoint(-20,0);
                 swerveDrive.drive(0,0,1,0);
-                if(shoot(2,.67)){
+                if(shoot(2,.64)){
                     state=RobotState.RotateToFirstBeacon;
                     swerveDrive.setPivotPoint(0,0);
                 }
@@ -72,7 +72,7 @@ public class RedNormal extends Robot {
                 if(beaconResult== HistogramAnalysisThread.BeaconResult.RED_LEFT){
                     extraDistance=5;
                 }
-                if(alignWithAndPushBeacon("Gears", beaconResult, Side.RED,.25,1)){
+                if(alignWithAndPushBeacon("Gears", beaconResult, Side.RED,.225,1)){
                     state=RobotState.DriveToSecondBeacon;
                     buttonWheel.setPosition(WHEEL_IN);
                 }
@@ -86,13 +86,13 @@ public class RedNormal extends Robot {
 
             case PressSecondBeacon:
                 buttonWheel.setPosition(WHEEL_OUT);
-                if(alignWithAndPushBeacon("Tools", beaconResult, Side.RED,.25,1)){
+                if(alignWithAndPushBeacon("Tools", beaconResult, Side.RED,.225,1)){
                     state=RobotState.DriveToCapBall;
                     buttonWheel.setPosition(WHEEL_IN);
                 }
                 break;
             case DriveToCapBall:
-                if(driveWithHeading(-.9,-1,0,.4,50,startGyroHeading+90)){
+                if(driveWithHeading(-.9,-1,0,.4,60,startGyroHeading+90)){
                     state=RobotState.Stop;
                 }
                 break;

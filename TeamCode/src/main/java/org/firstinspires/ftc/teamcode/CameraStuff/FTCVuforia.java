@@ -412,7 +412,7 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
                     Vec2F middle= Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(0, 0, 54));
                     Vec2F left=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(-targetWidth/2+30,200f,54));
                     Vec2F right=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(targetWidth/2-30,200f,54));
-                    Vec2F bottom=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(0,-targetHeight/2+200f,54));
+                    Vec2F bottom=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(0,-targetHeight/2+260f,54));
                     Vec2F top=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(0,targetHeight/2+150f,54));
                     float[][] rotation = {{data[0], data[1], data[2]},
                             {data[4], data[5], data[6]},

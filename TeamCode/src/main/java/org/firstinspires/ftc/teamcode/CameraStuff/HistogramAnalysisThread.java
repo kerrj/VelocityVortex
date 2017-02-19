@@ -44,7 +44,6 @@ public class HistogramAnalysisThread extends Thread {
     }
 
     public BeaconResult getBeaconResult(){
-
         if(accumulationValue>10000){
             synchronized (dataLock) {
                 return BeaconResult.RED_LEFT;
@@ -234,7 +233,7 @@ public class HistogramAnalysisThread extends Thread {
                 //            Log.d("PerceptronValue",Integer.toString(perceptronOutput));
 
                 accumulationValue += perceptronOutput;
-                if (Math.abs(accumulationValue) > 10000) {
+                if (Math.abs(accumulationValue) > 10100) {
                     stopAnalyzing();
                 }
             }

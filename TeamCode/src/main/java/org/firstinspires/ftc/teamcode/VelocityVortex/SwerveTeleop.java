@@ -203,7 +203,7 @@ public class SwerveTeleop extends Robot {
                     //                power = .75;
                     //            }
                     if(gamepad2.a){
-                        power=.75;
+                        power=.70;
                     }else if(gamepad2.b){
                         power=0;
                     }

@@ -46,8 +46,8 @@ public class RedDefend extends Robot {
 
         switch(state){
             case DriveForward:
-                shootRight.setPower(.67);
-                shootLeft.setPower(.67);
+                shootRight.setPower(AUTONOMOUS_SHOOTING_POWER);
+                shootLeft.setPower(AUTONOMOUS_SHOOTING_POWER);
                 if(driveWithEncodersAndGyro(-1, 0, 0, .2, 15)){
                     state=RobotState.Shoot;
                     deviationHeading=gyro.getHeading()-startGyroHeading;
@@ -56,14 +56,14 @@ public class RedDefend extends Robot {
             case Shoot:
                 swerveDrive.setPivotPoint(-20,0);
                 swerveDrive.drive(0,0,1,0);
-                if(shoot(2,.67)){
+                if(shoot(2,AUTONOMOUS_SHOOTING_POWER)){
                     state=RobotState.RotateToFirstBeacon;
                     swerveDrive.setPivotPoint(0,0);
                 }
                 break;
 
             case RotateToFirstBeacon:
-                if(turnAroundPivotPoint(-20, 0, .4,Direction.CLOCKWISE, 90-(int)deviationHeading, 4)){
+                if(turnAroundPivotPoint(-20, 0, .5,Direction.CLOCKWISE, 90-(int)deviationHeading, 4)){
                     state=RobotState.PressFirstBeacon;
                 }
                 break;

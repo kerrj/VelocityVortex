@@ -49,8 +49,8 @@ public class RedAperture extends Robot {
         switch(state){
             //old version
             case DriveForward:
-                shootRight.setPower(.67);
-                shootLeft.setPower(.67);
+                shootRight.setPower(.6);
+                shootLeft.setPower(.6);
                 if(driveWithEncodersAndGyro(-1, 0, 0, .2, 15)){
                     state=RobotState.Shoot;
                     deviationHeading=gyro.getHeading()-startGyroHeading;
