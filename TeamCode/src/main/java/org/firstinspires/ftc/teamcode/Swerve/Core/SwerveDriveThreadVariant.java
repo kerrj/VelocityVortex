@@ -23,9 +23,10 @@ import java.io.UnsupportedEncodingException;
  * @author duncan
  */
 
-public class SwerveDriveThreadVariant extends Thread {
+public class SwerveDriveThreadVariant  {
     //Add values when swerve is done and also look at what absolute encoder is for
     SwerveModuleThreadVariant[] modules;
+    SwerveThread thread1,thread2;
     double[] angles={0,0,0,0};
     double[] powers={0,0,0,0};
     double[] targetPowers={0,0,0,0};
@@ -140,7 +141,10 @@ public class SwerveDriveThreadVariant extends Thread {
         positions=new int[]{lf.getCurrentPosition(),rf.getCurrentPosition(),lb.getCurrentPosition(),rb.getCurrentPosition()};
         this.ftcSwerve=ftcSwerve;
         lastAcceleration=new double[]{System.nanoTime()/1E6,System.nanoTime()/1E6,System.nanoTime()/1E6,System.nanoTime()/1E6};
-//        start();
+        thread1=new SwerveThread(new SwerveModuleThreadVariant[]{modules[0],modules[2]});
+        thread2=new SwerveThread(new SwerveModuleThreadVariant[]{modules[1],modules[3]});
+        thread1.start();
+        thread2.start();
     }
 
     public void setPivotPoint(double x,double y){
@@ -187,82 +191,6 @@ public class SwerveDriveThreadVariant extends Thread {
         targetPowers[3]=(vects[2].getMagnitude() / maxPower)*powerScale;
     }
 
-//    public void run(){
-//        while(running) {
-//            if (!waitForServos) {
-//                for (int i = 0; i < modules.length; i++) {
-//                    SwerveModuleThreadVariant module = modules[i];
-//                    if (accelerate) {
-//                        accelerate(i);
-//                    } else {
-//                        powers[i] = targetPowers[i];
-//                    }
-//                    module.set(angles[i], powers[i]);
-//                    //distance travelled
-//                    double average = 0;
-//                    for (int j = 0; j < positions.length; j++) {
-//                        int position = motors[j].getCurrentPosition();
-//                        average += Math.abs(positions[j] - position);
-//                        positions[j] = position;
-//                    }
-//                    average /= 4;
-//                    deltaCounts += average;
-//                }
-//            } else {
-//                boolean atPosition = true;
-//                for (int i = 0; i < modules.length; i++) {
-//                    SwerveModuleThreadVariant module = modules[i];
-//                    if (accelerate) {
-//                        accelerate(i);
-//                    } else {
-//                        powers[i] = targetPowers[i];
-//                    }
-//                    if (Math.abs(module.getDelta(angles[i])) > Math.toRadians(servoThreshold)) {
-//                        atPosition = false;
-//                        atPositions[i] = false;
-//                    } else {
-//                        atPositions[i] = true;
-//                    }
-//                }
-//
-//                if (atPosition) {//if all are at the correct position
-//                    for (int i = 0; i < modules.length; i++) {
-//                        modules[i].set(angles[i], powers[i]);
-//                        double average = 0;//initialize average
-//                        for (int j = 0; j < positions.length; j++) {//iterate over all swerve modules
-//                            int position = motors[j].getCurrentPosition();
-//                            average += Math.abs(positions[j] - position);//calculate the change in encoder position
-//                            //since we last checked and add this to the averagew
-//                            positions[j] = position;
-//                        }
-//                        average /= 4;//divide the average by 4 swerve modules
-//                        deltaCounts += average;//add the final change in position to the running total
-//                    }
-//                } else {
-//                    for (int j = 0; j < positions.length; j++) {
-//                        positions[j] = motors[j].getCurrentPosition();
-//                    }
-//                    for (int i = 0; i < modules.length; i++) {
-//                        SwerveModuleThreadVariant module = modules[i];
-//                        if (atPositions[i]) {
-//                            modules[i].set(angles[i], 0);
-//                        } else {
-//                            if (module.getDirection(angles[i]) == SwerveModuleThreadVariant.ModuleDirection.clockwise) {
-//                                modules[i].set(angles[i], turnPower);//adjust signs on these depending on motor direction
-//                            } else {
-//                                modules[i].set(angles[i], -turnPower);
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//            try {
-//                Thread.sleep(10);
-//            } catch (InterruptedException e){
-//                e.printStackTrace();
-//            }
-//        }
-//    }
     /**
      * Method called every loop iteration
      */
@@ -339,6 +267,8 @@ public class SwerveDriveThreadVariant extends Thread {
     }
     public void kill(){
         running=false;
+        thread1.kill();
+        thread2.kill();
         for(SwerveModuleThreadVariant module:modules){
             module.kill();
         }

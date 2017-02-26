@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
  * Created by hunai on 9/14/2016.
  * @author Duncan
  */
-public class SwerveModuleThreadVariant extends Thread{
+public class SwerveModuleThreadVariant {
     private DcMotor driveMotor; //SpeedController used so this can be talon, victor, jaguar, CAN talon...
     public  Servo steerServo;
     public AbsoluteEncoder steerEncoder;
@@ -109,13 +109,12 @@ public class SwerveModuleThreadVariant extends Thread{
             pid=new PID(KP, KI,KD,driveMotor,KA);
         }catch(NumberFormatException e){
             e.printStackTrace();
-            pid=new PID(2/3.0,2.5,.01,driveMotor,1);
+            pid=new PID(2.0,1.0,0,driveMotor,0);
         }
         //        pid=new PID(2.0/3.0,2.5,.01,driveMotor,1);
         currentAngle=steerEncoder.getAngle();
         //        currentMotorPower=driveMotor.getPower();
         lastServoPower=steerServo.getPosition();
-        start();
     }
     /**
      * @param angle in radians
@@ -201,40 +200,57 @@ public class SwerveModuleThreadVariant extends Thread{
             return ModuleDirection.clockwise;
         }
     }
+    public void update(){
+        currentAngle=steerEncoder.getAngle();
+        if(Math.abs(lastMotorPower-motorPower)>.025||motorPower==0) {
+            driveMotor.setPower(motorPower);
+            lastMotorPower=motorPower;
+        }
+        setServoPower( pid.setPIDpower(-getDelta(),motorPower), .5);//negative
+        if(Math.abs(targetServoPower-lastServoPower)>.02||targetServoPower==.5){
+            if(targetServoPower>.75){
+                targetServoPower=1;
+            }else if(targetServoPower<.25){
+                targetServoPower=0;
+            }
+            controller.setServoPosition(portNumber, targetServoPower);
+            lastServoPower=targetServoPower;
+        }
+    }
 
-    public void run(){
-        while(running){
-            double startTime=System.nanoTime()/1.0E6;
-            currentAngle=steerEncoder.getAngle();
-            if(Math.abs(lastMotorPower-motorPower)>.025||motorPower==0) {
-                driveMotor.setPower(motorPower);
-                lastMotorPower=motorPower;
-            }
-            setServoPower( pid.setPIDpower(-getDelta(),motorPower), .5);//negative
-            if(Math.abs(targetServoPower-lastServoPower)>.02||targetServoPower==.5){
-                if(targetServoPower>.75){
-                    targetServoPower=1;
-                }else if(targetServoPower<.25){
-                    targetServoPower=0;
-                }
-                controller.setServoPosition(portNumber, targetServoPower);
-                lastServoPower=targetServoPower;
-            }
+//    public void run(){
+//        while(running){
+//            double startTime=System.nanoTime()/1.0E6;
+//            currentAngle=steerEncoder.getAngle();
+//            if(Math.abs(lastMotorPower-motorPower)>.025||motorPower==0) {
+//                driveMotor.setPower(motorPower);
+//                lastMotorPower=motorPower;
+//            }
+//            setServoPower( pid.setPIDpower(-getDelta(),motorPower), .5);//negative
 //            if(Math.abs(targetServoPower-lastServoPower)>.02||targetServoPower==.5){
+//                if(targetServoPower>.75){
+//                    targetServoPower=1;
+//                }else if(targetServoPower<.25){
+//                    targetServoPower=0;
+//                }
 //                controller.setServoPosition(portNumber, targetServoPower);
 //                lastServoPower=targetServoPower;
 //            }
-            if(System.nanoTime()/1.0E6-startTime<1){
-                try {
-                    Thread.sleep(1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        kill();
-    }
+////            if(Math.abs(targetServoPower-lastServoPower)>.02||targetServoPower==.5){
+////                controller.setServoPosition(portNumber, targetServoPower);
+////                lastServoPower=targetServoPower;
+////            }
+//            if(System.nanoTime()/1.0E6-startTime<1){
+//                try {
+//                    Thread.sleep(1);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//
+//        kill();
+//    }
 
     public void kill(){
         running=false;
