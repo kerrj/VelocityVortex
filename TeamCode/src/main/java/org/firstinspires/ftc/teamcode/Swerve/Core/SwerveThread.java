@@ -43,7 +43,7 @@ public class SwerveThread {
                 for(SwerveModuleThreadVariant m:modules){
                     m.updateServo();
                 }
-                if(System.nanoTime()/1.0E6-start<2){
+                if(System.nanoTime()/1.0E6-start<1){
                     try {
                         Thread.sleep(1);
                     } catch (InterruptedException e) {
@@ -53,8 +53,6 @@ public class SwerveThread {
             }
         }
     }
-
-
 
 
     private class MotorThread extends Thread{

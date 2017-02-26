@@ -110,6 +110,7 @@ public class BlueNormal extends Robot {
         telemetry.addData("Confidence",thread.getConfidence());
         telemetry.addData("State",state);
         swerveDrive.update(waitForServos,30,true);
+        telemetry.addData("lfm",lfm.getPower());
     }
 
     public void stop(){

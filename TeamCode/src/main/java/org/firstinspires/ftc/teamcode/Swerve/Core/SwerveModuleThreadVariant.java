@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
  * Created by hunai on 9/14/2016.
  * @author Duncan
  */
-public class SwerveModuleThreadVariant {
+public class SwerveModuleThreadVariant  {
     private DcMotor driveMotor; //SpeedController used so this can be talon, victor, jaguar, CAN talon...
     public  Servo steerServo;
     public AbsoluteEncoder steerEncoder;
@@ -115,6 +115,7 @@ public class SwerveModuleThreadVariant {
         currentAngle=steerEncoder.getAngle();
         //        currentMotorPower=driveMotor.getPower();
         lastServoPower=steerServo.getPosition();
+//        start();
     }
     /**
      * @param angle in radians
@@ -201,18 +202,18 @@ public class SwerveModuleThreadVariant {
         }
     }
     public void updateMotor(){
-        if(Math.abs(lastMotorPower-motorPower)>.025||motorPower==0) {
+        lastMotorPower=driveMotor.getPower();
+        if(Math.abs(lastMotorPower-motorPower)>.025||motorPower==0&&lastMotorPower!=0) {
             driveMotor.setPower(motorPower);
-            lastMotorPower=motorPower;
         }
     }
     public void updateServo(){
         currentAngle=steerEncoder.getAngle();
         setServoPower( pid.setPIDpower(-getDelta(),motorPower), .5);//negative
         if(Math.abs(targetServoPower-lastServoPower)>.02||targetServoPower==.5){
-            if(targetServoPower>.75){
+            if(targetServoPower>.7){
                 targetServoPower=1;
-            }else if(targetServoPower<.25){
+            }else if(targetServoPower<.3){
                 targetServoPower=0;
             }
             controller.setServoPosition(portNumber, targetServoPower);

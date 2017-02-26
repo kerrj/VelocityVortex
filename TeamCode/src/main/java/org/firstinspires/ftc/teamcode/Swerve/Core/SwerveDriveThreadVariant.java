@@ -216,11 +216,6 @@ public class SwerveDriveThreadVariant  {
             boolean atPosition=true;
             for(int i=0;i<modules.length;i++){
                 SwerveModuleThreadVariant module=modules[i];
-                if(accelerate){
-                    accelerate(i);
-                }else{
-                    powers[i]=targetPowers[i];
-                }
                 if (Math.abs(module.getDelta(angles[i]))>Math.toRadians(threshold)){
                     atPosition=false;
                     atPositions[i]=false;
@@ -231,6 +226,11 @@ public class SwerveDriveThreadVariant  {
 
             if(atPosition){//if all are at the correct position
                 for(int i=0;i<modules.length;i++){
+                    if(accelerate){
+                        accelerate(i);
+                    }else{
+                        powers[i]=targetPowers[i];
+                    }
                     modules[i].set(angles[i],powers[i]);
                     double average=0;//initialize average
                     for(int j=0;j<positions.length;j++){//iterate over all swerve modules
@@ -277,7 +277,7 @@ public class SwerveDriveThreadVariant  {
         double dt=System.nanoTime()/1.0E6-lastAcceleration[i];
         lastAcceleration[i]=System.nanoTime()/1.0E6;
 
-        if(Math.abs(delta)<.05){
+        if(Math.abs(delta)<.03){
             powers[i]=targetPowers[i];
         }else if(delta>0){
             if(powers[i]>0) {
