@@ -200,12 +200,14 @@ public class SwerveModuleThreadVariant {
             return ModuleDirection.clockwise;
         }
     }
-    public void update(){
-        currentAngle=steerEncoder.getAngle();
+    public void updateMotor(){
         if(Math.abs(lastMotorPower-motorPower)>.025||motorPower==0) {
             driveMotor.setPower(motorPower);
             lastMotorPower=motorPower;
         }
+    }
+    public void updateServo(){
+        currentAngle=steerEncoder.getAngle();
         setServoPower( pid.setPIDpower(-getDelta(),motorPower), .5);//negative
         if(Math.abs(targetServoPower-lastServoPower)>.02||targetServoPower==.5){
             if(targetServoPower>.75){

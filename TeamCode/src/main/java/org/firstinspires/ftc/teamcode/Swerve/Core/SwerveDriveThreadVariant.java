@@ -143,8 +143,6 @@ public class SwerveDriveThreadVariant  {
         lastAcceleration=new double[]{System.nanoTime()/1E6,System.nanoTime()/1E6,System.nanoTime()/1E6,System.nanoTime()/1E6};
         thread1=new SwerveThread(new SwerveModuleThreadVariant[]{modules[0],modules[2]});
         thread2=new SwerveThread(new SwerveModuleThreadVariant[]{modules[1],modules[3]});
-        thread1.start();
-        thread2.start();
     }
 
     public void setPivotPoint(double x,double y){
