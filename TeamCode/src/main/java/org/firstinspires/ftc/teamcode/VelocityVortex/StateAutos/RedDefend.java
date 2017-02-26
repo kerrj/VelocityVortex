@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.VelocityVortex.StateAutos;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.CameraStuff.HistogramAnalysisThread;
+import org.firstinspires.ftc.teamcode.Swerve.Core.FTCSwerve;
 import org.firstinspires.ftc.teamcode.VelocityVortex.Robot;
 
 /**
@@ -20,12 +21,14 @@ public class RedDefend extends Robot {
 
     @Override
     public void init() {
-        super.init();
         initAutonomous();
     }
 
     public void init_loop(){
         if(!gyro.isCalibrating()) {
+            if(swerveDrive==null){
+                swerveDrive=new FTCSwerve(lfa, rfa, lba, rba, lfm, rfm, lbm, rbm, lf, rf, lb, rb, 14, 14);
+            }
             swerveDrive.refreshValues();
             swerveDrive.drive(-1, 0, 0, 0);
             swerveDrive.update(true, 15, false);
@@ -72,7 +75,7 @@ public class RedDefend extends Robot {
                 if(beaconResult== HistogramAnalysisThread.BeaconResult.RED_LEFT){
                     extraDistance=5;
                 }
-                if(alignWithAndPushBeacon("Gears", beaconResult, Side.RED,.25,1)){
+                if(alignWithAndPushBeacon("Gears", beaconResult, Side.RED,.25,1,false)){
                     state=RobotState.DriveToSecondBeacon;
                     buttonWheel.setPosition(WHEEL_IN);
                 }
@@ -86,7 +89,7 @@ public class RedDefend extends Robot {
 
             case PressSecondBeacon:
                 buttonWheel.setPosition(WHEEL_OUT);
-                if(alignWithAndPushBeacon("Tools", beaconResult, Side.RED,.25,1)){
+                if(alignWithAndPushBeacon("Tools", beaconResult, Side.RED,.25,1,false)){
                     state=RobotState.DriveToDefend;
                     buttonWheel.setPosition(WHEEL_IN);
                 }

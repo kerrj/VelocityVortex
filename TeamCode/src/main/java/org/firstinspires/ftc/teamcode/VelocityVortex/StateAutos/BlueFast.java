@@ -4,13 +4,13 @@ package org.firstinspires.ftc.teamcode.VelocityVortex.StateAutos;
         import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
         import org.firstinspires.ftc.teamcode.CameraStuff.HistogramAnalysisThread;
+        import org.firstinspires.ftc.teamcode.Swerve.Core.FTCSwerve;
         import org.firstinspires.ftc.teamcode.VelocityVortex.Robot;
 
 /**
  * Created by Justin on 1/27/2017.
  */
 @Autonomous
-@Disabled
 public class BlueFast extends Robot {
     HistogramAnalysisThread.BeaconResult beaconResult;
     enum RobotState{DriveForward,Shoot,RotateToFirstBeacon,DriveToSecondBeacon,PressFirstBeacon,PressSecondBeacon,DriveToDefend,Defend,Stop}
@@ -22,12 +22,14 @@ public class BlueFast extends Robot {
 
     @Override
     public void init() {
-        super.init();
         initAutonomous();
     }
 
     public void init_loop(){
         if(!gyro.isCalibrating()) {
+            if(swerveDrive==null){
+                swerveDrive=new FTCSwerve(lfa, rfa, lba, rba, lfm, rfm, lbm, rbm, lf, rf, lb, rb, 14, 14);
+            }
             swerveDrive.refreshValues();
             swerveDrive.drive(.4, -1, 0, 0);
             swerveDrive.update(true, 15, false);
@@ -43,7 +45,6 @@ public class BlueFast extends Robot {
 
         switch(state){
             case DriveForward:
-                waitForServos=false;
                 shootRight.setPower(AUTONOMOUS_SHOOTING_POWER);
                 shootLeft.setPower(AUTONOMOUS_SHOOTING_POWER);
                 if(swerveDrive.getLinearInchesTravelled()>AUTONOMOUS_SHOOT_DRIVE_DISTANCE){
@@ -59,9 +60,9 @@ public class BlueFast extends Robot {
                         shootServo.setPosition(SHOOTER_UP);
                     }
                 }
-                if(driveWithEncodersAndGyro(.4, -1, 0, .4, 40)){
-                    state=RobotState.PressFirstBeacon;
+                if(driveWithEncodersAndGyro(.4, -1, 0, 1, 45)){
                     waitForServos=true;
+                    state=RobotState.PressFirstBeacon;
                 }
                 break;
 
@@ -72,7 +73,7 @@ public class BlueFast extends Robot {
                 if(beaconResult== HistogramAnalysisThread.BeaconResult.RED_LEFT){
                     extraDistance=5;
                 }
-                if(alignWithAndPushBeacon("Wheels", beaconResult, Side.BLUE,.25,1)){
+                if(alignWithAndPushBeacon("Wheels", beaconResult, Side.BLUE,.3,1,true)){
                     state=RobotState.DriveToSecondBeacon;
                     buttonWheel.setPosition(WHEEL_IN);
                     shootLeft.setPower(0);
@@ -81,30 +82,31 @@ public class BlueFast extends Robot {
                 break;
 
             case DriveToSecondBeacon:
-                waitForServos=true;
                 if(driveWithEncodersAndGyro(-.4, -1, -.1, .4, 25+extraDistance)){
                     state=RobotState.PressSecondBeacon;
-                    waitForServos=true;
                 }
                 break;
 
             case PressSecondBeacon:
                 buttonWheel.setPosition(WHEEL_OUT);
-                if(alignWithAndPushBeacon("Legos", beaconResult, Side.BLUE,.2,2)){
+                if(alignWithAndPushBeacon("Legos", beaconResult, Side.BLUE,.2,2,false)){
                     state=RobotState.DriveToDefend;
                     buttonWheel.setPosition(WHEEL_IN);
                 }
                 break;
             case DriveToDefend:
-                waitForServos=false;
-                if(driveWithEncodersAndGyro(-1, -.2, 0, .3, 50)){
+                if(driveWithEncoders(-1,-.4,0,.4,15)){
+                    state=RobotState.Defend;
+                }
+                break;
+            case Defend:
+                if(driveWithEncoders(-1,0,0,.4,20)){
                     state=RobotState.Stop;
-                    waitForServos=true;
                 }
                 break;
 
             case Stop:
-                swerveDrive.drive(0,0,-1,.1);
+                swerveDrive.drive(0,0,-1,0);
                 break;
         }
 
@@ -112,7 +114,7 @@ public class BlueFast extends Robot {
         telemetry.addData("BeaconResult",beaconResult);
         telemetry.addData("Confidence",thread.getConfidence());
         telemetry.addData("State",state);
-        swerveDrive.update(waitForServos,20,true);
+        swerveDrive.update(waitForServos,30,true);
     }
 
     public void stop(){

@@ -11,11 +11,11 @@ import com.qualcomm.robotcore.hardware.Servo;
  */
 public class FTCSwerve {
 
-    public SwerveDrive swerveDrive;
+    public SwerveDriveThreadVariant swerveDrive;
     public FTCSwerve(AnalogInput frontLeft, AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
                      DcMotor lf, DcMotor rf, DcMotor lb, DcMotor rb,
                      Servo frontLeftServo, Servo frontRightServo, Servo backLeftServo, Servo backRightServo, double width, double length){
-        swerveDrive=new SwerveDrive(frontLeft,frontRight,backLeft,backRight,//encoders
+        swerveDrive=new SwerveDriveThreadVariant(frontLeft,frontRight,backLeft,backRight,//encoders
                                     lf,rf,lb,rb,//motors
                                     frontLeftServo,frontRightServo,backLeftServo,backRightServo,width,length,this);
     }
@@ -47,11 +47,10 @@ public class FTCSwerve {
     }
 
     public void stop(){
-        swerveDrive.stop();
+        swerveDrive.kill();
     }
 
     public void lockWheels(){
-        swerveDrive.lockWheels();
     }
     /**
      * Resets the displacement of the robot to 0. getLinearInchesTravelled will again return 0
@@ -75,7 +74,7 @@ public class FTCSwerve {
     }
 
     public void refreshValues(){
-        swerveDrive.refreshValues();
+//        swerveDrive.refreshValues();
     }
 
     public void setPivotPoint(double x,double y){swerveDrive.setPivotPoint(x,y);}

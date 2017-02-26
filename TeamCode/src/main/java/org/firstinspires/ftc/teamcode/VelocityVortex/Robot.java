@@ -38,8 +38,8 @@ public class Robot extends OpMode {
     public static final double CAP_LEFT_HOLD=.9;
     public static final int SLIDE_DOWN=0;
     public static final int SLIDE_UP=20200;
-    public static final double SHOOTER_DOWN=.6;
-    public static final double SHOOTER_UP=0;
+    public static final double SHOOTER_DOWN=.45;
+    public static final double SHOOTER_UP=.25;
     public static final double SWEEPER_INTAKE=1;
     public static final double SWEEPER_OUTAKE=-1;
     public static final double SWEEPER_STOP=0;
@@ -48,7 +48,7 @@ public class Robot extends OpMode {
     public final double SPONGE_OFFSET_FROM_CAMERA=70;
     public final double BUTTON_DISTANCE_FROM_WALL=60;
     public final double BUTTON_OFFSET_FROM_CENTER=67,
-            AUTONOMOUS_SHOOTING_POWER=.67,
+            AUTONOMOUS_SHOOTING_POWER=.7,
             AUTONOMOUS_SHOOT_DRIVE_DISTANCE=20,
             SHOOTER_MOVE_TIME=300,
             SHOOTER_DELAY_TIME=700;
@@ -122,7 +122,7 @@ public class Robot extends OpMode {
         rbe=new AbsoluteEncoder(Constants.BR_OFFSET, rba);
         lbe=new AbsoluteEncoder(Constants.BL_OFFSET, lba);
         swerveDrive=new FTCSwerve(lfa,rfa,lba,rba,lfm,rfm,lbm,rbm,lf,rf,lb,rb,14,14);
-        lastLoop=System.nanoTime();
+        lastLoop=System.nanoTime()/1.0E6;
     }
 
     @Override
@@ -149,6 +149,7 @@ public class Robot extends OpMode {
         rb.setPosition(0.5);
         capRight.setPosition(CAP_RIGHT_HOLD);
         capLeft.setPosition(CAP_LEFT_HOLD);
+        swerveDrive.stop();
     }
 
 
@@ -159,6 +160,48 @@ public class Robot extends OpMode {
     //===================================
 
     public void initAutonomous(){
+        lfm=hardwareMap.dcMotor.get("lfm");
+        rfm=hardwareMap.dcMotor.get("rfm");
+        lbm=hardwareMap.dcMotor.get("lbm");
+        rbm=hardwareMap.dcMotor.get("rbm");
+        gyro=hardwareMap.gyroSensor.get("gyro");
+        gyro.calibrate();
+        sweeper=hardwareMap.dcMotor.get("sweeper");
+        shootLeft=hardwareMap.dcMotor.get("shootLeft");
+        shootRight=hardwareMap.dcMotor.get("shootRight");
+        shootRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        shootLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shootRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lf=hardwareMap.servo.get("lf");
+        lb=hardwareMap.servo.get("lb");
+        rf=hardwareMap.servo.get("rf");
+        rb=hardwareMap.servo.get("rb");
+        shootServo=hardwareMap.servo.get("shootServo");
+        shootServo.setPosition(SHOOTER_DOWN);
+        slideMotor=hardwareMap.dcMotor.get("slideMotor");
+        slideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        slideStartPosition=slideMotor.getCurrentPosition();
+        lf.setPosition(0.5);
+        lb.setPosition(0.5);
+        rf.setPosition(0.5);
+        rb.setPosition(0.5);
+        neck=hardwareMap.servo.get("neck");
+        buttonWheel=hardwareMap.servo.get("buttonWheel");
+        capLeft=hardwareMap.servo.get("capLeft");
+        capRight=hardwareMap.servo.get("capRight");
+        buttonWheel.setPosition(WHEEL_IN);
+        neck.setPosition(NECK_FLAT);
+        capRight.setPosition(CAP_RIGHT_IN);
+        capLeft.setPosition(CAP_LEFT_IN);
+        lfa=hardwareMap.analogInput.get("lfa");
+        lba=hardwareMap.analogInput.get("lba");
+        rfa=hardwareMap.analogInput.get("rfa");
+        rba=hardwareMap.analogInput.get("rba");
+        lfe=new AbsoluteEncoder(Constants.FL_OFFSET, lfa);
+        rfe=new AbsoluteEncoder(Constants.FR_OFFSET, rfa);
+        rbe=new AbsoluteEncoder(Constants.BR_OFFSET, rba);
+        lbe=new AbsoluteEncoder(Constants.BL_OFFSET, lba);
         lfm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rfm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lbm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -247,7 +290,7 @@ public class Robot extends OpMode {
     private Vector buttonVector=new Vector(1,0);
     private boolean targetFound=false;
 
-    public boolean alignWithAndPushBeacon(String targetName, HistogramAnalysisThread.BeaconResult beaconResult, Side side,double power,double rotationDivisionConstant){
+    public boolean alignWithAndPushBeacon(String targetName, HistogramAnalysisThread.BeaconResult beaconResult, Side side,double power,double rotationDivisionConstant,boolean backUp){
         if(resetPosition){
             resetPosition=false;
             state=PressingState.AlignWithBeacon;
@@ -277,6 +320,7 @@ public class Robot extends OpMode {
                 if(currentBeacon.isFound()){
                     Vector direction;
                     if(beaconResult== HistogramAnalysisThread.BeaconResult.INCONCLUSIVE){
+                        power=.1;
                         direction = new Vector(currentBeacon.getDistance() -BUTTON_DISTANCE_FROM_WALL-SPONGE_OFFSET_FROM_CAMERA,
                                                currentBeacon.getHorizontalDistance());
                     }else if(beaconResult== HistogramAnalysisThread.BeaconResult.RED_LEFT){
@@ -286,7 +330,6 @@ public class Robot extends OpMode {
                         direction = new Vector(currentBeacon.getDistance()-BUTTON_DISTANCE_FROM_WALL-SPONGE_OFFSET_FROM_CAMERA,
                                                currentBeacon.getHorizontalDistance()-buttonOffsetFromCenter+CAMERA_OFFSET_FROM_PLOW);
                     }
-//                    direction=rotateVector(direction,currentBeacon.getYRotation()); probably wrong
                     buttonVector=direction;
                     swerveDrive.drive(direction.x, direction.y, currentBeacon.getYRotation()/rotationDivisionConstant,power);
 
@@ -312,7 +355,12 @@ public class Robot extends OpMode {
 
             case PressButton:
                 if(driveWithEncoders(buttonVector.x, buttonVector.y, 0, power, mmToInch(buttonVector.getMagnitude())+1)){
-                    state=PressingState.BackUp;
+                    if(backUp) {
+                        state = PressingState.BackUp;
+                    }else{
+                        resetPosition=true;
+                        return true;
+                    }
                     return false;
                 }else{
                     return false;
@@ -398,29 +446,78 @@ public class Robot extends OpMode {
     private enum ShootServoState{MovingUp,MovingDown}
     private ShootServoState servoState;
     private int shots;
+
+
     public boolean shoot(int targetShots,double power){
         if(resetPosition){
+            resetServoTime=true;
             startTime=System.currentTimeMillis();
             resetPosition=false;
             shots=0;
+            servoState=ShootServoState.MovingUp;
+            shootServo.setPosition(SHOOTER_UP);
+            shootLeft.setPower(power);
+            shootRight.setPower(power);
         }
-        shootLeft.setPower(power);
-        shootRight.setPower(power);
-        if(System.currentTimeMillis()-startTime>200){
+        if(System.currentTimeMillis()-startTime>0){
             if(resetServoTime){
                 servoTravelStart=System.currentTimeMillis();
                 resetServoTime=false;
             }
             if(servoState==ShootServoState.MovingUp){
-                if(System.currentTimeMillis()-servoTravelStart>300){
+                if(System.currentTimeMillis()-servoTravelStart>200){
                     shots++;
                     lastShot=System.currentTimeMillis();
                     if(shots<targetShots) {
                         servoState = ShootServoState.MovingDown;
                         return false;
-                    }else{
+                    }else{//finished
+                        shootServo.setPosition(SHOOTER_DOWN);
                         shootLeft.setPower(0);
                         shootRight.setPower(0);
+                        resetPosition=true;
+                        return true;
+                    }
+                }else{
+                    shootServo.setPosition(SHOOTER_UP);
+                    return false;
+                }
+            }else{
+                shootServo.setPosition(SHOOTER_DOWN);
+                if(System.currentTimeMillis()-lastShot>600){
+                    servoState=ShootServoState.MovingUp;
+                    servoTravelStart=System.currentTimeMillis();
+                }
+                return false;
+            }
+        }else{
+            return false;
+        }
+    }
+
+    public boolean shoot(int targetShots){
+        if(resetPosition){
+            resetServoTime=true;
+            startTime=System.currentTimeMillis();
+            resetPosition=false;
+            shots=0;
+            servoState=ShootServoState.MovingUp;
+            shootServo.setPosition(SHOOTER_UP);
+        }
+        if(System.currentTimeMillis()-startTime>0){
+            if(resetServoTime){
+                servoTravelStart=System.currentTimeMillis();
+                resetServoTime=false;
+            }
+            if(servoState==ShootServoState.MovingUp){
+                if(System.currentTimeMillis()-servoTravelStart>200){
+                    shots++;
+                    lastShot=System.currentTimeMillis();
+                    if(shots<targetShots) {
+                        servoState = ShootServoState.MovingDown;
+                        return false;
+                    }else{//finished
+                        shootServo.setPosition(SHOOTER_DOWN);
                         resetPosition=true;
                         return true;
                     }

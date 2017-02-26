@@ -25,7 +25,7 @@ public class SwerveTeleop extends Robot {
     Vector direction=new Vector(0,1);
     double power=0;
     double offset=0;
-    boolean wheelIn=true,wheelsRotated=false;
+    boolean wheelIn=true,wheelsRotated=false,doneShooting=true;
     private enum TeleOpState{Normal,PressingButton}
     private TeleOpState state=TeleOpState.Normal;
     private String lastFound;
@@ -112,7 +112,7 @@ public class SwerveTeleop extends Robot {
                     if (d.getMagnitude() > .02 || Math.abs(gamepad1.right_stick_x) > .02) {
                         direction = d;
                         //                swerveDrive.drive(Math.cos(angleBetween+inputAngle)*direction.getMagnitude(), Math.sin(angleBetween-inputAngle)*direction.getMagnitude(), gamepad1.right_stick_x/1.5, .2);
-                        swerveDrive.drive(direction.x,direction.y,gamepad1.right_stick_x/1.5,.2);
+                        swerveDrive.drive(direction.x,direction.y,gamepad1.right_stick_x/2,.2);
                         if(Math.abs(gamepad1.right_stick_x)>.02&&d.getMagnitude()<.02){
                             wheelsRotated=true;
                         }else{
@@ -122,13 +122,13 @@ public class SwerveTeleop extends Robot {
                         swerveDrive.drive(0,0,1,0);
                     } else {
                         //                swerveDrive.drive(Math.cos(angleBetween+inputAngle)*direction.getMagnitude(), Math.sin(angleBetween-inputAngle)*direction.getMagnitude(), gamepad1.right_stick_x/1.5, 0);
-                        swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, 0);
+                        swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/2, 0);
                     }
                 }else {
                     if (d.getMagnitude() > .02 || Math.abs(gamepad1.right_stick_x) > .02) {
                         direction = d;
                         //                swerveDrive.drive(Math.cos(angleBetween-inputAngle)*direction.getMagnitude(), Math.sin(angleBetween-inputAngle)*direction.getMagnitude(), gamepad1.right_stick_x/1.5, .5);
-                        swerveDrive.drive(direction.x,direction.y,gamepad1.right_stick_x/1.5,.6);
+                        swerveDrive.drive(direction.x,direction.y,gamepad1.right_stick_x/2,1);
                         if(Math.abs(gamepad1.right_stick_x)>.02&&d.getMagnitude()<.02){
                             wheelsRotated=true;
                         }else{
@@ -138,23 +138,30 @@ public class SwerveTeleop extends Robot {
                         swerveDrive.drive(0,0,1,0);
                     }else {
                         //                swerveDrive.drive(Math.cos(angleBetween+inputAngle)*direction.getMagnitude(), Math.sin(angleBetween-inputAngle)*direction.getMagnitude(), gamepad1.right_stick_x/1.5, 0);
-                        swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/1.5, 0);
+                        swerveDrive.drive(direction.x, direction.y, gamepad1.right_stick_x/2, 0);
                     }
                 }
 
-                swerveDrive.update(true,30,false);
+                swerveDrive.update(true,40,false);
 
                 //========================================================================================================
 
 
 
                 //shooter servo===========================================================================================
-                if(gamepad2.right_bumper){
-                    shootServo.setPosition(SHOOTER_UP);
-                    lastPush=System.currentTimeMillis();
-                }else{
-                    shootServo.setPosition(SHOOTER_DOWN);
+//                if(gamepad2.right_bumper){
+//                    shootServo.setPosition(SHOOTER_UP);
+//                }else{
+//                    shootServo.setPosition(SHOOTER_DOWN);
+//                }
+
+                if(gamepad2.right_bumper) {
+                    doneShooting = false;
                 }
+                if (!doneShooting) {
+                    doneShooting = shoot(4);
+                }
+
                 //        if(System.currentTimeMillis()-lastPush>400){
                 //            shootServo.setPosition(SHOOTER_UP);
                 //        }
@@ -204,11 +211,12 @@ public class SwerveTeleop extends Robot {
                     //            }
                     if(gamepad2.a){
                         power=.70;
-                    }else if(gamepad2.b){
-                        power=0;
-                    }
-                    if(gamepad2.x){
+                    }else if(gamepad2.x){
                         power=-.5;
+                    }else {
+                        if(doneShooting) {
+                            power = 0;
+                        }
                     }
                     //button pusher==========================================================================================================
 
@@ -252,6 +260,7 @@ public class SwerveTeleop extends Robot {
 //                    state=TeleOpState.PressingButton;
 //                }
                 telemetry.addData("ShooterPower",power);
+                telemetry.addLine("Mohammad is pretty Cool");
                 break;
 
 //            case PressingButton:

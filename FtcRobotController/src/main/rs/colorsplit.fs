@@ -42,12 +42,14 @@ uchar4 __attribute__ ((kernel)) split(uchar4 in, uint32_t x, uint32_t y){
 
     //rgb filter=========================================================
     uchar4 pixelOut;
-    if(in.r>in.g+70&&in.r>in.b+70){
-        pixelOut=(uchar4){255,255,255,255};
+    if(in.b>in.g+20&&in.b>in.r){
+        pixelOut=(uchar4){0,0,255,255};
+    }else if(in.r>in.g+20&&in.r>in.b){
+        pixelOut=(uchar4){255,0,0,255};
     }else{
         pixelOut=(uchar4){0,0,0,255};
-    }
-    return pixelOut;
+   }
+   return pixelOut;
 
 
     //hsv filter========================================

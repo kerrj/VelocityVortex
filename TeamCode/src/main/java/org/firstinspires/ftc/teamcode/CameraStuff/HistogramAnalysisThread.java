@@ -8,6 +8,7 @@ import android.renderscript.ScriptIntrinsicHistogram;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.justin.opencvcamera.ScriptC_colorsplit;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
@@ -26,16 +27,15 @@ public class HistogramAnalysisThread extends Thread {
 
     private FTCVuforia vuforia;
     private Allocation mAllocationIn;
-    private Allocation leftHistogramAllocation,rightHistogramAllocation;
+    private Allocation leftHistogramAllocation,rightHistogramAllocation,mAllocationOut;
     private ScriptIntrinsicHistogram leftHistogram,rightHistogram;
+    private ScriptC_colorsplit colorsplit;
     private Script.LaunchOptions leftOptions,rightOptions;
     private Bitmap RGBABitmap =Bitmap.createBitmap(1280, 720, Bitmap.Config.ARGB_8888);
     private Bitmap RGB565Bitmap =Bitmap.createBitmap(1280, 720, Bitmap.Config.RGB_565);
     private Object dataLock= new Object();
 
     public enum BeaconResult{ RED_LEFT,RED_RIGHT,INCONCLUSIVE}
-
-
 
     private int accumulationValue=0;
 
@@ -79,6 +79,8 @@ public class HistogramAnalysisThread extends Thread {
         rightHistogramAllocation=FtcRobotControllerActivity.getRightHistogramAllocation();
         leftOptions=FtcRobotControllerActivity.getLeftOptions();
         rightOptions=FtcRobotControllerActivity.getRightOptions();
+        colorsplit=FtcRobotControllerActivity.getColorsplit();
+        mAllocationOut=FtcRobotControllerActivity.getGetmAllocationOut();
         running=true;
     }
     public int getConfidence(){
@@ -89,7 +91,11 @@ public class HistogramAnalysisThread extends Thread {
     public void run(){
         while(running) {
             if (!analyze) {
-
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             } else {
                 HashMap<String, double[]> data = vuforia.getVuforiaData();
                 int top, left, bottom, right, middle;
@@ -138,15 +144,15 @@ public class HistogramAnalysisThread extends Thread {
                 } else if (bottom == top && top == 1) {
                     bottom++;
                 }
-
+                colorsplit.forEach_split(mAllocationIn,mAllocationOut);
                 try {
                     leftOptions.setX(left, middle);
                     leftOptions.setY(top, bottom);
-                    leftHistogram.forEach(mAllocationIn, leftOptions);
+                    leftHistogram.forEach(mAllocationOut, leftOptions);
 
                     rightOptions.setX(middle, right);
                     rightOptions.setY(top, bottom);
-                    rightHistogram.forEach(mAllocationIn, rightOptions);
+                    rightHistogram.forEach(mAllocationOut, rightOptions);
                 } catch (RSIllegalArgumentException e) {
                     e.printStackTrace();
                     continue;
@@ -223,8 +229,8 @@ public class HistogramAnalysisThread extends Thread {
                 //            Log.d("RightB",Integer.toString(rightBTotal));
 
                 //positive is on the left
-                int redDifference = leftRTotal - rightRTotal + leftRTotal - leftBTotal;
-                int blueDifference = leftBTotal - rightBTotal + leftBTotal - leftRTotal;
+                int redDifference = leftRTotal - rightRTotal;
+                int blueDifference = leftBTotal - rightBTotal;
                 //positive is red on the left
                 int perceptronOutput = redDifference - blueDifference;
 

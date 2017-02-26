@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.VelocityVortex.Robot;
 
+import java.util.ArrayList;
+
 /**
  * Created by hunaid on 9/30/2016.
  */
@@ -28,6 +30,8 @@ public class PID {
     int[] positionHistory=new int[3];
     double[] positionTimes=new double[3];
     double acceleration=0;
+    ArrayList<Double> accelerations=new ArrayList();
+    final int HISTORY_SIZE=3;
     double lastMotorPower=0;
 
 
@@ -60,12 +64,24 @@ public class PID {
             double[] intermediateTimes = new double[]{(positionTimes[0] + positionTimes[1]) / 2, (positionTimes[1] + positionTimes[2]) / 2};
             //calculate dv/dt
             acceleration = (v[1] - v[0]) / (intermediateTimes[1] - intermediateTimes[0]);//acceleration!
+            if(accelerations.size()<HISTORY_SIZE){
+                accelerations.add(acceleration);
+            }else{
+                accelerations.remove(0);
+                accelerations.add(acceleration);
+            }
         }catch(ArithmeticException e){
             e.printStackTrace();
             acceleration=0;
         }
-        dt=(System.nanoTime()/1E6)-time;//change in time
-        time=System.nanoTime()/1E6;//reset "last" time
+        //calculate average acceleration
+        acceleration=0;
+        for(double a:accelerations){
+            acceleration+=a;
+        }
+        acceleration/=accelerations.size();
+        dt=(System.nanoTime()/1.0E6)-time;//change in time
+        time=System.nanoTime()/1.0E6;//reset "last" time
 
 //        acceleration/=(1+(dt/50));//decay more when more time has passed
 //        acceleration=acceleration+motorPower-lastMotorPower;

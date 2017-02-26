@@ -23,9 +23,9 @@ import java.io.UnsupportedEncodingException;
  * @author duncan
  */
 
-public class SwerveDrive {
+public class SwerveDriveThreadVariant extends Thread {
     //Add values when swerve is done and also look at what absolute encoder is for
-    SwerveModule[] modules;
+    SwerveModuleThreadVariant[] modules;
     double[] angles={0,0,0,0};
     double[] powers={0,0,0,0};
     double[] targetPowers={0,0,0,0};
@@ -40,14 +40,16 @@ public class SwerveDrive {
     private double[] lastAcceleration;
     private File directory;
     private File constants;
+    public boolean waitForServos,accelerate,running=true;
+    public int servoThreshold;
     double pivotX=0,pivotY=0;
-//    private double leftTargetPower=0;
-//    private double rightTargetPower=0;
+    //    private double leftTargetPower=0;
+    //    private double rightTargetPower=0;
 
     /**
      * Custom constructor for current robot.
      */
-    public SwerveDrive(AnalogInput frontLeft, AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
+    public SwerveDriveThreadVariant(AnalogInput frontLeft, AnalogInput frontRight, AnalogInput backLeft, AnalogInput backRight,
                        DcMotor lf, DcMotor rf, DcMotor lb, DcMotor rb,
                        Servo frontleftServo,Servo frontRightServo, Servo backLeftServo, Servo backRightServo, double width, double length, FTCSwerve ftcSwerve){
         //initialize array of modules
@@ -74,80 +76,71 @@ public class SwerveDrive {
             String contents=new String(data,"UTF-8");
             JSONObject json=new JSONObject(contents);
             Log.d("json",json.toString());
-            modules = new SwerveModule[]{
+            modules = new SwerveModuleThreadVariant[]{
                     //front left
-                    new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(-json.getDouble("lf"), frontLeft),-width/2,length/2),
+                    new SwerveModuleThreadVariant(lf,frontleftServo, new AbsoluteEncoder(-json.getDouble("lf"), frontLeft),-width/2,length/2),
                     //front right
-                    new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(-json.getDouble("rf"), frontRight),width/2,length/2),
+                    new SwerveModuleThreadVariant(rf,frontRightServo, new AbsoluteEncoder(-json.getDouble("rf"), frontRight),width/2,length/2),
                     //back left
-                    new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(-json.getDouble("lb"), backLeft),-width/2,-length/2),
+                    new SwerveModuleThreadVariant(lb,backLeftServo, new AbsoluteEncoder(-json.getDouble("lb"), backLeft),-width/2,-length/2),
                     //back right
-                    new SwerveModule(rb,backRightServo, new AbsoluteEncoder(-json.getDouble("rb"), backRight),width/2,-length/2)
+                    new SwerveModuleThreadVariant(rb,backRightServo, new AbsoluteEncoder(-json.getDouble("rb"), backRight),width/2,-length/2)
             };
             Log.d("lf",Double.toString(json.getDouble("lf")));
         } catch (JSONException e) {
             e.printStackTrace();
-            modules = new SwerveModule[] {
+            modules = new SwerveModuleThreadVariant[]{
                     //front left
-                    new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(Constants.FL_OFFSET, frontLeft),-width/2,length/2),
+                    new SwerveModuleThreadVariant(lf,frontleftServo, new AbsoluteEncoder(0, frontLeft),-width/2,length/2),
                     //front right
-                    new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(Constants.FR_OFFSET, frontRight),width/2,length/2),
+                    new SwerveModuleThreadVariant(rf,frontRightServo, new AbsoluteEncoder(0, frontRight),width/2,length/2),
                     //back left
-                    new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(Constants.BL_OFFSET, backLeft),-width/2,-length/2),
+                    new SwerveModuleThreadVariant(lb,backLeftServo, new AbsoluteEncoder(0, backLeft),-width/2,-length/2),
                     //back right
-                    new SwerveModule(rb,backRightServo, new AbsoluteEncoder(Constants.BR_OFFSET, backRight),width/2,-length/2)
+                    new SwerveModuleThreadVariant(rb,backRightServo, new AbsoluteEncoder(0, backRight),width/2,-length/2)
             };
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
-            modules = new SwerveModule[] {
+            modules = new SwerveModuleThreadVariant[]{
                     //front left
-                    new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(Constants.FL_OFFSET, frontLeft),-width/2,length/2),
+                    new SwerveModuleThreadVariant(lf,frontleftServo, new AbsoluteEncoder(0, frontLeft),-width/2,length/2),
                     //front right
-                    new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(Constants.FR_OFFSET, frontRight),width/2,length/2),
+                    new SwerveModuleThreadVariant(rf,frontRightServo, new AbsoluteEncoder(0, frontRight),width/2,length/2),
                     //back left
-                    new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(Constants.BL_OFFSET, backLeft),-width/2,-length/2),
+                    new SwerveModuleThreadVariant(lb,backLeftServo, new AbsoluteEncoder(0, backLeft),-width/2,-length/2),
                     //back right
-                    new SwerveModule(rb,backRightServo, new AbsoluteEncoder(Constants.BR_OFFSET, backRight),width/2,-length/2)
+                    new SwerveModuleThreadVariant(rb,backRightServo, new AbsoluteEncoder(0, backRight),width/2,-length/2)
             };
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            modules = new SwerveModule[] {
+            modules = new SwerveModuleThreadVariant[]{
                     //front left
-                    new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(Constants.FL_OFFSET, frontLeft),-width/2,length/2),
+                    new SwerveModuleThreadVariant(lf,frontleftServo, new AbsoluteEncoder(0, frontLeft),-width/2,length/2),
                     //front right
-                    new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(Constants.FR_OFFSET, frontRight),width/2,length/2),
+                    new SwerveModuleThreadVariant(rf,frontRightServo, new AbsoluteEncoder(0, frontRight),width/2,length/2),
                     //back left
-                    new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(Constants.BL_OFFSET, backLeft),-width/2,-length/2),
+                    new SwerveModuleThreadVariant(lb,backLeftServo, new AbsoluteEncoder(0, backLeft),-width/2,-length/2),
                     //back right
-                    new SwerveModule(rb,backRightServo, new AbsoluteEncoder(Constants.BR_OFFSET, backRight),width/2,-length/2)
+                    new SwerveModuleThreadVariant(rb,backRightServo, new AbsoluteEncoder(0, backRight),width/2,-length/2)
             };
         } catch (IOException e) {
             e.printStackTrace();
-            modules = new SwerveModule[] {
+            modules = new SwerveModuleThreadVariant[]{
                     //front left
-                    new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(Constants.FL_OFFSET, frontLeft),-width/2,length/2),
+                    new SwerveModuleThreadVariant(lf,frontleftServo, new AbsoluteEncoder(0, frontLeft),-width/2,length/2),
                     //front right
-                    new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(Constants.FR_OFFSET, frontRight),width/2,length/2),
+                    new SwerveModuleThreadVariant(rf,frontRightServo, new AbsoluteEncoder(0, frontRight),width/2,length/2),
                     //back left
-                    new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(Constants.BL_OFFSET, backLeft),-width/2,-length/2),
+                    new SwerveModuleThreadVariant(lb,backLeftServo, new AbsoluteEncoder(0, backLeft),-width/2,-length/2),
                     //back right
-                    new SwerveModule(rb,backRightServo, new AbsoluteEncoder(Constants.BR_OFFSET, backRight),width/2,-length/2)
+                    new SwerveModuleThreadVariant(rb,backRightServo, new AbsoluteEncoder(0, backRight),width/2,-length/2)
             };
         }
-//                modules = new SwerveModule[] {
-//                //front left
-//                new SwerveModule(lf,frontleftServo, new AbsoluteEncoder(Constants.FL_OFFSET, frontLeft),-width/2,length/2),
-//                //front right
-//                new SwerveModule(rf,frontRightServo, new AbsoluteEncoder(Constants.FR_OFFSET, frontRight),width/2,length/2),
-//                //back left
-//                new SwerveModule(lb,backLeftServo, new AbsoluteEncoder(Constants.BL_OFFSET, backLeft),-width/2,-length/2),
-//                //back right
-//                new SwerveModule(rb,backRightServo, new AbsoluteEncoder(Constants.BR_OFFSET, backRight),width/2,-length/2)
-//        };
         motors=new DcMotor[]{lf,rf,lb,rb};
         positions=new int[]{lf.getCurrentPosition(),rf.getCurrentPosition(),lb.getCurrentPosition(),rb.getCurrentPosition()};
         this.ftcSwerve=ftcSwerve;
         lastAcceleration=new double[]{System.nanoTime()/1E6,System.nanoTime()/1E6,System.nanoTime()/1E6,System.nanoTime()/1E6};
+//        start();
     }
 
     public void setPivotPoint(double x,double y){
@@ -194,74 +187,95 @@ public class SwerveDrive {
         targetPowers[3]=(vects[2].getMagnitude() / maxPower)*powerScale;
     }
 
-
-
-//    public void translate(Vector direction,double power){
-//        leftTargetPower=power;
-//        rightTargetPower=power;
+//    public void run(){
+//        while(running) {
+//            if (!waitForServos) {
+//                for (int i = 0; i < modules.length; i++) {
+//                    SwerveModuleThreadVariant module = modules[i];
+//                    if (accelerate) {
+//                        accelerate(i);
+//                    } else {
+//                        powers[i] = targetPowers[i];
+//                    }
+//                    module.set(angles[i], powers[i]);
+//                    //distance travelled
+//                    double average = 0;
+//                    for (int j = 0; j < positions.length; j++) {
+//                        int position = motors[j].getCurrentPosition();
+//                        average += Math.abs(positions[j] - position);
+//                        positions[j] = position;
+//                    }
+//                    average /= 4;
+//                    deltaCounts += average;
+//                }
+//            } else {
+//                boolean atPosition = true;
+//                for (int i = 0; i < modules.length; i++) {
+//                    SwerveModuleThreadVariant module = modules[i];
+//                    if (accelerate) {
+//                        accelerate(i);
+//                    } else {
+//                        powers[i] = targetPowers[i];
+//                    }
+//                    if (Math.abs(module.getDelta(angles[i])) > Math.toRadians(servoThreshold)) {
+//                        atPosition = false;
+//                        atPositions[i] = false;
+//                    } else {
+//                        atPositions[i] = true;
+//                    }
+//                }
 //
-//        //left side
-//        modules[0].set(direction.getAngle());
-//        modules[2].set(direction.getAngle()+Math.PI);//intentionally reversed
-//        if(Math.abs(modules[0].getDelta())>Math.PI/2){
-//            leftTargetPower*=-1;
-//            modules[0].set(direction.getAngle()+Math.PI);
-//            modules[2].set(direction.getAngle());//intentionally reversed
-//        }
-//
-//        //right side
-//        modules[1].set(direction.getAngle());
-//        modules[3].set(direction.getAngle());
-//        if(Math.abs(modules[1].getDelta())>Math.PI/2){
-//            rightTargetPower*=-1;
-//            modules[1].set(direction.getAngle()+Math.PI);
-//            modules[3].set(direction.getAngle()+Math.PI);
+//                if (atPosition) {//if all are at the correct position
+//                    for (int i = 0; i < modules.length; i++) {
+//                        modules[i].set(angles[i], powers[i]);
+//                        double average = 0;//initialize average
+//                        for (int j = 0; j < positions.length; j++) {//iterate over all swerve modules
+//                            int position = motors[j].getCurrentPosition();
+//                            average += Math.abs(positions[j] - position);//calculate the change in encoder position
+//                            //since we last checked and add this to the averagew
+//                            positions[j] = position;
+//                        }
+//                        average /= 4;//divide the average by 4 swerve modules
+//                        deltaCounts += average;//add the final change in position to the running total
+//                    }
+//                } else {
+//                    for (int j = 0; j < positions.length; j++) {
+//                        positions[j] = motors[j].getCurrentPosition();
+//                    }
+//                    for (int i = 0; i < modules.length; i++) {
+//                        SwerveModuleThreadVariant module = modules[i];
+//                        if (atPositions[i]) {
+//                            modules[i].set(angles[i], 0);
+//                        } else {
+//                            if (module.getDirection(angles[i]) == SwerveModuleThreadVariant.ModuleDirection.clockwise) {
+//                                modules[i].set(angles[i], turnPower);//adjust signs on these depending on motor direction
+//                            } else {
+//                                modules[i].set(angles[i], -turnPower);
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            try {
+//                Thread.sleep(10);
+//            } catch (InterruptedException e){
+//                e.printStackTrace();
+//            }
 //        }
 //    }
-//
-//    public void rotate(double power){
-//        leftTargetPower=-power;//intentionally negative
-//        rightTargetPower=power;
-//
-//        //left side
-//        modules[0].set(Math.PI/4);
-//        modules[2].set(3*Math.PI/4);
-//        if(Math.abs(modules[0].getDelta())>Math.PI/2){
-//            leftTargetPower*=-1;
-//            modules[0].set(Math.PI/4+Math.PI);
-//            modules[2].set(3*Math.PI/4+Math.PI);
-//        }
-//
-//        //right side
-//        modules[1].set(7*Math.PI/4);
-//        modules[3].set(5*Math.PI/4);
-//        if(Math.abs(modules[1].getDelta())>Math.PI/2){
-//            rightTargetPower*=-1;
-//            modules[1].set(7*Math.PI/4+Math.PI);
-//            modules[3].set(5*Math.PI/4+Math.PI);
-//        }
-//    }
-    public void refreshValues(){
-        for(SwerveModule m:modules){
-
-        }
-    }
-
     /**
      * Method called every loop iteration
      */
     public void update(boolean waitForServos,double threshold, boolean accelerate){
         if(!waitForServos) {
             for(int i=0;i<modules.length;i++){
-                SwerveModule module=modules[i];
-                module.refreshValues();
+                SwerveModuleThreadVariant module=modules[i];
                 if(accelerate){
                     accelerate(i);
                 }else{
                     powers[i]=targetPowers[i];
                 }
                 module.set(angles[i],powers[i]);
-                module.update();
                 //distance travelled
                 double average=0;
                 for(int j=0;j<positions.length;j++){
@@ -275,15 +289,13 @@ public class SwerveDrive {
         }else{
             boolean atPosition=true;
             for(int i=0;i<modules.length;i++){
-                SwerveModule module=modules[i];
-                module.refreshValues();
+                SwerveModuleThreadVariant module=modules[i];
                 if(accelerate){
                     accelerate(i);
                 }else{
                     powers[i]=targetPowers[i];
                 }
-                module.set(angles[i],powers[i]);//necessary
-                if (Math.abs(module.getDelta())>Math.toRadians(threshold)){
+                if (Math.abs(module.getDelta(angles[i]))>Math.toRadians(threshold)){
                     atPosition=false;
                     atPositions[i]=false;
                 }else{
@@ -293,8 +305,7 @@ public class SwerveDrive {
 
             if(atPosition){//if all are at the correct position
                 for(int i=0;i<modules.length;i++){
-                    SwerveModule module=modules[i];
-                    module.update();
+                    modules[i].set(angles[i],powers[i]);
                     double average=0;//initialize average
                     for(int j=0;j<positions.length;j++){//iterate over all swerve modules
                         int position=motors[j].getCurrentPosition();
@@ -310,22 +321,28 @@ public class SwerveDrive {
                     positions[j]=motors[j].getCurrentPosition();
                 }
                 for(int i=0;i<modules.length;i++){
-                    SwerveModule module=modules[i];
+                    SwerveModuleThreadVariant module=modules[i];
                     if(atPositions[i]){
-                        module.setPower(0);
+                        modules[i].set(angles[i],0);
                     }else{
-                        if(module.getDirection()== SwerveModule.ModuleDirection.clockwise){
-                            module.setPower(turnPower);//adjust signs on these depending on motor direction
+                        if(module.getDirection(angles[i])== SwerveModuleThreadVariant.ModuleDirection.clockwise){
+                            modules[i].set(angles[i],0);//adjust signs on these depending on motor direction
+                            modules[i].setMotorPower(turnPower);
                         }else{
-                            module.setPower(-turnPower);
+                            modules[i].set(angles[i],0);
+                            modules[i].setMotorPower(-turnPower);
                         }
                     }
-                    module.update();
                 }
             }
         }
     }
-
+    public void kill(){
+        running=false;
+        for(SwerveModuleThreadVariant module:modules){
+            module.kill();
+        }
+    }
 
     private void  accelerate(int i){
         double delta=targetPowers[i]-powers[i];
@@ -357,27 +374,6 @@ public class SwerveDrive {
 
 
     private double turnPower=.12;
-
-    public void setTurnPower(double turnPower){
-        this.turnPower=turnPower;
-    }
-
-    public void stop(){
-        for(int i=0;i<modules.length;i++){
-            powers[i]=0;
-            angles[i]=modules[i].steerEncoder.getAngle();
-        }
-    }
-
-    public void lockWheels(){
-        angles[0]=3*Math.PI/4;
-        angles[1]=Math.PI/4;
-        angles[2]=Math.PI/4;
-        angles[3]=3*Math.PI/4;
-        for(int i=0;i<modules.length;i++){
-            powers[i]=0;
-        }
-    }
 
     public double getLinearInchesTravelled(){
         double circumference=Math.PI*WHEEL_DIAMETER;

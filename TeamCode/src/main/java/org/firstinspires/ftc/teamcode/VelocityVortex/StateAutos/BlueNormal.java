@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.VelocityVortex.StateAutos;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.CameraStuff.HistogramAnalysisThread;
+import org.firstinspires.ftc.teamcode.Swerve.Core.FTCSwerve;
 import org.firstinspires.ftc.teamcode.VelocityVortex.Robot;
 
 /**
@@ -20,13 +21,14 @@ public class BlueNormal extends Robot {
 
     @Override
     public void init() {
-        super.init();
         initAutonomous();
     }
 
     public void init_loop(){
         if(!gyro.isCalibrating()) {
-            swerveDrive.refreshValues();
+            if(swerveDrive==null){
+                swerveDrive=new FTCSwerve(lfa, rfa, lba, rba, lfm, rfm, lbm, rbm, lf, rf, lb, rb, 14, 14);
+            }
             swerveDrive.drive(-1, 0, 0, 0);
             swerveDrive.update(true, 15, false);
         }
@@ -49,13 +51,13 @@ public class BlueNormal extends Robot {
             case DriveForward:
                 shootRight.setPower(AUTONOMOUS_SHOOTING_POWER);
                 shootLeft.setPower(AUTONOMOUS_SHOOTING_POWER);
-                if(driveWithEncodersAndGyro(-1, 0, 0, .2, 15)){
+                if(driveWithEncodersAndGyro(-1, 0, 0, .3, 15)){
                     state=RobotState.Shoot;
                     deviationHeading=gyro.getHeading()-startGyroHeading;
                 }
                 break;
             case Shoot:
-                swerveDrive.setPivotPoint(-20,0);
+                swerveDrive.setPivotPoint(-16,0);
                 swerveDrive.drive(0,0,1,0);
                 if(shoot(2,AUTONOMOUS_SHOOTING_POWER)){
                     state=RobotState.RotateToFirstBeacon;
@@ -64,7 +66,7 @@ public class BlueNormal extends Robot {
                 break;
 
             case RotateToFirstBeacon:
-                if(turnAroundPivotPoint(-20, 0, .4,Direction.COUNTERCLOCKWISE, 90+(int)deviationHeading, 4)){
+                if(turnAroundPivotPoint(-16, 0, .7,Direction.COUNTERCLOCKWISE, 90+(int)deviationHeading, 4)){
                     state=RobotState.PressFirstBeacon;
                 }
                 break;
@@ -73,27 +75,27 @@ public class BlueNormal extends Robot {
                 if(beaconResult== HistogramAnalysisThread.BeaconResult.RED_LEFT){
                     extraDistance=5;
                 }
-                if(alignWithAndPushBeacon("Wheels", beaconResult, Side.BLUE,.225,1)){
+                if(alignWithAndPushBeacon("Wheels", beaconResult, Side.BLUE,.275,1,false)){
                     state=RobotState.DriveToSecondBeacon;
                     buttonWheel.setPosition(WHEEL_IN);
                 }
                 break;
 
             case DriveToSecondBeacon:
-                if(driveWithHeading(-.6,-1,0,.5,35+extraDistance,startGyroHeading-90)){
+                if(driveWithHeading(-.7,-1,0,.7,40+extraDistance,startGyroHeading-90)){
                     state=RobotState.PressSecondBeacon;
                 }
                 break;
 
             case PressSecondBeacon:
                 buttonWheel.setPosition(WHEEL_OUT);
-                if(alignWithAndPushBeacon("Legos", beaconResult, Side.BLUE,.225,1)){
+                if(alignWithAndPushBeacon("Legos", beaconResult, Side.BLUE,.275,1,false)){
                     state=RobotState.DriveToCapBall;
                     buttonWheel.setPosition(WHEEL_IN);
                 }
                 break;
             case DriveToCapBall:
-                if(driveWithHeading(-.9,1,0,.4,60,startGyroHeading-90)){
+                if(driveWithHeading(-.9,1,0,.7,60,startGyroHeading-90)){
                     state=RobotState.Stop;
                 }
                 break;

@@ -66,6 +66,7 @@ import com.google.blocks.ftcrobotcontroller.BlocksActivity;
 import com.google.blocks.ftcrobotcontroller.ProgrammingModeActivity;
 import com.google.blocks.ftcrobotcontroller.ProgrammingModeControllerImpl;
 import com.google.blocks.ftcrobotcontroller.runtime.BlocksOpMode;
+import com.justin.opencvcamera.ScriptC_colorsplit;
 import com.qualcomm.ftccommon.AboutActivity;
 import com.qualcomm.ftccommon.ClassManagerFactory;
 import com.qualcomm.ftccommon.Device;
@@ -187,6 +188,7 @@ public class FtcRobotControllerActivity extends Activity {
 
   private static Allocation leftHistogramAllocation;
   private static Allocation rightHistogramAllocation;
+  private static ScriptC_colorsplit colorsplit;
 
   public static ScriptIntrinsicHistogram getLeftHistogram() {
     return leftHistogram;
@@ -215,6 +217,10 @@ public class FtcRobotControllerActivity extends Activity {
 
   public static RenderScript getRenderScript(){
     return mRS;
+  }
+
+  public static ScriptC_colorsplit getColorsplit() {
+    return colorsplit;
   }
 
   protected class RobotRestarter implements Restarter {
@@ -384,9 +390,9 @@ public class FtcRobotControllerActivity extends Activity {
     RobotLog.vv(TAG, "onResume()");
     readNetworkType(NETWORK_TYPE_FILENAME);
     mRS=RenderScript.create(getBaseContext());
-    blur= ScriptIntrinsicBlur.create(mRS, Element.RGBA_8888(mRS));
-    red=new ScriptC_red(mRS);
-    blue=new ScriptC_blue(mRS);
+//    blur= ScriptIntrinsicBlur.create(mRS, Element.RGBA_8888(mRS));
+//    red=new ScriptC_red(mRS);
+//    blue=new ScriptC_blue(mRS);
     mAllocationIn = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), 1280, 720),
                                            Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
     getmAllocationOut = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), 1280, 720),
@@ -401,6 +407,8 @@ public class FtcRobotControllerActivity extends Activity {
     rightHistogram=ScriptIntrinsicHistogram.create(mRS,Element.RGBA_8888(mRS));
     rightHistogram.setOutput(rightHistogramAllocation);
     rightOptions=new Script.LaunchOptions();
+
+    colorsplit=new ScriptC_colorsplit(mRS);
 
     OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, getBaseContext(), new LoaderCallbackInterface() {
       @Override
