@@ -11,6 +11,7 @@ package org.firstinspires.ftc.teamcode.VelocityVortex.StateAutos;
  * Created by Justin on 1/27/2017.
  */
 @Autonomous
+@Disabled
 public class BlueFast extends Robot {
     HistogramAnalysisThread.BeaconResult beaconResult;
     enum RobotState{DriveForward,Shoot,RotateToFirstBeacon,DriveToSecondBeacon,PressFirstBeacon,PressSecondBeacon,DriveToDefend,Defend,Stop}

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.VelocityVortex.StateAutos;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.CameraStuff.HistogramAnalysisThread;
 import org.firstinspires.ftc.teamcode.Swerve.Core.FTCSwerve;
@@ -10,6 +11,7 @@ import org.firstinspires.ftc.teamcode.VelocityVortex.Robot;
  * Created by Justin on 1/27/2017.
  */
 @Autonomous
+@Disabled
 public class RedDefend extends Robot {
     HistogramAnalysisThread.BeaconResult beaconResult;
     enum RobotState{DriveForward,Shoot,RotateToFirstBeacon,DriveToSecondBeacon,PressFirstBeacon,PressSecondBeacon,

@@ -38,17 +38,18 @@ public class HistogramAnalysisThread extends Thread {
     public enum BeaconResult{ RED_LEFT,RED_RIGHT,INCONCLUSIVE}
 
     private int accumulationValue=0;
+    private final int DECISION_THRESHOLD=20000;
 
     public void resetResult(){
         accumulationValue=0;
     }
 
     public BeaconResult getBeaconResult(){
-        if(accumulationValue>10000){
+        if(accumulationValue>DECISION_THRESHOLD){
             synchronized (dataLock) {
                 return BeaconResult.RED_LEFT;
             }
-        }else if(accumulationValue<-10000){
+        }else if(accumulationValue<-DECISION_THRESHOLD){
             synchronized (dataLock) {
                 return BeaconResult.RED_RIGHT;
             }
@@ -92,38 +93,42 @@ public class HistogramAnalysisThread extends Thread {
         while(running) {
             if (!analyze) {
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(10);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             } else {
                 HashMap<String, double[]> data = vuforia.getVuforiaData();
-                int top, left, bottom, right, middle;
-                if (data.containsKey("Wheels")) {
+                int top, left, bottom, right, middleLeft,middleRight;
+                if(data.containsKey("Wheels")) {
                     top = (int) data.get("Wheels")[16];
-                    bottom = (int) Math.max(0, data.get("Wheels")[14]);
+                    bottom = (int) Math.max(0,data.get("Wheels")[14]);
                     left = (int) data.get("Wheels")[9];
                     right = (int) data.get("Wheels")[11];
-                    middle = (int) data.get("Wheels")[7];
-                } else if (data.containsKey("Tools")) {
+                    middleLeft = (int) data.get("Wheels")[7];
+                    middleRight = (int) data.get("Wheels")[17];
+                }else        if(data.containsKey("Tools")) {
                     top = (int) data.get("Tools")[16];
-                    bottom = (int) Math.max(0, data.get("Tools")[14]);
+                    bottom = (int) Math.max(0,data.get("Tools")[14]);
                     left = (int) data.get("Tools")[9];
                     right = (int) data.get("Tools")[11];
-                    middle = (int) data.get("Tools")[7];
-                } else if (data.containsKey("Gears")) {
+                    middleLeft = (int) data.get("Tools")[7];
+                    middleRight = (int) data.get("Tools")[17];
+                }else        if(data.containsKey("Gears")) {
                     top = (int) data.get("Gears")[16];
-                    bottom = (int) Math.max(0, data.get("Gears")[14]);
+                    bottom = (int) Math.max(0,data.get("Gears")[14]);
                     left = (int) data.get("Gears")[9];
                     right = (int) data.get("Gears")[11];
-                    middle = (int) data.get("Gears")[7];
-                } else if (data.containsKey("Legos")) {
+                    middleLeft = (int) data.get("Gears")[7];
+                    middleRight = (int) data.get("Gears")[17];
+                }else        if(data.containsKey("Legos")) {
                     top = (int) data.get("Legos")[16];
-                    bottom = (int) Math.max(0, data.get("Legos")[14]);
+                    bottom = (int) Math.max(0,data.get("Legos")[14]);
                     left = (int) data.get("Legos")[9];
                     right = (int) data.get("Legos")[11];
-                    middle = (int) data.get("Legos")[7];
-                } else {
+                    middleLeft = (int) data.get("Legos")[7];
+                    middleRight = (int) data.get("Legos")[17];
+                }else{
                     continue;
                 }
 
@@ -138,7 +143,8 @@ public class HistogramAnalysisThread extends Thread {
                 right = clipX(right);
                 top = clipY(top);
                 bottom = clipY(bottom);
-                middle = clipX(middle);
+                middleLeft=clipX(middleLeft);
+                middleRight=clipX(middleRight);
                 if (bottom == top && top == 719) {
                     top--;
                 } else if (bottom == top && top == 1) {
@@ -146,11 +152,11 @@ public class HistogramAnalysisThread extends Thread {
                 }
                 colorsplit.forEach_split(mAllocationIn,mAllocationOut);
                 try {
-                    leftOptions.setX(left, middle);
+                    leftOptions.setX(left, middleLeft);
                     leftOptions.setY(top, bottom);
                     leftHistogram.forEach(mAllocationOut, leftOptions);
 
-                    rightOptions.setX(middle, right);
+                    rightOptions.setX(middleRight, right);
                     rightOptions.setY(top, bottom);
                     rightHistogram.forEach(mAllocationOut, rightOptions);
                 } catch (RSIllegalArgumentException e) {
@@ -239,7 +245,7 @@ public class HistogramAnalysisThread extends Thread {
                 //            Log.d("PerceptronValue",Integer.toString(perceptronOutput));
 
                 accumulationValue += perceptronOutput;
-                if (Math.abs(accumulationValue) > 10100) {
+                if (Math.abs(accumulationValue) > DECISION_THRESHOLD+1) {
                     stopAnalyzing();
                 }
             }

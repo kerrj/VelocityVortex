@@ -7,8 +7,10 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ServoController;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
@@ -36,22 +38,27 @@ public class Robot extends OpMode {
     public static final double CAP_LEFT_OUT=1;
     public static final double CAP_RIGHT_HOLD=.6;
     public static final double CAP_LEFT_HOLD=.9;
+    public static final double CAP_RIGHT_DAB = 1;
+    public static final double CAP_LEFT_DAB = 1;
     public static final int SLIDE_DOWN=0;
     public static final int SLIDE_UP=20200;
-    public static final double SHOOTER_DOWN=.45;
-    public static final double SHOOTER_UP=.25;
+    public static final double SHOOTER_DOWN=.85;
+    public static final double SHOOTER_UP=.2;
     public static final double SWEEPER_INTAKE=1;
     public static final double SWEEPER_OUTAKE=-1;
-    public static final double SWEEPER_STOP=0;
 
     public final double CAMERA_OFFSET_FROM_PLOW=44;//44
     public final double SPONGE_OFFSET_FROM_CAMERA=70;
     public final double BUTTON_DISTANCE_FROM_WALL=60;
     public final double BUTTON_OFFSET_FROM_CENTER=67,
-            AUTONOMOUS_SHOOTING_POWER=.7,
+            AUTONOMOUS_SHOOTING_POWER=.65,
             AUTONOMOUS_SHOOT_DRIVE_DISTANCE=20,
             SHOOTER_MOVE_TIME=300,
-            SHOOTER_DELAY_TIME=700;
+            SHOOTER_DELAY_TIME=700,
+            AUTONOMOUS_NORMAL_DRIVE_POWER=.7,
+            AUTONOMOUS_SHOOT_DRIVE_POWER=.3,
+            AUTONOMOUS_SLOW_DRIVE_POWER=.3,
+            AUTONOMOUS_PUSHING_POWER=.3;
 
 
 
@@ -83,6 +90,11 @@ public class Robot extends OpMode {
         rfm=hardwareMap.dcMotor.get("rfm");
         lbm=hardwareMap.dcMotor.get("lbm");
         rbm=hardwareMap.dcMotor.get("rbm");
+
+        lfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        rfm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        lbm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        rbm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         gyro=hardwareMap.gyroSensor.get("gyro");
         gyro.calibrate();
         sweeper=hardwareMap.dcMotor.get("sweeper");
@@ -123,6 +135,11 @@ public class Robot extends OpMode {
         lbe=new AbsoluteEncoder(Constants.BL_OFFSET, lba);
         swerveDrive=new FTCSwerve(lfa,rfa,lba,rba,lfm,rfm,lbm,rbm,lf,rf,lb,rb,14,14);
         lastLoop=System.nanoTime()/1.0E6;
+    }
+
+    @Override
+    public void start(){
+        resetStartTime();
     }
 
     @Override
@@ -290,7 +307,8 @@ public class Robot extends OpMode {
     private Vector buttonVector=new Vector(1,0);
     private boolean targetFound=false;
 
-    public boolean alignWithAndPushBeacon(String targetName, HistogramAnalysisThread.BeaconResult beaconResult, Side side,double power,double rotationDivisionConstant,boolean backUp){
+    public boolean alignWithAndPushBeacon(String targetName, HistogramAnalysisThread.BeaconResult beaconResult,
+                                          Side side,double power,double rotationDivisionConstant,boolean backUp){
         if(resetPosition){
             resetPosition=false;
             state=PressingState.AlignWithBeacon;
@@ -357,11 +375,11 @@ public class Robot extends OpMode {
                 if(driveWithEncoders(buttonVector.x, buttonVector.y, 0, power, mmToInch(buttonVector.getMagnitude())+1)){
                     if(backUp) {
                         state = PressingState.BackUp;
+                        return false;
                     }else{
                         resetPosition=true;
                         return true;
                     }
-                    return false;
                 }else{
                     return false;
                 }
@@ -455,12 +473,12 @@ public class Robot extends OpMode {
             resetPosition=false;
             shots=0;
             servoState=ShootServoState.MovingUp;
-            shootServo.setPosition(SHOOTER_UP);
             shootLeft.setPower(power);
             shootRight.setPower(power);
         }
-        if(System.currentTimeMillis()-startTime>0){
+        if(System.currentTimeMillis()-startTime>300){
             if(resetServoTime){
+                shootServo.setPosition(SHOOTER_UP);
                 servoTravelStart=System.currentTimeMillis();
                 resetServoTime=false;
             }
@@ -484,7 +502,7 @@ public class Robot extends OpMode {
                 }
             }else{
                 shootServo.setPosition(SHOOTER_DOWN);
-                if(System.currentTimeMillis()-lastShot>600){
+                if(System.currentTimeMillis()-lastShot>800){
                     servoState=ShootServoState.MovingUp;
                     servoTravelStart=System.currentTimeMillis();
                 }

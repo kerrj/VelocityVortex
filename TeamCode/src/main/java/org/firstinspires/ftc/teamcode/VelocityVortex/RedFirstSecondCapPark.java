@@ -9,6 +9,7 @@ import android.util.Log;
 import com.qualcomm.ftcrobotcontroller.ScriptC_blue;
 import com.qualcomm.ftcrobotcontroller.ScriptC_red;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
@@ -38,6 +39,7 @@ import java.util.HashMap;
  * Created by Justin on 10/7/2016.
  */
 @Autonomous
+@Disabled
 public class RedFirstSecondCapPark extends Robot {
 
     //---------------------------------------------------------------------------------------

@@ -1,7 +1,6 @@
-package org.firstinspires.ftc.teamcode.VelocityVortex.StateAutos;
+package org.firstinspires.ftc.teamcode.VelocityVortex.SuperAutos;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.CameraStuff.HistogramAnalysisThread;
 import org.firstinspires.ftc.teamcode.Swerve.Core.FTCSwerve;
@@ -11,13 +10,12 @@ import org.firstinspires.ftc.teamcode.VelocityVortex.Robot;
  * Created by Justin on 1/27/2017.
  */
 @Autonomous
-@Disabled
-public class BlueDefend extends Robot {
+public class RedNormal extends Robot {
     HistogramAnalysisThread.BeaconResult beaconResult;
-    enum RobotState{DriveForward,Shoot,RotateToFirstBeacon,DriveToSecondBeacon,PressFirstBeacon,
-        PressSecondBeacon,DriveToDefend,DriveToCapBall,Defend,Stop,AlignToShoot}
+    enum RobotState{DriveForward,Shoot,RotateToFirstBeacon,DriveToSecondBeacon,PressFirstBeacon,PressSecondBeacon,
+        DriveToDefend,Defend,DriveToCapBall,Stop,AlignToShoot,RotateToCapBall,DriveToCapBall2}
     RobotState state=RobotState.DriveForward;
-    boolean waitForServos=true, internalResetPosition=true;
+    boolean waitForServos=true,internalResetPosition=true;
     double extraDistance=0,startGyroHeading,deviationHeading;
 
 
@@ -36,12 +34,13 @@ public class BlueDefend extends Robot {
             swerveDrive.update(true, 15, false);
         }
     }
+
     @Override
     public void loop() {
         super.loop();
-
         if(gyro.isCalibrating()){
             return;
+
         }
         if(internalResetPosition){
             startGyroHeading=gyro.getHeading();
@@ -50,11 +49,10 @@ public class BlueDefend extends Robot {
         beaconResult=thread.getBeaconResult();
 
         switch(state){
-            //old version
             case DriveForward:
                 shootRight.setPower(AUTONOMOUS_SHOOTING_POWER);
                 shootLeft.setPower(AUTONOMOUS_SHOOTING_POWER);
-                if(driveWithEncodersAndGyro(-1, 0, 0, .2, 15)){
+                if(driveWithEncodersAndGyro(-1, 0, 0, AUTONOMOUS_SHOOT_DRIVE_POWER, 15)){
                     state=RobotState.Shoot;
                     deviationHeading=gyro.getHeading()-startGyroHeading;
                 }
@@ -69,7 +67,7 @@ public class BlueDefend extends Robot {
                 break;
 
             case RotateToFirstBeacon:
-                if(turnAroundPivotPoint(-20, 0, .5,Direction.COUNTERCLOCKWISE, 90+(int)deviationHeading, 4)){
+                if(turnAroundPivotPoint(-16, 0, AUTONOMOUS_NORMAL_DRIVE_POWER,Direction.CLOCKWISE, 90-(int)deviationHeading, 4)){
                     state=RobotState.PressFirstBeacon;
                 }
                 break;
@@ -78,33 +76,49 @@ public class BlueDefend extends Robot {
                 if(beaconResult== HistogramAnalysisThread.BeaconResult.RED_LEFT){
                     extraDistance=5;
                 }
-                if(alignWithAndPushBeacon("Wheels", beaconResult, Side.BLUE,.25,1,false)){
+                if(alignWithAndPushBeacon("Gears", beaconResult, Side.RED,AUTONOMOUS_PUSHING_POWER,1,false)){
                     state=RobotState.DriveToSecondBeacon;
                     buttonWheel.setPosition(WHEEL_IN);
                 }
                 break;
 
             case DriveToSecondBeacon:
-                if(driveWithHeading(-.6,-1,0,.5,35+extraDistance,startGyroHeading-90)){
+                double drivePower=getRuntime()<10?AUTONOMOUS_SLOW_DRIVE_POWER:AUTONOMOUS_SLOW_DRIVE_POWER;
+                if(getRuntime()<10&&swerveDrive.getLinearInchesTravelled()>30){
+                    drivePower=0;
+                }
+                if(driveWithHeading(-.7,1,0,drivePower,40+extraDistance,startGyroHeading+90)){
                     state=RobotState.PressSecondBeacon;
                 }
                 break;
 
             case PressSecondBeacon:
                 buttonWheel.setPosition(WHEEL_OUT);
-                if(alignWithAndPushBeacon("Legos", beaconResult, Side.BLUE,.25,1,false)){
-                    state=RobotState.DriveToDefend;
+                if(alignWithAndPushBeacon("Tools", beaconResult, Side.RED,AUTONOMOUS_PUSHING_POWER,1,false)){
+                    state=RobotState.RotateToCapBall;
                     buttonWheel.setPosition(WHEEL_IN);
                 }
                 break;
-            case DriveToDefend:
-                if(driveWithHeading(-1, -.2, 0, .3, 50,startGyroHeading-90)){
-                    state=RobotState.Stop;
-                    waitForServos=true;
+
+            case DriveToCapBall:
+                if(driveWithEncoders(1,-.5,0,.2,20)){
+                    state=RobotState.DriveToCapBall2;
                 }
                 break;
 
+            case DriveToCapBall2:
+                if(driveWithEncoders(0,-1,0,.3,15)){
+                    state=RobotState.Stop;
+                }
+                break;
+            case RotateToCapBall:
+                if(turnAroundPivotPoint(-20,0,.4,Direction.COUNTERCLOCKWISE,90,4)){
+                    state=RobotState.DriveToCapBall;
+                    sweeper.setPower(SWEEPER_OUTAKE);
+                }
+                break;
             case Stop:
+                sweeper.setPower(0);
                 swerveDrive.drive(0,0,1,0);
                 break;
         }

@@ -409,11 +409,17 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
                     //Also a timestamp is added
                     Matrix34F matrix=result.getPose();
                     float[] data = matrix.getData();
-                    Vec2F middle= Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(0, 0, 54));
-                    Vec2F left=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(-targetWidth/2+30,200f,54));
-                    Vec2F right=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(targetWidth/2-30,200f,54));
-                    Vec2F bottom=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(0,-targetHeight/2+260f,54));
-                    Vec2F top=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(0,targetHeight/2+150f,54));
+                    float topHeightAboveTargetTop=177;
+                    float displacementInFromTarget=26;
+                    float bottomHeightAboveTargetTop=51;
+                    float distanceFromTargetZDirection=40;
+                    float marginFromCenterLine=31;
+                    Vec2F middleLeft=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(-marginFromCenterLine,0,distanceFromTargetZDirection));
+                    Vec2F middleRight=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(marginFromCenterLine,0,distanceFromTargetZDirection));
+                    Vec2F left=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(-targetWidth/2+displacementInFromTarget,0,distanceFromTargetZDirection));
+                    Vec2F right=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(targetWidth/2-displacementInFromTarget,0,distanceFromTargetZDirection));
+                    Vec2F bottom=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(0,targetHeight/2+bottomHeightAboveTargetTop,distanceFromTargetZDirection));
+                    Vec2F top=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(0,targetHeight/2+topHeightAboveTargetTop,distanceFromTargetZDirection));
                     float[][] rotation = {{data[0], data[1], data[2]},
                             {data[4], data[5], data[6]},
                             {data[8], data[9], data[10]}};
@@ -422,7 +428,7 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
                     double thetaY = Math.atan2(-rotation[2][0], Math.sqrt(rotation[2][1] * rotation[2][1] + rotation[2][2] * rotation[2][2]));
                     double thetaZ = Math.atan2(rotation[1][0], rotation[0][0]);
 
-                    double[] tempVuforiaData = new double[7+10];
+                    double[] tempVuforiaData = new double[7+12];
 
                     tempVuforiaData[0] = thetaX;
                     tempVuforiaData[1] = thetaY;
@@ -432,8 +438,9 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
                     tempVuforiaData[5] = data[11];
                     tempVuforiaData[6] = System.currentTimeMillis();
 
-                    tempVuforiaData[7]=middle.getData()[0];
-                    tempVuforiaData[8]=middle.getData()[1];
+
+                    tempVuforiaData[7]=middleLeft.getData()[0];
+                    tempVuforiaData[8]=middleLeft.getData()[1];
 
                     tempVuforiaData[9]=left.getData()[0];
                     tempVuforiaData[10]=left.getData()[1];
@@ -446,6 +453,9 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
 
                     tempVuforiaData[15]=top.getData()[0];
                     tempVuforiaData[16]=top.getData()[1];
+
+                    tempVuforiaData[17]=middleRight.getData()[0];
+                    tempVuforiaData[18]=middleRight.getData()[1];
 
 
 

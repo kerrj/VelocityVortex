@@ -21,8 +21,6 @@ public class ServoCalib extends Robot {
     @Override
     public void init() {
 
-
-        //        dataLogger=DataLogger.create(50);
         lfm=hardwareMap.dcMotor.get("lfm");
         rfm=hardwareMap.dcMotor.get("rfm");
         lbm=hardwareMap.dcMotor.get("lbm");
@@ -80,4 +78,10 @@ public class ServoCalib extends Robot {
         telemetry.addData("lb",Math.toDegrees(lbe.getAngle()));
         telemetry.addData("rb",Math.toDegrees(rbe.getAngle()));
     }
+
+    @Override
+    public void stop(){
+
+    }
+
 }
