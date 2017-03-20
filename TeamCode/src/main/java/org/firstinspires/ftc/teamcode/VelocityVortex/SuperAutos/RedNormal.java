@@ -40,7 +40,10 @@ public class RedNormal extends Robot {
         super.loop();
         if(gyro.isCalibrating()){
             return;
+        }
 
+        if(swerveDrive==null){
+            swerveDrive=new FTCSwerve(lfa, rfa, lba, rba, lfm, rfm, lbm, rbm, lf, rf, lb, rb, 14, 14);
         }
         if(internalResetPosition){
             startGyroHeading=gyro.getHeading();
@@ -84,7 +87,7 @@ public class RedNormal extends Robot {
 
             case DriveToSecondBeacon:
                 double drivePower=getRuntime()<10?AUTONOMOUS_SLOW_DRIVE_POWER:AUTONOMOUS_SLOW_DRIVE_POWER;
-                if(getRuntime()<10&&swerveDrive.getLinearInchesTravelled()>30){
+                if(getRuntime()<10.0&&swerveDrive.getLinearInchesTravelled()>30){
                     drivePower=0;
                 }
                 if(driveWithHeading(-.7,1,0,drivePower,40+extraDistance,startGyroHeading+90)){
@@ -94,14 +97,14 @@ public class RedNormal extends Robot {
 
             case PressSecondBeacon:
                 buttonWheel.setPosition(WHEEL_OUT);
-                if(alignWithAndPushBeacon("Tools", beaconResult, Side.RED,AUTONOMOUS_PUSHING_POWER,1,false)){
+                if(alignWithAndPushBeacon("Tools", beaconResult, Side.RED,AUTONOMOUS_PUSHING_POWER,1,true)){
                     state=RobotState.RotateToCapBall;
                     buttonWheel.setPosition(WHEEL_IN);
                 }
                 break;
 
             case DriveToCapBall:
-                if(driveWithEncoders(1,-.5,0,.2,20)){
+                if(driveWithEncoders(1,-.5,0,.2,25)){
                     state=RobotState.DriveToCapBall2;
                 }
                 break;

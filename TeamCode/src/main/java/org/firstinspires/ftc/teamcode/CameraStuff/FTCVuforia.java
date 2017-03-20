@@ -410,10 +410,11 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
                     Matrix34F matrix=result.getPose();
                     float[] data = matrix.getData();
                     float topHeightAboveTargetTop=177;
-                    float displacementInFromTarget=26;
+                    float displacementInFromTarget=40;//26
                     float bottomHeightAboveTargetTop=51;
                     float distanceFromTargetZDirection=40;
                     float marginFromCenterLine=31;
+
                     Vec2F middleLeft=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(-marginFromCenterLine,0,distanceFromTargetZDirection));
                     Vec2F middleRight=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(marginFromCenterLine,0,distanceFromTargetZDirection));
                     Vec2F left=Tool.projectPoint(CameraDevice.getInstance().getCameraCalibration(), matrix, new Vec3F(-targetWidth/2+displacementInFromTarget,0,distanceFromTargetZDirection));

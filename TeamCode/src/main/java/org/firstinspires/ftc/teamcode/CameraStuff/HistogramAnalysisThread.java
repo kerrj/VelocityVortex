@@ -38,7 +38,7 @@ public class HistogramAnalysisThread extends Thread {
     public enum BeaconResult{ RED_LEFT,RED_RIGHT,INCONCLUSIVE}
 
     private int accumulationValue=0;
-    private final int DECISION_THRESHOLD=20000;
+    private final int DECISION_THRESHOLD=50000;
 
     public void resetResult(){
         accumulationValue=0;

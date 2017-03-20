@@ -40,6 +40,10 @@ public class BlueCornerPark extends Robot {
         if(gyro.isCalibrating()){
             return;
         }
+
+        if(swerveDrive==null){
+            swerveDrive=new FTCSwerve(lfa, rfa, lba, rba, lfm, rfm, lbm, rbm, lf, rf, lb, rb, 14, 14);
+        }
         if(internalResetPosition){
             startGyroHeading=gyro.getHeading();
             internalResetPosition=false;
@@ -83,7 +87,7 @@ public class BlueCornerPark extends Robot {
 
             case DriveToSecondBeacon:
                 double drivePower=getRuntime()<10?AUTONOMOUS_SLOW_DRIVE_POWER:AUTONOMOUS_NORMAL_DRIVE_POWER;
-                if(getRuntime()<10&&swerveDrive.getLinearInchesTravelled()>30){
+                if(getRuntime()<10.0&&swerveDrive.getLinearInchesTravelled()>30){
                     drivePower=0;
                 }
                 if(driveWithHeading(-.7,-1,0,drivePower,40+extraDistance,startGyroHeading-90)){

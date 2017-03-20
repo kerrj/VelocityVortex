@@ -49,7 +49,7 @@ public class Robot extends OpMode {
 
     public final double CAMERA_OFFSET_FROM_PLOW=44;//44
     public final double SPONGE_OFFSET_FROM_CAMERA=70;
-    public final double BUTTON_DISTANCE_FROM_WALL=60;
+    public final double BUTTON_DISTANCE_FROM_WALL=40;//60
     public final double BUTTON_OFFSET_FROM_CENTER=67,
             AUTONOMOUS_SHOOTING_POWER=.65,
             AUTONOMOUS_SHOOT_DRIVE_DISTANCE=20,
@@ -166,7 +166,9 @@ public class Robot extends OpMode {
         rb.setPosition(0.5);
         capRight.setPosition(CAP_RIGHT_HOLD);
         capLeft.setPosition(CAP_LEFT_HOLD);
-        swerveDrive.stop();
+        if(swerveDrive!=null) {
+            swerveDrive.stop();
+        }
     }
 
 
@@ -372,7 +374,7 @@ public class Robot extends OpMode {
 
 
             case PressButton:
-                if(driveWithEncoders(buttonVector.x, buttonVector.y, 0, power, mmToInch(buttonVector.getMagnitude())+1)){
+                if(driveWithEncoders(buttonVector.x, buttonVector.y, 0, power, mmToInch(buttonVector.getMagnitude())+.25)){//+1
                     if(backUp) {
                         state = PressingState.BackUp;
                         return false;
