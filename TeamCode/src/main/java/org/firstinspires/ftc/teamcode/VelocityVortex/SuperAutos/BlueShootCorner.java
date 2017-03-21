@@ -59,7 +59,7 @@ public class BlueShootCorner extends Robot {
                 if(getRuntime()>15){
                     shootRight.setPower(AUTONOMOUS_SHOOTING_POWER);
                     shootLeft.setPower(AUTONOMOUS_SHOOTING_POWER);
-                    if(driveWithHeading(0,1,0,.2,24,startGyroHeading)){
+                    if(driveWithHeading(0,-1,0,.2,24,startGyroHeading)){
                         state=RobotState.Shoot;
                     }
                 }else{
