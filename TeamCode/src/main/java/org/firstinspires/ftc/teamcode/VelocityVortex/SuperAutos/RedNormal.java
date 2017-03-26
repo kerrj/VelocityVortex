@@ -53,6 +53,7 @@ public class RedNormal extends Robot {
 
         switch(state){
             case DriveForward:
+                vuforia.cameraLight(true);
                 shootRight.setPower(AUTONOMOUS_SHOOTING_POWER);
                 shootLeft.setPower(AUTONOMOUS_SHOOTING_POWER);
                 if(driveWithEncodersAndGyro(-1, 0, 0, AUTONOMOUS_SHOOT_DRIVE_POWER, 15)){
@@ -63,6 +64,7 @@ public class RedNormal extends Robot {
             case Shoot:
                 swerveDrive.setPivotPoint(-20,0);
                 swerveDrive.drive(0,0,1,0);
+                buttonWheel.setPosition(WHEEL_OUT);
                 if(shoot(2,AUTONOMOUS_SHOOTING_POWER)){
                     state=RobotState.RotateToFirstBeacon;
                     swerveDrive.setPivotPoint(0,0);
@@ -81,7 +83,7 @@ public class RedNormal extends Robot {
                 }
                 if(alignWithAndPushBeacon("Gears", beaconResult, Side.RED,AUTONOMOUS_PUSHING_POWER,1,false)){
                     state=RobotState.DriveToSecondBeacon;
-                    buttonWheel.setPosition(WHEEL_IN);
+//                    buttonWheel.setPosition(WHEEL_IN);
                 }
                 break;
 

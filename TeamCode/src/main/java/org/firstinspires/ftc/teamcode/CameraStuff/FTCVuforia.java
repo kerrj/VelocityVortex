@@ -331,7 +331,7 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
      */
             private boolean startVuforiaCamera() {
         
-        if (!CameraDevice.getInstance().init(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_FRONT)) {
+        if (!CameraDevice.getInstance().init(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK)) {
             return false;
             }//if
         
@@ -411,7 +411,7 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
                     float[] data = matrix.getData();
                     float topHeightAboveTargetTop=177;
                     float displacementInFromTarget=40;//26
-                    float bottomHeightAboveTargetTop=51;
+                    float bottomHeightAboveTargetTop=40;
                     float distanceFromTargetZDirection=40;
                     float marginFromCenterLine=31;
 
@@ -474,9 +474,9 @@ public class FTCVuforia implements Vuforia.UpdateCallbackInterface {
      * <li>rotation x(roll)</li>
      * <li>rotation y(pitch)</li>
      * <li>rotation z(yaw)</li>
-     * <li>distance x</li>
+     * <li>distance x</li> 3
      * <li>distance y</li>
-     * <li>distance z</li>
+     * <li>distance z</li> 5
      * <li>time the data was recorded in milliseconds</li>
      * @return the data
      */

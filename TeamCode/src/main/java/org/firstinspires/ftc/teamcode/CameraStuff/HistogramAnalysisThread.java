@@ -16,6 +16,10 @@ import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 
 /**
@@ -34,11 +38,12 @@ public class HistogramAnalysisThread extends Thread {
     private Bitmap RGBABitmap =Bitmap.createBitmap(1280, 720, Bitmap.Config.ARGB_8888);
     private Bitmap RGB565Bitmap =Bitmap.createBitmap(1280, 720, Bitmap.Config.RGB_565);
     private Object dataLock= new Object();
+    private double distance;
 
     public enum BeaconResult{ RED_LEFT,RED_RIGHT,INCONCLUSIVE}
 
     private int accumulationValue=0;
-    private final int DECISION_THRESHOLD=50000;
+    private final int DECISION_THRESHOLD=20000;
 
     public void resetResult(){
         accumulationValue=0;
@@ -139,6 +144,18 @@ public class HistogramAnalysisThread extends Thread {
                 Utils.matToBitmap(original, RGBABitmap);
                 mAllocationIn.copyFrom(RGBABitmap);
 
+                try {
+                    File directory = FtcRobotControllerActivity.getActivity().getBaseContext().getExternalFilesDir(null);
+                    File image = new File(directory, Long.toString(System.currentTimeMillis()) + ".jpeg");
+                    image.createNewFile();
+                    FileOutputStream fos = new FileOutputStream(image);
+                    RGBABitmap.compress(Bitmap.CompressFormat.JPEG, 50,fos) ;
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 left = clipX(left);
                 right = clipX(right);
                 top = clipY(top);
@@ -152,12 +169,16 @@ public class HistogramAnalysisThread extends Thread {
                 }
                 colorsplit.forEach_split(mAllocationIn,mAllocationOut);
                 try {
-                    leftOptions.setX(left, middleLeft);
-                    leftOptions.setY(top, bottom);
+                    leftOptions.setX(middleLeft,left);
+                    //        leftOptions.setX(left,middleLeft);
+                    leftOptions.setY(bottom,top);
+                    //        leftOptions.setY(top,bottom);
                     leftHistogram.forEach(mAllocationOut, leftOptions);
 
-                    rightOptions.setX(middleRight, right);
-                    rightOptions.setY(top, bottom);
+                    rightOptions.setX(right,middleRight);
+                    //        rightOptions.setX(middleRight,right);
+                    rightOptions.setY(bottom,top);
+                    //        rightOptions.setY(top,bottom);
                     rightHistogram.forEach(mAllocationOut, rightOptions);
                 } catch (RSIllegalArgumentException e) {
                     e.printStackTrace();

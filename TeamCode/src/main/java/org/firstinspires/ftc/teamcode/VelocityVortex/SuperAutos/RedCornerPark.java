@@ -53,6 +53,7 @@ public class RedCornerPark extends Robot {
 
         switch(state){
             case DriveForward:
+                vuforia.cameraLight(true);
                 shootRight.setPower(.6);
                 shootLeft.setPower(.6);
                 if(driveWithEncodersAndGyro(-1, 0, 0, AUTONOMOUS_SHOOT_DRIVE_POWER, 15)){
@@ -61,6 +62,7 @@ public class RedCornerPark extends Robot {
                 }
                 break;
             case Shoot:
+                buttonWheel.setPosition(WHEEL_OUT);
                 swerveDrive.setPivotPoint(-20,0);
                 swerveDrive.drive(0,0,1,0);
                 if(shoot(2,.64)){
@@ -81,7 +83,7 @@ public class RedCornerPark extends Robot {
                 }
                 if(alignWithAndPushBeacon("Gears", beaconResult, Side.RED,AUTONOMOUS_PUSHING_POWER,1,false)){
                     state=RobotState.DriveToSecondBeacon;
-                    buttonWheel.setPosition(WHEEL_IN);
+//                    buttonWheel.setPosition(WHEEL_IN);
                 }
                 break;
 

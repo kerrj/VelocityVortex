@@ -69,11 +69,11 @@ public class FTCTarget  {
      * @return angle in radians [-pi,pi] to the image target, only on plane parallel to playing field
      */
     public double getAngle(){
-        return Math.atan2(x,z);
-    }
+        return Math.atan2(-x,z);
+    }//(x,z)
 
     public double getHorizontalDistance(){
-        return x;
-    }
+        return -x;
+    }//x
 
 }
