@@ -109,7 +109,7 @@ public class RedFirstSecondCapPark extends Robot {
         red=FtcRobotControllerActivity.getRed();
         blur=FtcRobotControllerActivity.getBlur();
         mAllocationIn=FtcRobotControllerActivity.getmAllocationIn();
-        getmAllocationOut=FtcRobotControllerActivity.getGetmAllocationOut();
+        getmAllocationOut=FtcRobotControllerActivity.getmAllocationOut();
         blueMat=new Mat();
         redMat=new Mat();
         hierarchy=new Mat();

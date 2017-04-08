@@ -106,7 +106,7 @@ public class BlueNormal extends Robot {
                 break;
 
             case DriveToCapBall:
-                if(driveWithEncoders(-1,-.5,0,.2,20)){
+                if(driveWithEncoders(-1,0,0,.2,22)){
                     state=RobotState.DrivetoCapBall2;
                 }
                 break;
@@ -118,7 +118,7 @@ public class BlueNormal extends Robot {
                 }
                 break;
             case DrivetoCapBall2:
-                if(driveWithEncoders(0,-1,0,.3,15)){
+                if(driveWithEncoders(0,-1,0,.3,25)){
                     state=RobotState.Stop;
                 }
                 break;

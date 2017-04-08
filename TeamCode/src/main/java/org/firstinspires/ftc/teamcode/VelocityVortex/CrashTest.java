@@ -13,7 +13,6 @@ import com.qualcomm.ftcrobotcontroller.ScriptC_red;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.robot.RobotState;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.teamcode.CameraStuff.FTCVuforia;
@@ -25,10 +24,6 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
@@ -65,7 +60,7 @@ public class CrashTest extends OpMode {
         red=FtcRobotControllerActivity.getRed();
         blur=FtcRobotControllerActivity.getBlur();
         mAllocationIn=FtcRobotControllerActivity.getmAllocationIn();
-        getmAllocationOut=FtcRobotControllerActivity.getGetmAllocationOut();
+        getmAllocationOut=FtcRobotControllerActivity.getmAllocationOut();
         blueMat=new Mat();
         redMat=new Mat();
         hierarchy=new Mat();

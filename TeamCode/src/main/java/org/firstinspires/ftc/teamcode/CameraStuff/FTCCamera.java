@@ -35,7 +35,7 @@ public class FTCCamera {
     This class sets up the camera for renderscript/opencv interaction and delivers Allocations in an interface each frame
      */
     public interface AllocationListener {
-        public void onAllocationAvailable(Allocation allocation);
+        public void onAllocationAvailable(Allocation inAlloc,Allocation outAlloc);
     }
 
     private CameraManager mCameraManager;
@@ -43,43 +43,27 @@ public class FTCCamera {
     private String mCameraId;
     private Context context;
     private Handler mHandler;
-    private Allocation mAllocationIn;
+    private Allocation mAllocationIn,mAllocationOut;
     private RenderScript mRS;
     private AllocationListener allocationListener;
 
     private Allocation.OnBufferAvailableListener listener = new Allocation.OnBufferAvailableListener() {
-        @Override
-        public void onBufferAvailable(Allocation a) {
-            mAllocationIn.ioReceive();//mAllocationIn now has the current camera frame, is ready for processing
-            allocationListener.onAllocationAvailable(mAllocationIn);
-        }
-    };
+            @Override
+            public void onBufferAvailable(Allocation a) {
+                mAllocationIn.ioReceive();//mAllocationIn now has the current camera frame, is ready for processing
+                allocationListener.onAllocationAvailable(mAllocationIn,mAllocationOut);
+            }
+        };
 
 
-    public void setListener(AllocationListener listener) {
-        this.allocationListener = listener;
-    }
-
-    public FTCCamera(int WIDTH, int HEIGHT) {
-        mRS = RenderScript.create(FtcRobotControllerActivity.getActivity().getBaseContext());
+    public FTCCamera(AllocationListener listener) {
+        this.allocationListener=listener;
+        mRS = FtcRobotControllerActivity.getRenderScript();
         context = FtcRobotControllerActivity.getActivity().getBaseContext();
-        mAllocationIn = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), WIDTH, HEIGHT),
-                                               Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_IO_INPUT | Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
-        //first initialize OpenCV
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, FtcRobotControllerActivity.getActivity().getBaseContext(), new LoaderCallbackInterface() {
-            @Override
-            public void onManagerConnected(int status) {
-                if (status == LoaderCallbackInterface.SUCCESS) {
-                }
-            }
-
-            @Override
-            public void onPackageInstall(int operation, InstallCallbackInterface callback) {
-
-            }
-        });
+        mAllocationIn = FtcRobotControllerActivity.getCameraAllocation();
+        mAllocationOut=FtcRobotControllerActivity.getmAllocationOut();
     }
-    public void init(){
+    public void startCamera(){
         startHandler();
         setupCamera();
     }
@@ -112,6 +96,10 @@ public class FTCCamera {
         }
     };
 
+    public void stopCamera(){
+        mCameraDevice.close();
+    }
+
     private void setupCamera() {
         mCameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
 
@@ -143,6 +131,7 @@ public class FTCCamera {
                 @Override
                 public void onConfigured(CameraCaptureSession cameraCaptureSession) {
                     try {
+                        mCaptureRequestBuilder.set(CaptureRequest.FLASH_MODE,CaptureRequest.FLASH_MODE_TORCH);
                         CaptureRequest mCaptureRequest = mCaptureRequestBuilder.build();
                         cameraCaptureSession.setRepeatingRequest(mCaptureRequest, null, mHandler);
                     } catch (CameraAccessException e) {

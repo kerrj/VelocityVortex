@@ -1,21 +1,16 @@
 package org.firstinspires.ftc.teamcode.VelocityVortex;
 
 import android.graphics.Bitmap;
-import android.graphics.Paint;
 import android.renderscript.Allocation;
-import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
-import android.renderscript.Type;
 import android.util.Log;
 
 import com.qualcomm.ftcrobotcontroller.ScriptC_blue;
 import com.qualcomm.ftcrobotcontroller.ScriptC_red;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.vuforia.Image;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.teamcode.CameraStuff.FTCCamera;
@@ -24,9 +19,6 @@ import org.firstinspires.ftc.teamcode.CameraStuff.FTCVuforia;
 import org.firstinspires.ftc.teamcode.Swerve.Core.Vector;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.opencv.android.InstallCallbackInterface;
-import org.opencv.android.LoaderCallbackInterface;
-import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -40,7 +32,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -115,7 +106,7 @@ public class BlueSecondFirstPark extends Robot {
         red=FtcRobotControllerActivity.getRed();
         blur=FtcRobotControllerActivity.getBlur();
         mAllocationIn=FtcRobotControllerActivity.getmAllocationIn();
-        getmAllocationOut=FtcRobotControllerActivity.getGetmAllocationOut();
+        getmAllocationOut=FtcRobotControllerActivity.getmAllocationOut();
         blueMat=new Mat();
         redMat=new Mat();
         hierarchy=new Mat();

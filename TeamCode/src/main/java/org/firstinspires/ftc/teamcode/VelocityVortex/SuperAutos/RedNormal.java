@@ -106,13 +106,13 @@ public class RedNormal extends Robot {
                 break;
 
             case DriveToCapBall:
-                if(driveWithEncoders(1,-.5,0,.2,25)){
+                if(driveWithEncoders(1,0,0,.2,22)){
                     state=RobotState.DriveToCapBall2;
                 }
                 break;
 
             case DriveToCapBall2:
-                if(driveWithEncoders(0,-1,0,.3,15)){
+                if(driveWithEncoders(0,-1,0,.3,25)){
                     state=RobotState.Stop;
                 }
                 break;

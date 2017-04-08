@@ -5,11 +5,8 @@ import android.renderscript.Allocation;
 import android.renderscript.RSIllegalArgumentException;
 import android.renderscript.Script;
 import android.renderscript.ScriptIntrinsicHistogram;
-import android.util.Log;
-import android.widget.Toast;
 
 import com.justin.opencvcamera.ScriptC_colorsplit;
-import com.qualcomm.robotcore.hardware.AnalogInput;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.opencv.android.Utils;
@@ -86,7 +83,7 @@ public class HistogramAnalysisThread extends Thread {
         leftOptions=FtcRobotControllerActivity.getLeftOptions();
         rightOptions=FtcRobotControllerActivity.getRightOptions();
         colorsplit=FtcRobotControllerActivity.getColorsplit();
-        mAllocationOut=FtcRobotControllerActivity.getGetmAllocationOut();
+        mAllocationOut=FtcRobotControllerActivity.getmAllocationOut();
         running=true;
     }
     public int getConfidence(){

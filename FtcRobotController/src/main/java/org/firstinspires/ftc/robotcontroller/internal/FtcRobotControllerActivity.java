@@ -49,6 +49,7 @@ import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.Script;
+import android.renderscript.ScriptGroup;
 import android.renderscript.ScriptIntrinsicBlur;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
@@ -66,7 +67,10 @@ import com.google.blocks.ftcrobotcontroller.BlocksActivity;
 import com.google.blocks.ftcrobotcontroller.ProgrammingModeActivity;
 import com.google.blocks.ftcrobotcontroller.ProgrammingModeControllerImpl;
 import com.google.blocks.ftcrobotcontroller.runtime.BlocksOpMode;
+import com.justin.opencvcamera.ScriptC_canny;
 import com.justin.opencvcamera.ScriptC_colorsplit;
+import com.justin.opencvcamera.ScriptC_hysteresis;
+import com.justin.opencvcamera.ScriptC_sobel;
 import com.qualcomm.ftccommon.AboutActivity;
 import com.qualcomm.ftccommon.ClassManagerFactory;
 import com.qualcomm.ftccommon.Device;
@@ -106,9 +110,6 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -155,9 +156,6 @@ public class FtcRobotControllerActivity extends Activity {
 
   private static FtcRobotControllerActivity activity;
   private static RenderScript mRS;
-  private static ScriptC_blue blue;
-  private static ScriptC_red red;
-  private static ScriptIntrinsicBlur blur;
 
   public static ScriptC_red getRed() {
     return red;
@@ -171,12 +169,17 @@ public class FtcRobotControllerActivity extends Activity {
     return mAllocationIn;
   }
 
-  public static Allocation getGetmAllocationOut() {
-    return getmAllocationOut;
+  public static Allocation getmAllocationOut() {
+    return mAllocationOut;
   }
 
   private static Allocation mAllocationIn;
-  private static Allocation getmAllocationOut;
+  private static Allocation mAllocationOut;
+
+  public static Allocation getCameraAllocation() {
+    return cameraAllocation;
+  }
+
 
   public static Allocation getLeftHistogramAllocation() {
     return leftHistogramAllocation;
@@ -383,6 +386,29 @@ public class FtcRobotControllerActivity extends Activity {
       }
     });
   }
+  //ball detection stuff==========================================================================================================
+  //=================================================================================================================
+  private static Allocation cameraAllocation;
+
+  private static ScriptC_blue blue;
+  private static ScriptC_red red;
+  private static ScriptIntrinsicBlur blur;
+  private static ScriptC_sobel sobel;
+  private static ScriptC_canny canny;
+  private static ScriptC_hysteresis hysteresis;
+
+  public static ScriptGroup getRedGroup() {
+    return redGroup;
+  }
+
+  public static ScriptGroup getBlueGroup() {
+    return blueGroup;
+  }
+
+  private static ScriptGroup blueGroup,redGroup;
+
+  //=================================================================================================================
+  //=================================================================================================================
 
   @Override
   protected void onResume() {
@@ -390,15 +416,81 @@ public class FtcRobotControllerActivity extends Activity {
     RobotLog.vv(TAG, "onResume()");
     readNetworkType(NETWORK_TYPE_FILENAME);
     mRS=RenderScript.create(getBaseContext());
-//    blur= ScriptIntrinsicBlur.create(mRS, Element.RGBA_8888(mRS));
+
+//    //ball detection stuff==========================================================================================================
+//    //=================================================================================================================
+//
+//    int WIDTH=800;
+//    int HEIGHT=480;
 //    red=new ScriptC_red(mRS);
 //    blue=new ScriptC_blue(mRS);
+//    blur=ScriptIntrinsicBlur.create(mRS,Element.U8(mRS));
+//    hysteresis=new ScriptC_hysteresis(mRS);
+//    sobel=new ScriptC_sobel(mRS);
+//    canny=new ScriptC_canny(mRS);
+//
+//    canny.set_height(HEIGHT);
+//    canny.set_width(WIDTH);
+//    canny.set_UPPER((short)40);
+//    canny.set_LOWER((short)20);
+//    hysteresis.set_height(HEIGHT);
+//    hysteresis.set_width(WIDTH);
+//    hysteresis.set_gradientThreshold(0);
+//    blur.setRadius(3);
+//
+//    cameraAllocation=Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), 1280, 720),
+//                                            Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_IO_INPUT |
+//                                                    Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
+//
+//    ScriptGroup.Builder blueBuilder =new ScriptGroup.Builder(mRS);
+//    blueBuilder.addKernel(blue.getKernelID_split());
+//    blueBuilder.addKernel(blur.getKernelID());
+//    blueBuilder.addKernel(sobel.getKernelID_sobel());
+//    blueBuilder.addKernel(canny.getKernelID_suppress());
+//    blueBuilder.addKernel(hysteresis.getKernelID_hysteresis());
+//    Type u8=Type.createXY(mRS,Element.U8(mRS),WIDTH,HEIGHT);
+//    blueBuilder.addConnection(u8,
+//                                           blue.getKernelID_split(), blur.getFieldID_Input());
+//    blueBuilder.addConnection(u8,
+//                                           blur.getKernelID(), sobel.getFieldID_inAllocation());
+//    blueBuilder.addConnection(Type.createXY(mRS, Element.F32_2(mRS), WIDTH, HEIGHT),
+//                                           sobel.getKernelID_sobel(), canny.getFieldID_inAllocation());
+//    blueBuilder.addConnection(Type.createXY(mRS, Element.F32_2(mRS), WIDTH, HEIGHT),
+//                                           canny.getKernelID_suppress(), hysteresis.getFieldID_inAllocation());
+//    blueGroup = blueBuilder.create();
+//    blueGroup.setOutput(hysteresis.getKernelID_hysteresis(), mAllocationOut);
+//    blueGroup.setInput(blue.getKernelID_split(), cameraAllocation);
+//
+//
+//    ScriptGroup.Builder redBuilder =new ScriptGroup.Builder(mRS);
+//    redBuilder.addKernel(red.getKernelID_split());
+//    redBuilder.addKernel(blur.getKernelID());
+//    redBuilder.addKernel(sobel.getKernelID_sobel());
+//    redBuilder.addKernel(canny.getKernelID_suppress());
+//    redBuilder.addKernel(hysteresis.getKernelID_hysteresis());
+//    redBuilder.addConnection(u8,
+//                                           red.getKernelID_split(), blur.getFieldID_Input());
+//    redBuilder.addConnection(u8,
+//                                           blur.getKernelID(), sobel.getFieldID_inAllocation());
+//    redBuilder.addConnection(Type.createXY(mRS, Element.F32_2(mRS), WIDTH, HEIGHT),
+//                                           sobel.getKernelID_sobel(), canny.getFieldID_inAllocation());
+//    redBuilder.addConnection(Type.createXY(mRS, Element.F32_2(mRS), WIDTH, HEIGHT),
+//                                           canny.getKernelID_suppress(), hysteresis.getFieldID_inAllocation());
+//    redGroup = redBuilder.create();
+//    redGroup.setOutput(hysteresis.getKernelID_hysteresis(), mAllocationOut);
+//    redGroup.setInput(blue.getKernelID_split(), cameraAllocation);
+//    //=================================================================================================================
+//    //=================================================================================================================
+
+
+
     mAllocationIn = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), 1280, 720),
                                            Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
-    getmAllocationOut = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), 1280, 720),
-                                               Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
+    mAllocationOut = Allocation.createTyped(mRS, Type.createXY(mRS, Element.RGBA_8888(mRS), 1280, 720),
+                                            Allocation.MipmapControl.MIPMAP_NONE, Allocation.USAGE_GRAPHICS_TEXTURE | Allocation.USAGE_SCRIPT);
     leftHistogramAllocation=Allocation.createSized(mRS,Element.U32_3(mRS),256,Allocation.USAGE_SCRIPT);
     rightHistogramAllocation=Allocation.createSized(mRS,Element.U32_3(mRS),256, Allocation.USAGE_SCRIPT);
+
 
     leftHistogram=ScriptIntrinsicHistogram.create(mRS,Element.RGBA_8888(mRS));
     leftHistogram.setOutput(leftHistogramAllocation);
@@ -410,7 +502,7 @@ public class FtcRobotControllerActivity extends Activity {
 
     colorsplit=new ScriptC_colorsplit(mRS);
 
-    OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, getBaseContext(), new LoaderCallbackInterface() {
+    OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, getBaseContext(), new LoaderCallbackInterface() {
       @Override
       public void onManagerConnected(int status) {
         if (status == LoaderCallbackInterface.SUCCESS) {

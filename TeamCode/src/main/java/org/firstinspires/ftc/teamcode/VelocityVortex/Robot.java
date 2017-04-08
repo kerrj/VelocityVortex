@@ -32,9 +32,9 @@ public class Robot extends OpMode {
     public static final double WHEEL_IN=.95;
     public static final double WHEEL_OUT=.3;
     public static final double NECK_FLAT=.45;
-    public static final double CAP_RIGHT_HOLD=.65;//change this
-    public static final double CAP_RIGHT_IN=CAP_RIGHT_HOLD+.1;
-    public static final double CAP_LEFT_IN=.7;
+    public static final double CAP_RIGHT_HOLD=.85;//change this
+    public static final double CAP_RIGHT_IN=CAP_RIGHT_HOLD+.2;
+    public static final double CAP_LEFT_IN=.6;
     public static final double CAP_RIGHT_OUT=CAP_RIGHT_HOLD-.2;
     public static final double CAP_LEFT_OUT=1;
     public static final double CAP_LEFT_HOLD=.9;

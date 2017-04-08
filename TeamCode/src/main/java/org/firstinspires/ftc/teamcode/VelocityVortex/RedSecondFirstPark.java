@@ -2,10 +2,8 @@ package org.firstinspires.ftc.teamcode.VelocityVortex;
 
 import android.graphics.Bitmap;
 import android.renderscript.Allocation;
-import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
-import android.renderscript.Type;
 import android.util.Log;
 
 import com.qualcomm.ftcrobotcontroller.ScriptC_blue;
@@ -13,7 +11,6 @@ import com.qualcomm.ftcrobotcontroller.ScriptC_red;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.vuforia.Image;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.teamcode.CameraStuff.FTCCamera;
@@ -35,7 +32,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -111,7 +107,7 @@ public class RedSecondFirstPark extends Robot {
         red=FtcRobotControllerActivity.getRed();
         blur=FtcRobotControllerActivity.getBlur();
         mAllocationIn=FtcRobotControllerActivity.getmAllocationIn();
-        getmAllocationOut=FtcRobotControllerActivity.getGetmAllocationOut();
+        getmAllocationOut=FtcRobotControllerActivity.getmAllocationOut();
         blueMat=new Mat();
         redMat=new Mat();
         hierarchy=new Mat();
