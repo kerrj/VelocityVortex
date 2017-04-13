@@ -6,7 +6,8 @@ import android.renderscript.RSIllegalArgumentException;
 import android.renderscript.Script;
 import android.renderscript.ScriptIntrinsicHistogram;
 
-import com.justin.opencvcamera.ScriptC_colorsplit;
+
+import com.qualcomm.ftcrobotcontroller.ScriptC_colorsplit;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.opencv.android.Utils;
