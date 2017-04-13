@@ -1,5 +1,5 @@
 #pragma version(1)
-#pragma rs java_package_name(com.justin.opencvcamera)
+#pragma rs java_package_name(com.qualcomm.ftcrobotcontroller)
 #pragma RS_FP_IMPRECISE
 
 uchar3 rgb;

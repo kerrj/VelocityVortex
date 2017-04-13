@@ -67,7 +67,8 @@ import com.google.blocks.ftcrobotcontroller.BlocksActivity;
 import com.google.blocks.ftcrobotcontroller.ProgrammingModeActivity;
 import com.google.blocks.ftcrobotcontroller.ProgrammingModeControllerImpl;
 import com.google.blocks.ftcrobotcontroller.runtime.BlocksOpMode;
-import com.justin.opencvcamera.ScriptC_colorsplit;
+import com.qualcomm.ftcrobotcontroller.ScriptC_colorsplit;
+
 import com.qualcomm.ftccommon.AboutActivity;
 import com.qualcomm.ftccommon.ClassManagerFactory;
 import com.qualcomm.ftccommon.Device;
