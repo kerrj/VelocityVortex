@@ -70,10 +70,10 @@ public class FTCTarget  {
      */
     public double getAngle(){
         return Math.atan2(-x,z);
-    }//(x,z)
+    }//(x,z) for front facing
 
     public double getHorizontalDistance(){
         return -x;
-    }//x
+    }//x for front facing
 
 }

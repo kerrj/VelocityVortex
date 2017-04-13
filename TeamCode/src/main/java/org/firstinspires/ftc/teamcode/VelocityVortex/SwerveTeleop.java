@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode.VelocityVortex;
 
+
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.teamcode.CameraStuff.FTCVuforia;
@@ -233,6 +233,9 @@ public class SwerveTeleop extends Robot {
                 }
                 shootLeft.setPower(power);
                 shootRight.setPower(power);
+                if(gamepad2.y){
+                    neck.setPosition(WHEEL_OUT);
+                }
                 //========================================================================================================
 
                 // cap ball collection========================================================================================================

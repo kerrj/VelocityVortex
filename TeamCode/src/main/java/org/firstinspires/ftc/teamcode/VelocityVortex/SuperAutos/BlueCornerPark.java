@@ -53,7 +53,7 @@ public class BlueCornerPark extends Robot {
         switch(state){
             //old version
             case DriveForward:
-                vuforia.cameraLight(true);
+                vuforia.cameraLight(useLight);
                 shootRight.setPower(AUTONOMOUS_SHOOTING_POWER);
                 shootLeft.setPower(AUTONOMOUS_SHOOTING_POWER);
                 if(driveWithEncodersAndGyro(-1, 0, 0, AUTONOMOUS_SHOOT_DRIVE_POWER, 15)){

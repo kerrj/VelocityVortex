@@ -67,10 +67,7 @@ import com.google.blocks.ftcrobotcontroller.BlocksActivity;
 import com.google.blocks.ftcrobotcontroller.ProgrammingModeActivity;
 import com.google.blocks.ftcrobotcontroller.ProgrammingModeControllerImpl;
 import com.google.blocks.ftcrobotcontroller.runtime.BlocksOpMode;
-import com.justin.opencvcamera.ScriptC_canny;
 import com.justin.opencvcamera.ScriptC_colorsplit;
-import com.justin.opencvcamera.ScriptC_hysteresis;
-import com.justin.opencvcamera.ScriptC_sobel;
 import com.qualcomm.ftccommon.AboutActivity;
 import com.qualcomm.ftccommon.ClassManagerFactory;
 import com.qualcomm.ftccommon.Device;
@@ -393,9 +390,6 @@ public class FtcRobotControllerActivity extends Activity {
   private static ScriptC_blue blue;
   private static ScriptC_red red;
   private static ScriptIntrinsicBlur blur;
-  private static ScriptC_sobel sobel;
-  private static ScriptC_canny canny;
-  private static ScriptC_hysteresis hysteresis;
 
   public static ScriptGroup getRedGroup() {
     return redGroup;

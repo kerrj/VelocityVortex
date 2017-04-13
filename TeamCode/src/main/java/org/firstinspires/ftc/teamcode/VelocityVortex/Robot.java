@@ -3,7 +3,8 @@ package org.firstinspires.ftc.teamcode.VelocityVortex;
 import android.sax.TextElementListener;
 import android.util.Log;
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.*;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -28,13 +29,14 @@ import java.util.LinkedList;
 /**
  * Created by Justin on 10/15/2016.
  */
+@TeleOp
 public class Robot extends OpMode {
     public static final double WHEEL_IN=.95;
     public static final double WHEEL_OUT=.3;
     public static final double NECK_FLAT=.45;
     public static final double CAP_RIGHT_HOLD=.85;//change this
     public static final double CAP_RIGHT_IN=CAP_RIGHT_HOLD+.2;
-    public static final double CAP_LEFT_IN=.6;
+    public static final double CAP_LEFT_IN=.65;
     public static final double CAP_RIGHT_OUT=CAP_RIGHT_HOLD-.2;
     public static final double CAP_LEFT_OUT=1;
     public static final double CAP_LEFT_HOLD=.9;
@@ -46,6 +48,8 @@ public class Robot extends OpMode {
     public static final double SHOOTER_UP=.2;
     public static final double SWEEPER_INTAKE=1;
     public static final double SWEEPER_OUTAKE=-1;
+    public static final double NECK_IN=0;
+    public static final double NECK_OUT=.5;
 
     public final double CAMERA_OFFSET_FROM_PLOW=0;//44
     public final double SPONGE_OFFSET_FROM_CAMERA=70;
@@ -59,6 +63,8 @@ public class Robot extends OpMode {
             AUTONOMOUS_SHOOT_DRIVE_POWER=.3,
             AUTONOMOUS_SLOW_DRIVE_POWER=.3,
             AUTONOMOUS_PUSHING_POWER=.3;
+
+    public boolean useLight=true;
 
 
 
@@ -122,7 +128,7 @@ public class Robot extends OpMode {
         capLeft=hardwareMap.servo.get("capLeft");
         capRight=hardwareMap.servo.get("capRight");
         buttonWheel.setPosition(WHEEL_IN);
-        neck.setPosition(NECK_FLAT);
+        neck.setPosition(NECK_IN);
         capRight.setPosition(CAP_RIGHT_IN);
         capLeft.setPosition(CAP_LEFT_IN);
         lfa=hardwareMap.analogInput.get("lfa");
@@ -210,7 +216,7 @@ public class Robot extends OpMode {
         capLeft=hardwareMap.servo.get("capLeft");
         capRight=hardwareMap.servo.get("capRight");
         buttonWheel.setPosition(WHEEL_IN);
-        neck.setPosition(NECK_FLAT);
+        neck.setPosition(NECK_IN);
         capRight.setPosition(CAP_RIGHT_IN);
         capLeft.setPosition(CAP_LEFT_IN);
         lfa=hardwareMap.analogInput.get("lfa");

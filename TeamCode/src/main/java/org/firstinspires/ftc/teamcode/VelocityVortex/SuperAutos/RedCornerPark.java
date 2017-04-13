@@ -53,7 +53,7 @@ public class RedCornerPark extends Robot {
 
         switch(state){
             case DriveForward:
-                vuforia.cameraLight(true);
+                vuforia.cameraLight(useLight);
                 shootRight.setPower(.6);
                 shootLeft.setPower(.6);
                 if(driveWithEncodersAndGyro(-1, 0, 0, AUTONOMOUS_SHOOT_DRIVE_POWER, 15)){
