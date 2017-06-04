@@ -20,14 +20,16 @@ public class FTCTarget  {
      * @param name name of the image target, MUST be a key in the hashmap
      */
     public FTCTarget(HashMap<String,double[]> data,String name){
-        double[] values=data.get(name);
-        x=values[3];
-        y=values[4];
-        z=values[5];
-        xRotation=values[0];
-        yRotation=values[1];
-        zRotation=values[2];
-        this.name=name;
+        if(data.containsKey(name)) {
+            double[] values = data.get(name);
+            x = values[3];
+            y = values[4];
+            z = values[5];
+            xRotation = values[0];
+            yRotation = values[1];
+            zRotation = values[2];
+            this.name = name;
+        }
     }
 
     /**
