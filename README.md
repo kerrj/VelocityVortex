@@ -1,3 +1,6 @@
+# 5795 Code
+This repository contains code for FTC Swerve, located in Teamcode/src/main/java/swerve/core as well as usage of Renderscript to detect colors on the beacon. RS code is strewn around, but the brunt is located in HistogramAnalysisThread, FtcRobotControllerActivty (for initializing vars), and in the FTCRobotController/src/main/rs folder.
+
 # ftc_app
 FTC Android Studio project to create FTC Robot Controller app.
 
